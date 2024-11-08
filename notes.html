@@ -497,10 +497,6 @@
             });
         }
 
-        function shareNote(noteId) {
-            console.log("shareNote function called with noteId:", noteId);
-        }
-
         function createSharedNoteElement(id, note) {
             const noteElement = document.createElement('div');
             noteElement.className = 'note';
@@ -611,15 +607,12 @@
             }
 
             try {
-                // 查詢 Firestore 中的使用者文件，根據 email 欄位搜尋
                 const userSnapshot = await db.collection('Users').where('email', '==', email).limit(1).get();
 
                 if (userSnapshot.empty) {
                     alert('找不到該使用者，請確認電子郵件是否正確');
                     return;
                 }
-
-                const targetUserId = userSnapshot.docs[0].id;
 
                 const noteRef = db.collection('Users').doc(currentUser.uid).collection('Notes').doc(noteId);
                 const noteDoc = await noteRef.get();
@@ -635,8 +628,10 @@
                     return;
                 }
 
-                sharedWith.push(email);
-                await noteRef.update({ sharedWith });
+                // 更新 sharedWith 欄位
+                await noteRef.update({
+                    sharedWith: firebase.firestore.FieldValue.arrayUnion(email)
+                });
                 alert(`筆記已成功共用給 ${email}`);
             } catch (error) {
                 console.error('共用筆記時出錯:', error);
