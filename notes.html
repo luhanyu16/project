@@ -204,7 +204,7 @@
 
 <body>
     <div class="container">
-        <h1>網頁筆記本</h1>
+        <h1>網頁筆記</h1>
         <div class="header">
             <button id="login-button">Google 登入</button>
             <button id="new-note" style="display: none;">新增筆記</button>
@@ -218,7 +218,6 @@
         </div>
 
         <div id="notes-container">
-            <!-- 筆記列表將顯示在這裡 -->
         </div>
     </div>
 
@@ -228,16 +227,6 @@
     <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-firestore-compat.js"></script>
     <script>
         // Firebase 初始化
-        // const firebaseConfig = {
-        //     apiKey: "AIzaSyBEmo_Za0U52zNFBz-IikurtL0UWcco0sc",
-        //     authDomain: "project-f7999.firebaseapp.com",
-        //     databaseURL: "https://project-f7999-default-rtdb.firebaseio.com",
-        //     projectId: "project-f7999",
-        //     storageBucket: "project-f7999.appspot.com",
-        //     messagingSenderId: "579656505169",
-        //     appId: "1:579656505169:web:29fc7a9ed5764e35a66570",
-        //     measurementId: "G-GP2NN9Y1D5"
-        // };
         const firebaseConfig = {
             apiKey: "AIzaSyBEmo_Za0U52zNFBz-IikurtL0UWcco0sc",
             authDomain: "project-f7999.firebaseapp.com",
@@ -277,7 +266,7 @@
 
         firebase.auth().onAuthStateChanged(async (user) => {
             if (user) {
-                const userRef = db.collection('Users').doc(user.uid);
+                const userRef = db.collection('users').doc(user.uid);
 
                 try {
                 // 檢查 Firestore 中是否已有使用者資料
@@ -378,142 +367,225 @@
                 return;
             }
 
-            db.collection('Users').doc(currentUser.uid).collection('Notes').get()
-                .then(querySnapshot => {
-                    notesContainer.innerHTML = '';
-                    querySnapshot.forEach(doc => {
-                        const note = doc.data();
-                        const titleMatches = note.title && note.title.toLowerCase().includes(searchTerm);
-                        const categoryMatches = note.category && note.category.toLowerCase().includes(searchTerm);
-                        if (titleMatches || categoryMatches) {
-                            createNoteElement(doc.id, note);
-                        }
-                    });
-                })
-                .catch(error => {
-                    console.error('搜尋筆記時出錯:', error);
+            db.collection('Users').doc(currentUser.uid).collection('Notes')
+            .where('title', '>=', searchTerm).where('title', '<=', searchTerm + '\uf8ff')
+            .get()
+            .then(querySnapshot => {
+                notesContainer.innerHTML = '';
+                 querySnapshot.forEach(doc => {
+                    const note = doc.data();
+                    const titleMatches = note.title && note.title.toLowerCase().includes(searchTerm);
+                    const categoryMatches = note.category && note.category.toLowerCase().includes(searchTerm);
+                    if (titleMatches || categoryMatches) {
+                        createNoteElement(doc.id, note);
+                    }
                 });
+            })
+            .catch(error => {
+                console.error('搜尋筆記時出錯:', error);
+            });
         }
-// 建立筆記元素
-function createNoteElement(id, note) {
-    const noteElement = document.createElement('div');
-    noteElement.className = 'note';
-    noteElement.innerHTML = `
-        <div class="note-category"><strong>分類:</strong> ${note.category}</div>
-        <h2>${note.title}</h2>
-        <textarea id="text-content-${id}" style="color: ${note.textColor};">${note.content}</textarea>
-        <div class="text-tools">
-            <label for="text-color-picker-${id}">文字顏色:</label>
-            <input type="color" id="text-color-picker-${id}" value="${note.textColor}">
-        </div>
-        <canvas id="canvas-${id}" width="600" height="400"></canvas>
-        <div class="canvas-tools">
-            <div>
-                <label for="color-picker-${id}">畫筆顏色:</label>
-                <input type="color" id="color-picker-${id}" value="#000000">
-            </div>
-            <div>
-                <label for="brush-size-${id}">畫筆粗細:</label>
-                <select id="brush-size-${id}">
-                    <option value="2">2px</option>
-                    <option value="5">5px</option>
-                    <option value="10">10px</option>
-                    <option value="15">15px</option>
-                    <option value="20">20px</option>
-                </select>
-            </div>
-            <div>
-                <button id="brush-${id}">畫筆</button>
-                <button id="eraser-${id}">橡皮擦</button>
-                <button id="clear-canvas-${id}">清除畫布</button>
-                <button id="save-note-${id}">保存</button>
-            </div>
-        </div>
-        <div class="image-tools">
-            <label for="image-upload-${id}">上傳圖片:</label>
-            <input type="file" id="image-upload-${id}" accept="image/*">
-            <label for="image-scale-${id}">圖片縮放:</label>
-            <input type="range" id="image-scale-${id}" min="0.1" max="2" step="0.1" value="1">
-            <button id="delete-image-${id}">刪除圖片</button>
-            <div id="image-container-${id}" style="position: relative; text-align: center; margin-top: 10px;"></div>
-        </div>
-        <div class="actions">
-            <button onclick="editNote('${id}')">編輯</button>
-            <button onclick="deleteNote('${id}')">刪除</button>
-            <button onclick="shareNote('${id}')">共用</button>
-        </div>
-    `;
-    notesContainer.appendChild(noteElement);
 
-    const canvas = document.getElementById(`canvas-${id}`);
-    const ctx = canvas.getContext('2d');
-    let drawing = false;
-    let erasing = false;
-    let currentColor = '#000000';
-    let brushSize = note.brushSize || 5;
+        // 建立筆記元素
+        function createNoteElement(id, note) {
+            const noteElement = document.createElement('div');
+            noteElement.className = 'note';
+            noteElement.innerHTML = `
+               <div class="note-category"><strong>分類:</strong> ${note.category}</div>
+                <h2>${note.title}</h2>
+                <textarea id="text-content-${id}" style="color: ${note.textColor};">${note.content}</textarea>
+                <div class="text-tools">
+                    <label for="text-color-picker-${id}">文字顏色:</label>
+                    <input type="color" id="text-color-picker-${id}" value="${note.textColor}">
+                </div>
+                <canvas id="canvas-${id}" width="600" height="400"></canvas>
+                <div class="canvas-tools">
+                    <label for="color-picker-${id}">畫筆顏色:</label>
+                    <input type="color" id="color-picker-${id}" value="#000000">
+                    <label for="brush-size-${id}">畫筆粗細:</label>
+                    <select id="brush-size-${id}">
+                        <option value="2">2px</option>
+                        <option value="5">5px</option>
+                        <option value="10">10px</option>
+                        <option value="15">15px</option>
+                        <option value="20">20px</option>
+                    </select>
+                    <button id="brush-${id}">畫筆</button>
+                    <button id="eraser-${id}">橡皮擦</button>
+                    <button id="clear-canvas-${id}">清除畫布</button>
+                    <button id="save-note-${id}">保存</button>
+                </div>
+                <div class="actions">
+                    <button onclick="editNote('${id}')">編輯</button>
+                    <button onclick="deleteNote('${id}')">刪除</button>
+                    <button onclick="shareNote('${id}')">共用</button>
+                </div>
+            `;
+            notesContainer.appendChild(noteElement);
 
-    // 上傳圖片並實現拖曳、刪除和縮放
-    const imageUpload = document.getElementById(`image-upload-${id}`);
-    const imageContainer = document.getElementById(`image-container-${id}`);
-    const imageScaleInput = document.getElementById(`image-scale-${id}`);
-    const deleteImageBtn = document.getElementById(`delete-image-${id}`);
-    let uploadedImage = null;
-    let imageScale = 1;
+            // 繪圖和編輯功能
+            const canvas = document.getElementById(`canvas-${id}`);
+            const ctx = canvas.getContext('2d');
+            let drawing = false;
+            let erasing = false;
+            let currentColor = '#000000';
+            let brushSize = note.brushSize || 5;
 
-    // 圖片上傳和拖曳功能
-    imageUpload.addEventListener('change', (event) => {
-        const file = event.target.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                if (uploadedImage) imageContainer.removeChild(uploadedImage);
-                uploadedImage = new Image();
-                uploadedImage.src = e.target.result;
-                uploadedImage.style.position = 'absolute';
-                uploadedImage.style.cursor = 'move';
-                uploadedImage.style.width = `${imageScale * 100}%`;
-                uploadedImage.style.height = 'auto';
-                uploadedImage.draggable = true;
+            canvas.addEventListener('mousedown', () => { drawing = true; });
+            canvas.addEventListener('mouseup', () => { drawing = false; ctx.beginPath(); });
+            canvas.addEventListener('mousemove', (event) => draw(event, ctx, drawing, erasing, currentColor, brushSize));
 
-                // 圖片拖曳事件
-                uploadedImage.addEventListener('dragstart', (e) => {
-                    e.dataTransfer.setData('text/plain', null);
-                    e.target.classList.add('dragging');
+            document.getElementById(`color-picker-${id}`).addEventListener('input', (event) => {
+                currentColor = event.target.value;
+                erasing = false;
+            });
+
+            document.getElementById(`brush-size-${id}`).addEventListener('change', (event) => {
+                brushSize = event.target.value;
+            });
+
+            document.getElementById(`eraser-${id}`).addEventListener('click', () => {
+                erasing = true;
+            });
+
+            document.getElementById(`clear-canvas-${id}`).addEventListener('click', () => {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+            });
+
+            document.getElementById(`brush-${id}`).addEventListener('click', () => {
+                erasing = false;
+            });
+
+            document.getElementById(`save-note-${id}`).addEventListener('click', async () => {
+                const textContent = document.getElementById(`text-content-${id}`).value;
+                const dataURL = canvas.toDataURL();
+                await db.collection('Users').doc(currentUser.uid).collection('Notes').doc(id).update({
+                    canvasData: dataURL,
+                    content: textContent,
+                    textColor: document.getElementById(`text-color-picker-${id}`).value,  // 確保文字顏色也被保存
+                    brushSize: brushSize
                 });
-                uploadedImage.addEventListener('dragend', (e) => {
-                    const rect = imageContainer.getBoundingClientRect();
-                    e.target.style.left = `${e.pageX - rect.left - uploadedImage.width / 2}px`;
-                    e.target.style.top = `${e.pageY - rect.top - uploadedImage.height / 2}px`;
-                    e.target.classList.remove('dragging');
+            });
+
+            // 載入保存的畫布
+            if (note.canvasData) {
+                const img = new Image();
+                img.src = note.canvasData;
+                img.onload = () => {
+                    ctx.drawImage(img, 0, 0);
+                };
+            }
+
+            // 文字顏色選擇
+            const textContent = document.getElementById(`text-content-${id}`);
+            const textColorPicker = document.getElementById(`text-color-picker-${id}`);
+            textColorPicker.addEventListener('input', async (event) => {
+                const newColor = event.target.value;
+                textContent.style.color = newColor;
+                await db.collection('Notes').doc(id).update({
+                    textColor: newColor
                 });
-
-                imageContainer.appendChild(uploadedImage);
-            };
-            reader.readAsDataURL(file);
+            });
         }
-    });
 
-    // 刪除圖片
-    deleteImageBtn.addEventListener('click', () => {
-        if (uploadedImage) {
-            imageContainer.removeChild(uploadedImage);
-            uploadedImage = null;
+        function createSharedNoteElement(id, note) {
+            const noteElement = document.createElement('div');
+            noteElement.className = 'note';
+            noteElement.innerHTML = `
+               <div class="note-category"><strong>分類:</strong> ${note.category} (共用)</div>
+                <h2>${note.title}</h2>
+                <textarea id="text-content-${id}" style="color: ${note.textColor};">${note.content}</textarea>
+                <div class="text-tools">
+                    <label for="text-color-picker-${id}">文字顏色:</label>
+                    <input type="color" id="text-color-picker-${id}" value="${note.textColor}">
+                </div>
+                <canvas id="canvas-${id}" width="600" height="400"></canvas>
+                <div class="canvas-tools">
+                    <label for="color-picker-${id}">畫筆顏色:</label>
+                    <input type="color" id="color-picker-${id}" value="#000000">
+                    <label for="brush-size-${id}">畫筆粗細:</label>
+                    <select id="brush-size-${id}">
+                        <option value="2">2px</option>
+                        <option value="5">5px</option>
+                        <option value="10">10px</option>
+                        <option value="15">15px</option>
+                        <option value="20">20px</option>
+                    </select>
+                    <button id="brush-${id}">畫筆</button>
+                    <button id="eraser-${id}">橡皮擦</button>
+                    <button id="clear-canvas-${id}">清除畫布</button>
+                    <button id="save-note-${id}">保存</button>
+                </div>
+                <div class="actions">
+                    <button onclick="editSharedNote('${id}')">儲存變更</button>
+                </div>
+            `;
+            notesContainer.appendChild(noteElement);
+
+            // 繪圖和編輯功能
+            const canvas = document.getElementById(`canvas-${id}`);
+            const ctx = canvas.getContext('2d');
+            let drawing = false;
+            let erasing = false;
+            let currentColor = '#000000';
+            let brushSize = note.brushSize || 5;
+
+            canvas.addEventListener('mousedown', () => { drawing = true; });
+            canvas.addEventListener('mouseup', () => { drawing = false; ctx.beginPath(); });
+            canvas.addEventListener('mousemove', (event) => draw(event, ctx, drawing, erasing, currentColor, brushSize));
+
+            document.getElementById(`color-picker-${id}`).addEventListener('input', (event) => {
+                currentColor = event.target.value;
+                erasing = false;
+            });
+
+            document.getElementById(`brush-size-${id}`).addEventListener('change', (event) => {
+                brushSize = event.target.value;
+            });
+
+            document.getElementById(`eraser-${id}`).addEventListener('click', () => {
+                erasing = true;
+            });
+
+            document.getElementById(`clear-canvas-${id}`).addEventListener('click', () => {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+            });
+
+            document.getElementById(`brush-${id}`).addEventListener('click', () => {
+                erasing = false;
+            });
+
+            document.getElementById(`save-note-${id}`).addEventListener('click', async () => {
+                const textContent = document.getElementById(`text-content-${id}`).value;
+                const dataURL = canvas.toDataURL();
+                await db.collection('Users').doc(currentUser.uid).collection('Notes').doc(id).update({
+                    canvasData: dataURL,
+                    content: textContent,
+                    textColor: textColorPicker.value,  // 確保文字顏色也被保存
+                    brushSize: brushSize
+                });
+            });
+
+            // 載入保存的畫布
+            if (note.canvasData) {
+                const img = new Image();
+                img.src = note.canvasData;
+                img.onload = () => {
+                    ctx.drawImage(img, 0, 0);
+                };
+            }
+
+            // 文字顏色選擇
+            const textContent = document.getElementById(`text-content-${id}`);
+            const textColorPicker = document.getElementById(`text-color-picker-${id}`);
+            textColorPicker.addEventListener('input', async (event) => {
+                const newColor = event.target.value;
+                textContent.style.color = newColor;
+                await db.collection('Notes').doc(id).update({
+                    textColor: newColor
+                });
+            });
         }
-    });
-
-    // 縮放圖片
-    imageScaleInput.addEventListener('input', (event) => {
-        imageScale = parseFloat(event.target.value);
-        if (uploadedImage) {
-            uploadedImage.style.width = `${imageScale * 100}%`;
-        }
-    });
-
-    // 其他功能略 (如保存和畫筆功能)...
-}
-
-        // console.log("Firebase Auth:", firebase.auth());
-        // console.log("Firebase Firestore:", firebase.firestore());
 
         // 共用功能
         async function shareNote(noteId) {
@@ -524,7 +596,7 @@ function createNoteElement(id, note) {
             }
 
             try {
-                const userSnapshot = await db.collection('Users').where('email', '==', email).limit(1).get();
+                const userSnapshot = await db.collection('users').where('email', '==', email).limit(1).get();
 
                 if (userSnapshot.empty) {
                     alert('找不到該使用者，請確認電子郵件是否正確');
@@ -532,7 +604,6 @@ function createNoteElement(id, note) {
                 }
 
                 const noteRef = db.collection('Users').doc(currentUser.uid).collection('Notes').doc(noteId);
-                const noteDoc = await noteRef.get();
 
                 if (!noteDoc.exists) {
                     alert('筆記不存在');
@@ -546,9 +617,8 @@ function createNoteElement(id, note) {
                 }
 
                 // 更新 sharedWith 欄位
-                await noteRef.update({
-                    sharedWith: firebase.firestore.FieldValue.arrayUnion(email)
-                });
+                await noteRef.update({ category: newCategory, title: newTitle });
+                displayNotes();
                 alert(`筆記已成功共用給 ${email}`);
             } catch (error) {
                 console.error('共用筆記時出錯:', error);
@@ -662,9 +732,8 @@ function createNoteElement(id, note) {
                 const noteRef = db.collection('Users').doc(currentUser.uid).collection('Notes').doc(noteId);
                 
                 // 更新 `sharedWith` 欄位
-                await noteRef.update({
-                    sharedWith: firebase.firestore.FieldValue.arrayUnion(email)
-                });
+                await noteRef.update({ category: newCategory, title: newTitle });
+                displayNotes();
                 
                 console.log('筆記已成功共用給:', email);
             } catch (error) {
