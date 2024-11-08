@@ -204,7 +204,7 @@
 
 <body>
     <div class="container">
-        <h1>網頁筆記</h1>
+        <h1>網頁筆記本</h1>
         <div class="header">
             <button id="login-button">Google 登入</button>
             <button id="new-note" style="display: none;">新增筆記</button>
@@ -218,6 +218,7 @@
         </div>
 
         <div id="notes-container">
+            <!-- 筆記列表將顯示在這裡 -->
         </div>
     </div>
 
@@ -227,6 +228,16 @@
     <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-firestore-compat.js"></script>
     <script>
         // Firebase 初始化
+        // const firebaseConfig = {
+        //     apiKey: "AIzaSyBEmo_Za0U52zNFBz-IikurtL0UWcco0sc",
+        //     authDomain: "project-f7999.firebaseapp.com",
+        //     databaseURL: "https://project-f7999-default-rtdb.firebaseio.com",
+        //     projectId: "project-f7999",
+        //     storageBucket: "project-f7999.appspot.com",
+        //     messagingSenderId: "579656505169",
+        //     appId: "1:579656505169:web:29fc7a9ed5764e35a66570",
+        //     measurementId: "G-GP2NN9Y1D5"
+        // };
         const firebaseConfig = {
             apiKey: "AIzaSyBEmo_Za0U52zNFBz-IikurtL0UWcco0sc",
             authDomain: "project-f7999.firebaseapp.com",
@@ -266,7 +277,7 @@
 
         firebase.auth().onAuthStateChanged(async (user) => {
             if (user) {
-                const userRef = db.collection('users').doc(user.uid);
+                const userRef = db.collection('Users').doc(user.uid);
 
                 try {
                 // 檢查 Firestore 中是否已有使用者資料
@@ -464,6 +475,43 @@
                     brushSize: brushSize
                 });
             });
+			 // 上傳圖片並顯示在畫布上
+    const imageUpload = document.getElementById(`image-upload-${id}`);
+    imageUpload.addEventListener('change', (event) => {
+        const file = event.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                uploadedImage = new Image();
+                uploadedImage.src = e.target.result;
+                uploadedImage.onload = () => {
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    drawImageOnCanvas();
+                };
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+
+    // 縮放圖片
+    const imageScaleInput = document.getElementById(`image-scale-${id}`);
+    imageScaleInput.addEventListener('input', (event) => {
+        imageScale = parseFloat(event.target.value);
+        if (uploadedImage) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawImageOnCanvas();
+        }
+    });
+
+    // 在畫布上繪製圖片並根據縮放比例調整大小
+    function drawImageOnCanvas() {
+        const width = uploadedImage.width * imageScale;
+        const height = uploadedImage.height * imageScale;
+        const x = (canvas.width - width) / 2;
+        const y = (canvas.height - height) / 2;
+        ctx.clearRect(0, 0, canvas.width, canvas.height); // 清除畫布
+        ctx.drawImage(uploadedImage, x, y, width, height); // 繪製圖片
+    }
 
             // 載入保存的畫布
             if (note.canvasData) {
@@ -596,14 +644,14 @@
             }
 
             try {
-                const userSnapshot = await db.collection('users').where('email', '==', email).limit(1).get();
+                const userSnapshot = await db.collection('Users').where('email', '==', email).limit(1).get();
 
                 if (userSnapshot.empty) {
                     alert('找不到該使用者，請確認電子郵件是否正確');
                     return;
                 }
 
-                const noteRef = db.collection('users').doc(currentUser.uid).doc(email);
+                const noteRef = db.collection('Users').doc(currentUser.uid).collection('Notes').doc(noteId);
                 const noteDoc = await noteRef.get();
 
                 if (!noteDoc.exists) {
@@ -710,7 +758,7 @@
 
         // 刪除筆記
         async function deleteNote(noteId) {
-            // const confirmation = confirm('你確定要刪除此筆記嗎？這將同時移除共用權限。');
+            const confirmation = confirm('你確定要刪除此筆記嗎？這將同時移除共用權限。');
             if (!confirmation) {
                 return;
             }
