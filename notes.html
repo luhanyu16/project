@@ -324,6 +324,7 @@
             });
         }
 
+
         // 搜尋筆記
         const searchButton = document.getElementById('search-button');
         searchButton.addEventListener('click', searchNotes);
@@ -364,7 +365,7 @@
                     <label for="text-color-picker-${id}">文字顏色:</label>
                     <input type="color" id="text-color-picker-${id}" value="${note.textColor}">
                 </div>
-                <canvas id="canvas-${id}" width="600" height="400"></canvas>
+                <canvas id="canvas-${id}" width="800" height="600"></canvas>
                 <div class="canvas-tools">
                     <label for="color-picker-${id}">畫筆顏色:</label>
                     <input type="color" id="color-picker-${id}" value="#000000">
@@ -376,6 +377,7 @@
                         <option value="15">15px</option>
                         <option value="20">20px</option>
                     </select>
+                    <button id="add-image-${id}">新增圖片</button>
                     <button id="brush-${id}">畫筆</button>
                     <button id="eraser-${id}">橡皮擦</button>
                     <button id="clear-canvas-${id}">清除畫布</button>
@@ -420,15 +422,34 @@
             document.getElementById(`brush-${id}`).addEventListener('click', () => {
                 erasing = false;
             });
+                        // 新增圖片功能
+            document.getElementById(`add-image-${id}`).addEventListener('click', () => {
+                const imageInput = document.createElement('input');
+                imageInput.type = 'file';
+                imageInput.accept = 'image/*';
+                imageInput.onchange = (event) => {
+                    const file = event.target.files[0];
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        const img = new Image();
+                        img.src = e.target.result;
+                        img.onload = () => {
+                            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                        };
+                    };
+                    reader.readAsDataURL(file);
+                };
+                imageInput.click();
+            });
 
             document.getElementById(`save-note-${id}`).addEventListener('click', async () => {
                 const textContent = document.getElementById(`text-content-${id}`).value;
                 const dataURL = canvas.toDataURL();
                 await db.collection('Users').doc(currentUser.uid).collection('Notes').doc(id).update({
                     canvasData: dataURL,
-                    content: textContent,
-                    textColor: textColorPicker.value,  // 確保文字顏色也被保存
-                    brushSize: brushSize
+                    // content: textContent,
+                    // textColor: textColorPicker.value,  // 確保文字顏色也被保存
+                    // brushSize: brushSize
                 });
             });
 
