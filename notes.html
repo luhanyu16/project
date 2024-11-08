@@ -424,84 +424,24 @@
                 erasing = false;
             });
             //新增圖片
- document.getElementById(`add-image-${id}`).addEventListener('click', () => {
-    const imageInput = document.createElement('input');
-    imageInput.type = 'file';
-    imageInput.accept = 'image/*';
-    imageInput.onchange = (event) => {
-        const file = event.target.files[0];
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            const img = new Image();
-            img.src = e.target.result;
-
-            img.onload = () => {
-                // 將圖片繪製到畫布，然後重設繪圖起點
-                ctx.clearRect(0, 0, canvas.width, canvas.height); // 清空畫布
-                ctx.drawImage(img, 0, 0, canvas.width, canvas.height); // 繪製圖片
-                ctx.beginPath(); // 重設繪圖路徑，防止新增圖片後無法繪圖
-                let imgX = 0, imgY = 0, imgWidth = img.width, imgHeight = img.height;
-                let dragging = false;
-                let resizing = false;
-                let startX, startY;
-
-                // Draw initial image
-                ctx.drawImage(img, imgX, imgY, imgWidth, imgHeight);
-
-                // Mouse down event for dragging and resizing
-                canvas.addEventListener('mousedown', (event) => {
-                    startX = event.offsetX;
-                    startY = event.offsetY;
-
-                    // Check if the click is inside the image bounds
-                    if (
-                        startX >= imgX &&
-                        startX <= imgX + imgWidth &&
-                        startY >= imgY &&
-                        startY <= imgY + imgHeight
-                    ) {
-                        dragging = true;
-                    } else if (
-                        startX >= imgX + imgWidth - 10 &&
-                        startY >= imgY + imgHeight - 10
-                    ) {
-                        resizing = true;
-                    }
-                });
-
-                // Mouse move event for dragging and resizing
-                canvas.addEventListener('mousemove', (event) => {
-                    if (dragging) {
-                        const dx = event.offsetX - startX;
-                        const dy = event.offsetY - startY;
-                        imgX += dx;
-                        imgY += dy;
-                        startX = event.offsetX;
-                        startY = event.offsetY;
-                    } else if (resizing) {
-                        const dx = event.offsetX - startX;
-                        const dy = event.offsetY - startY;
-                        imgWidth += dx;
-                        imgHeight += dy;
-                        startX = event.offsetX;
-                        startY = event.offsetY;
-                    }
-                    // Clear canvas and redraw the image
-                    ctx.clearRect(0, 0, canvas.width, canvas.height);
-                    ctx.drawImage(img, imgX, imgY, imgWidth, imgHeight);
-                });
-
-                // Mouse up event to stop dragging/resizing
-                canvas.addEventListener('mouseup', () => {
-                    dragging = false;
-                    resizing = false;
-                });
-            };
-        };
-        reader.readAsDataURL(file);
-    };
-    imageInput.click();
-});
+            document.getElementById(`add-image-${id}`).addEventListener('click', () => {
+                const imageInput = document.createElement('input');
+                imageInput.type = 'file';
+                imageInput.accept = 'image/*';
+                imageInput.onchange = (event) => {
+                    const file = event.target.files[0];
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        const img = new Image();
+                        img.src = e.target.result;
+                        img.onload = () => {
+                            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                        };
+                    };
+                    reader.readAsDataURL(file);
+                };
+                imageInput.click();
+            });
 
             // 保存畫布
             document.getElementById(`save-note-${id}`).addEventListener('click', async () => {
