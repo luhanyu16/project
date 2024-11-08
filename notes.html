@@ -597,122 +597,122 @@
 
 
             // 新增圖片
-        //     document.getElementById(`add-image-${id}`).addEventListener('click', () => {
-        //     const imageInput = document.createElement('input');
-        //     imageInput.type = 'file';
-        //     imageInput.accept = 'image/*';
-        //     imageInput.onchange = (event) => {
-        //         const file = event.target.files[0];
-        //         const reader = new FileReader();
-        //         reader.onload = (e) => {
-        //             const img = new Image();
-        //             img.src = e.target.result;
+            document.getElementById(`add-image-${id}`).addEventListener('click', () => {
+            const imageInput = document.createElement('input');
+            imageInput.type = 'file';
+            imageInput.accept = 'image/*';
+            imageInput.onchange = (event) => {
+                const file = event.target.files[0];
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.src = e.target.result;
 
-        //             img.onload = () => {
-        //                 let imgX = 50; // 圖片初始位置
-        //                 let imgY = 50;
-        //                 let imgWidth = img.width / 2; // 圖片初始大小
-        //                 let imgHeight = img.height / 2;
-        //                 let dragging = false;
-        //                 let resizing = false;
-        //                 let resizeHandleSize = 10;
+                    img.onload = () => {
+                        let imgX = 50; // 圖片初始位置
+                        let imgY = 50;
+                        let imgWidth = img.width / 2; // 圖片初始大小
+                        let imgHeight = img.height / 2;
+                        let dragging = false;
+                        let resizing = false;
+                        let resizeHandleSize = 10;
 
-        //                 // 畫圖函數
-        //                 function drawImage() {
-        //                     ctx.clearRect(0, 0, canvas.width, canvas.height);
-        //                     ctx.drawImage(img, imgX, imgY, imgWidth, imgHeight);
+                        // 畫圖函數
+                        function drawImage() {
+                            ctx.clearRect(0, 0, canvas.width, canvas.height);
+                            ctx.drawImage(img, imgX, imgY, imgWidth, imgHeight);
 
-        //                     // 繪製控制點
-        //                     ctx.fillStyle = '#0056b3';
-        //                     ctx.fillRect(imgX + imgWidth - resizeHandleSize, imgY + imgHeight - resizeHandleSize, resizeHandleSize, resizeHandleSize);
-        //                 }
+                            // 繪製控制點
+                            ctx.fillStyle = '#0056b3';
+                            ctx.fillRect(imgX + imgWidth - resizeHandleSize, imgY + imgHeight - resizeHandleSize, resizeHandleSize, resizeHandleSize);
+                        }
 
-        //                 drawImage();
+                        drawImage();
 
-        //                 // 檢查是否點擊在控制點上
-        //                 function isOverResizeHandle(x, y) {
-        //                     return (
-        //                         x >= imgX + imgWidth - resizeHandleSize &&
-        //                         x <= imgX + imgWidth &&
-        //                         y >= imgY + imgHeight - resizeHandleSize &&
-        //                         y <= imgY + imgHeight
-        //                     );
-        //                 }
+                        // 檢查是否點擊在控制點上
+                        function isOverResizeHandle(x, y) {
+                            return (
+                                x >= imgX + imgWidth - resizeHandleSize &&
+                                x <= imgX + imgWidth &&
+                                y >= imgY + imgHeight - resizeHandleSize &&
+                                y <= imgY + imgHeight
+                            );
+                        }
 
-        //                 // 檢查是否點擊在圖片上
-        //                 function isOverImage(x, y) {
-        //                     return x >= imgX && x <= imgX + imgWidth && y >= imgY && y <= imgY + imgHeight;
-        //                 }
+                        // 檢查是否點擊在圖片上
+                        function isOverImage(x, y) {
+                            return x >= imgX && x <= imgX + imgWidth && y >= imgY && y <= imgY + imgHeight;
+                        }
 
-        //                 // 事件監聽器
-        //                 canvas.addEventListener('mousedown', (event) => {
-        //                     const mouseX = event.offsetX;
-        //                     const mouseY = event.offsetY;
+                        // 事件監聽器
+                        canvas.addEventListener('mousedown', (event) => {
+                            const mouseX = event.offsetX;
+                            const mouseY = event.offsetY;
 
-        //                     if (isOverResizeHandle(mouseX, mouseY)) {
-        //                         resizing = true;
-        //                     } else if (isOverImage(mouseX, mouseY)) {
-        //                         dragging = true;
-        //                     }
-        //                 });
+                            if (isOverResizeHandle(mouseX, mouseY)) {
+                                resizing = true;
+                            } else if (isOverImage(mouseX, mouseY)) {
+                                dragging = true;
+                            }
+                        });
 
-        //                 canvas.addEventListener('mousemove', (event) => {
-        //                     const mouseX = event.offsetX;
-        //                     const mouseY = event.offsetY;
+                        canvas.addEventListener('mousemove', (event) => {
+                            const mouseX = event.offsetX;
+                            const mouseY = event.offsetY;
 
-        //                     if (resizing) {
-        //                         imgWidth = mouseX - imgX;
-        //                         imgHeight = mouseY - imgY;
-        //                         drawImage();
-        //                     } else if (dragging) {
-        //                         imgX = mouseX - imgWidth / 2;
-        //                         imgY = mouseY - imgHeight / 2;
-        //                         drawImage();
-        //                     }
-        //                 });
+                            if (resizing) {
+                                imgWidth = mouseX - imgX;
+                                imgHeight = mouseY - imgY;
+                                drawImage();
+                            } else if (dragging) {
+                                imgX = mouseX - imgWidth / 2;
+                                imgY = mouseY - imgHeight / 2;
+                                drawImage();
+                            }
+                        });
 
-        //                 canvas.addEventListener('mouseup', () => {
-        //                     dragging = false;
-        //                     resizing = false;
-        //                 });
-        //             };
-        //         };
-        //         reader.readAsDataURL(file);
-        //     };
-        //     imageInput.click();
-        // });
-        // 
-        //     // 保存畫布
-        //     document.getElementById(`save-note-${id}`).addEventListener('click', async () => {
-        //         const textContent = document.getElementById(`text-content-${id}`).value;
-        //         const dataURL = canvas.toDataURL();
-        //         await db.collection('Users').doc(currentUser.uid).collection('Notes').doc(id).update({
-        //             canvasData: dataURL,
-        //             content: textContent,
-        //             textColor: textColorPicker.value,  // 確保文字顏色也被保存
-        //             brushSize: brushSize
-        //         });
-        //     });
+                        canvas.addEventListener('mouseup', () => {
+                            dragging = false;
+                            resizing = false;
+                        });
+                    };
+                };
+                reader.readAsDataURL(file);
+            };
+            imageInput.click();
+        });
+        
+            // 保存畫布
+            document.getElementById(`save-note-${id}`).addEventListener('click', async () => {
+                const textContent = document.getElementById(`text-content-${id}`).value;
+                const dataURL = canvas.toDataURL();
+                await db.collection('Users').doc(currentUser.uid).collection('Notes').doc(id).update({
+                    canvasData: dataURL,
+                    content: textContent,
+                    textColor: textColorPicker.value,  // 確保文字顏色也被保存
+                    brushSize: brushSize
+                });
+            });
 
-        //     // 載入保存的畫布
-        //     if (note.canvasData) {
-        //         const img = new Image();
-        //         img.src = note.canvasData;
-        //         img.onload = () => {
-        //             ctx.drawImage(img, 0, 0);
-        //         };
-        //     }
+            // 載入保存的畫布
+            if (note.canvasData) {
+                const img = new Image();
+                img.src = note.canvasData;
+                img.onload = () => {
+                    ctx.drawImage(img, 0, 0);
+                };
+            }
 
-        //     // 文字顏色選擇
-        //     const textContent = document.getElementById(`text-content-${id}`);
-        //     const textColorPicker = document.getElementById(`text-color-picker-${id}`);
-        //     textColorPicker.addEventListener('input', async (event) => {
-        //         const newColor = event.target.value;
-        //         textContent.style.color = newColor;
-        //         await db.collection('Notes').doc(id).update({
-        //             textColor: newColor
-        //         });
-        //     });
+            // 文字顏色選擇
+            const textContent = document.getElementById(`text-content-${id}`);
+            const textColorPicker = document.getElementById(`text-color-picker-${id}`);
+            textColorPicker.addEventListener('input', async (event) => {
+                const newColor = event.target.value;
+                textContent.style.color = newColor;
+                await db.collection('Notes').doc(id).update({
+                    textColor: newColor
+                });
+            });
         }
 
         // 繪圖功能
