@@ -395,7 +395,7 @@
                 });
         }
 
-       // 建立筆記元素
+      // 建立筆記元素
 function createNoteElement(id, note) {
     const noteElement = document.createElement('div');
     noteElement.className = 'note';
@@ -409,24 +409,34 @@ function createNoteElement(id, note) {
         </div>
         <canvas id="canvas-${id}" width="600" height="400"></canvas>
         <div class="canvas-tools">
-            <label for="color-picker-${id}">畫筆顏色:</label>
-            <input type="color" id="color-picker-${id}" value="#000000">
-            <label for="brush-size-${id}">畫筆粗細:</label>
-            <select id="brush-size-${id}">
-                <option value="2">2px</option>
-                <option value="5">5px</option>
-                <option value="10">10px</option>
-                <option value="15">15px</option>
-                <option value="20">20px</option>
-            </select>
-            <button id="brush-${id}">畫筆</button>
-            <button id="eraser-${id}">橡皮擦</button>
-            <button id="clear-canvas-${id}">清除畫布</button>
-            <button id="save-note-${id}">保存</button>
-            <label for="image-upload-${id}">上傳圖片:</label>
-            <input type="file" id="image-upload-${id}" accept="image/*">
-            <label for="image-scale-${id}">圖片縮放:</label>
-            <input type="range" id="image-scale-${id}" min="0.1" max="2" step="0.1" value="1">
+            <div>
+                <label for="color-picker-${id}">畫筆顏色:</label>
+                <input type="color" id="color-picker-${id}" value="#000000">
+            </div>
+            <div>
+                <label for="brush-size-${id}">畫筆粗細:</label>
+                <select id="brush-size-${id}">
+                    <option value="2">2px</option>
+                    <option value="5">5px</option>
+                    <option value="10">10px</option>
+                    <option value="15">15px</option>
+                    <option value="20">20px</option>
+                </select>
+            </div>
+            <div>
+                <button id="brush-${id}">畫筆</button>
+                <button id="eraser-${id}">橡皮擦</button>
+                <button id="clear-canvas-${id}">清除畫布</button>
+                <button id="save-note-${id}">保存</button>
+            </div>
+            <div>
+                <label for="image-upload-${id}">上傳圖片:</label>
+                <input type="file" id="image-upload-${id}" accept="image/*">
+            </div>
+            <div>
+                <label for="image-scale-${id}">圖片縮放:</label>
+                <input type="range" id="image-scale-${id}" min="0.1" max="2" step="0.1" value="1">
+            </div>
         </div>
         <div class="actions">
             <button onclick="editNote('${id}')">編輯</button>
@@ -541,6 +551,7 @@ function createNoteElement(id, note) {
         });
     });
 }
+
 
         function createSharedNoteElement(id, note) {
             const noteElement = document.createElement('div');
