@@ -436,6 +436,10 @@
             img.src = e.target.result;
 
             img.onload = () => {
+                // 將圖片繪製到畫布，然後重設繪圖起點
+                ctx.clearRect(0, 0, canvas.width, canvas.height); // 清空畫布
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height); // 繪製圖片
+                ctx.beginPath(); // 重設繪圖路徑，防止新增圖片後無法繪圖
                 let imgX = 0, imgY = 0, imgWidth = img.width, imgHeight = img.height;
                 let dragging = false;
                 let resizing = false;
