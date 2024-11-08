@@ -669,16 +669,44 @@
             }
         }
 
-     function validateEmail(email) {
+       // 檢查電子郵件格式的正則表達式
+function validateEmail(email) {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
 }
 
-// 將指定的筆記共用給特定的電子郵件地址
-async function shareNoteWithEmail(noteId) {
-    // 獲取輸入的電子郵件地址
-    const email = document.getElementById(`share-email-${noteId}`).value;
+// 編輯共用筆記
+async function editSharedNote(noteId) {
+    const textContent = document.getElementById(`text-content-${noteId}`).value;
+    const dataURL = document.getElementById(`canvas-${noteId}`).toDataURL();
 
+    try {
+        await db.collection('Users').doc(currentUser.uid).collection('Notes').doc(noteId)
+            .update({
+                content: textContent,
+                canvasData: dataURL
+            });
+        alert('共用筆記已更新');
+    } catch (error) {
+        console.error('更新共用筆記時出錯:', error);
+    }
+}
+
+// 刪除筆記
+function deleteNote(noteId) {
+    if (confirm('確定要刪除這個筆記嗎?')) {
+        db.collection('Users').doc(currentUser.uid).collection('Notes').doc(noteId).delete()
+            .then(() => {
+                displayNotes();
+            })
+            .catch(error => {
+                console.error('刪除筆記時出錯:', error);
+            });
+    }
+}
+
+// 將指定的筆記共用給特定的電子郵件地址
+async function shareNoteWithEmail(noteId, email) {
     // 檢查電子郵件格式
     if (!validateEmail(email)) {
         alert('請輸入正確的電子郵件格式');
