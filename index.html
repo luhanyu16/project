@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>登入</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        /* body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #f2f4f8;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            color: #333;
+        } */
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #a8c0ff, #3375cb);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            color: #333;
+        }
+
+        .login-container {
+            background-color: #ffffff;
+            border-radius: 10px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            max-width: 400px;
+            width: 100%;
+            text-align: center;
+        }
+
+        h1 {
+            color: #0056b3;
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+
+        button {
+            background-color: #cccccc;
+            color: #333333;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+            font-weight: 600;
+            font-size: 16px;
+        }
+
+        button:hover {
+            background-color: #999999;
+        }
+
+        .error-message {
+            color: #ff0000;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="login-container">
+        <div>
+            <h1>網頁筆記本</h1>
+        </div>
+        <div id="google-login" style="margin-top: 20px;">
+            <button id="google-login-button">連接 Google 登入</button>
+        </div>
+        <div class="error-message" id="error-message"></div>
+    </div>
+
+    <!-- 引入 Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-auth-compat.js"></script>
+    
+    <script>
+        // Firebase 初始化
+        const firebaseConfig = {
+            apiKey: "AIzaSyBEmo_Za0U52zNFBz-IikurtL0UWcco0sc",
+            authDomain: "project-f7999.firebaseapp.com",
+            projectId: "project-f7999",
+            storageBucket: "project-f7999.appspot.com",
+            messagingSenderId: "579656505169",
+            appId: "1:579656505169:web:29fc7a9ed5764e35a66570",
+            measurementId: "G-GP2NN9Y1D5"
+        };
+
+        // 初始化 Firebase
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        } else {
+            firebase.app(); // 如果已經初始化過，使用已有的實例
+        }
+
+        const auth = firebase.auth();
+
+        // Google 登入
+        const googleLoginButton = document.getElementById('google-login-button');
+        googleLoginButton.addEventListener('click', () => {
+            const provider = new firebase.auth.GoogleAuthProvider();
+            auth.signInWithPopup(provider)
+                .then((result) => {
+                    const user = result.user;
+                    console.log('登入成功:', user);
+                    // 生成用戶專屬的 notes 頁面 URL
+                    const userNotesUrl = `notes.html?uid=${user.uid}`;
+                    window.location.href = userNotesUrl; // 跳轉到專屬的筆記頁面
+                })
+                .catch((error) => {
+                    console.error('Google 登入錯誤:', error);
+                    const errorMessage = document.getElementById('error-message');
+                    errorMessage.textContent = `Google 登入失敗：${error.message}`;
+                });
+        });
+    </script>
+</body>
+
+</html>
