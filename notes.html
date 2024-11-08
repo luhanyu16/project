@@ -377,11 +377,15 @@
                         <option value="15">15px</option>
                         <option value="20">20px</option>
                     </select>
-                    <button id="add-image-${id}">新增圖片</button>
                     <button id="brush-${id}">畫筆</button>
                     <button id="eraser-${id}">橡皮擦</button>
                     <button id="clear-canvas-${id}">清除畫布</button>
+                    <button id="upload-image-${id}>上傳圖片</button> <!-- 新增上傳圖片按鈕 -->
+                    <input type="file" id="image-input-${id}" style="display: none;" accept="image/*"> <!-- 隱藏文件選擇框 -->
+                    <label for="image-scale-${id}">圖片大小:</label>
+                    <input type="range" id="image-scale-${id}" min="0.1" max="3" step="0.1" value="1">
                     <button id="save-note-${id}">保存</button>
+
                 </div>
                 <div class="actions">
                     <button onclick="editNote('${id}')">編輯</button>
@@ -391,7 +395,7 @@
             notesContainer.appendChild(noteElement);
 
             // 繪圖和編輯功能
-             const canvas = document.getElementById(`canvas-${id}`);
+            const canvas = document.getElementById(`canvas-${id}`);
             const ctx = canvas.getContext('2d');
             let drawing = false;
             let erasing = false;
@@ -402,58 +406,72 @@
             canvas.addEventListener('mouseup', () => { drawing = false; ctx.beginPath(); });
             canvas.addEventListener('mousemove', (event) => draw(event, ctx, drawing, erasing, currentColor, brushSize));
 
+            // 畫筆顏色選擇器
             document.getElementById(`color-picker-${id}`).addEventListener('input', (event) => {
                 currentColor = event.target.value;
                 erasing = false;
             });
 
+            // 畫筆大小選擇
             document.getElementById(`brush-size-${id}`).addEventListener('change', (event) => {
                 brushSize = event.target.value;
             });
 
+            // 橡皮擦模式
             document.getElementById(`eraser-${id}`).addEventListener('click', () => {
                 erasing = true;
             });
 
+            // 清除畫布
             document.getElementById(`clear-canvas-${id}`).addEventListener('click', () => {
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
             });
 
-            document.getElementById(`brush-${id}`).addEventListener('click', () => {
-                erasing = false;
-            });
-                        // 新增圖片功能
-            document.getElementById(`add-image-${id}`).addEventListener('click', () => {
-                const imageInput = document.createElement('input');
-                imageInput.type = 'file';
-                imageInput.accept = 'image/*';
-                imageInput.onchange = (event) => {
-                    const file = event.target.files[0];
-                    const reader = new FileReader();
-                    reader.onload = (e) => {
-                        const img = new Image();
-                        img.src = e.target.result;
-                        img.onload = () => {
-                            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                        };
-                    };
-                    reader.readAsDataURL(file);
-                };
-                imageInput.click();
+            // 觸發圖片上傳
+            document.getElementById(`upload-image-${id}`).addEventListener('click', () => {
+                document.getElementById(`image-input-${id}`).click();
             });
 
+            // 處理圖片上傳並顯示
+            document.getElementById(`image-input-${id}`).addEventListener('change', (event) => {
+                const file = event.target.files[0];
+                if (file) {
+                    const img = new Image();
+                    img.onload = () => {
+                        // 圖片初始顯示在畫布上
+                        ctx.clearRect(0, 0, canvas.width, canvas.height);
+                        ctx.drawImage(img, 0, 0, img.width, img.height);
+                    };
+                    img.src = URL.createObjectURL(file);
+                }
+            });
+
+            // 圖片大小調整
+            document.getElementById(`image-scale-${id}`).addEventListener('input', (event) => {
+                const scale = event.target.value;
+                const img = new Image();
+                img.onload = () => {
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    const width = img.width * scale;
+                    const height = img.height * scale;
+                    ctx.drawImage(img, 0, 0, width, height);
+                };
+                img.src = document.getElementById(`image-input-${id}`).files[0] ? URL.createObjectURL(document.getElementById(`image-input-${id}`).files[0]) : '';
+            });
+
+            // 保存筆記
             document.getElementById(`save-note-${id}`).addEventListener('click', async () => {
                 const textContent = document.getElementById(`text-content-${id}`).value;
                 const dataURL = canvas.toDataURL();
                 await db.collection('Users').doc(currentUser.uid).collection('Notes').doc(id).update({
                     canvasData: dataURL,
-                    // content: textContent,
-                    // textColor: textColorPicker.value,  // 確保文字顏色也被保存
-                    // brushSize: brushSize
+                    content: textContent,
+                    textColor: textColorPicker.value,
+                    brushSize: brushSize
                 });
             });
 
-            // 載入保存的畫布
+            // 載入已保存的畫布
             if (note.canvasData) {
                 const img = new Image();
                 img.src = note.canvasData;
@@ -486,7 +504,7 @@
             ctx.stroke();
             ctx.beginPath();
             ctx.moveTo(event.offsetX, event.offsetY);
-        }
+}
 
         // 編輯筆記
         async function editNote(noteId) {
