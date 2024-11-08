@@ -358,7 +358,7 @@
             const noteElement = document.createElement('div');
             noteElement.className = 'note';
             noteElement.innerHTML = `
-                <div class="note-category"><strong>分類:</strong> ${note.category}</div>
+               <div class="note-category"><strong>分類:</strong> ${note.category}</div>
                 <h2>${note.title}</h2>
                 <textarea id="text-content-${id}" style="color: ${note.textColor};">${note.content}</textarea>
                 <div class="text-tools">
@@ -382,6 +382,7 @@
                     <button id="eraser-${id}">橡皮擦</button>
                     <button id="clear-canvas-${id}">清除畫布</button>
                     <button id="save-note-${id}">保存</button>
+
                 </div>
                 <div class="actions">
                     <button onclick="editNote('${id}')">編輯</button>
@@ -390,15 +391,14 @@
             `;
             notesContainer.appendChild(noteElement);
 
-            const canvas = document.getElementById(`canvas-${id}`);
+            // 繪圖和編輯功能
+             const canvas = document.getElementById(`canvas-${id}`);
             const ctx = canvas.getContext('2d');
             let drawing = false;
             let erasing = false;
             let currentColor = '#000000';
             let brushSize = note.brushSize || 5;
-            let imageData = ctx.getImageData(0, 0, canvas.width, canvas.height); // 保存畫布初始狀態
 
-            // 繪畫功能
             canvas.addEventListener('mousedown', () => { drawing = true; });
             canvas.addEventListener('mouseup', () => { drawing = false; ctx.beginPath(); });
             canvas.addEventListener('mousemove', (event) => draw(event, ctx, drawing, erasing, currentColor, brushSize));
@@ -418,126 +418,107 @@
 
             document.getElementById(`clear-canvas-${id}`).addEventListener('click', () => {
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
-                imageData = ctx.getImageData(0, 0, canvas.width, canvas.height); // 清空後保存當前狀態
             });
 
             document.getElementById(`brush-${id}`).addEventListener('click', () => {
                 erasing = false;
             });
-
-            // 新增圖片
+            //新增圖片
             document.getElementById(`add-image-${id}`).addEventListener('click', () => {
-                const imageInput = document.createElement('input');
-                imageInput.type = 'file';
-                imageInput.accept = 'image/*';
-                imageInput.onchange = (event) => {
-                    const file = event.target.files[0];
-                    const reader = new FileReader();
-                    reader.onload = (e) => {
-                        const img = new Image();
-                        img.src = e.target.result;
+            const imageInput = document.createElement('input');
+            imageInput.type = 'file';
+            imageInput.accept = 'image/*';
+            imageInput.onchange = (event) => {
+                const file = event.target.files[0];
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.src = e.target.result;
 
-                        img.onload = () => {
-                            let imgX = 50;
-                            let imgY = 50;
-                            let imgWidth = img.width / 2;
-                            let imgHeight = img.height / 2;
-                            let dragging = false;
-                            let resizing = false;
-                            const resizeHandleSize = 10;
+                    img.onload = () => {
+                        let imgX = 50; // 圖片初始位置
+                        let imgY = 50;
+                        let imgWidth = img.width / 2; // 圖片初始大小
+                        let imgHeight = img.height / 2;
+                        let dragging = false;
+                        let resizing = false;
+                        let resizeHandleSize = 10;
 
-                            // 更新繪圖函數
-                            function drawImage() {
-                                ctx.putImageData(imageData, 0, 0); // 還原之前的繪圖內容
-                                ctx.drawImage(img, imgX, imgY, imgWidth, imgHeight);
+                        // 畫圖函數
+                        function drawImage() {
+                            ctx.clearRect(0, 0, canvas.width, canvas.height);
+                            ctx.drawImage(img, imgX, imgY, imgWidth, imgHeight);
 
-                                // 繪製控制點
-                                ctx.fillStyle = '#0056b3';
-                                ctx.fillRect(imgX + imgWidth - resizeHandleSize, imgY + imgHeight - resizeHandleSize, resizeHandleSize, resizeHandleSize);
+                            // 繪製控制點
+                            ctx.fillStyle = '#0056b3';
+                            ctx.fillRect(imgX + imgWidth - resizeHandleSize, imgY + imgHeight - resizeHandleSize, resizeHandleSize, resizeHandleSize);
+                        }
+
+                        drawImage();
+
+                        // 檢查是否點擊在控制點上
+                        function isOverResizeHandle(x, y) {
+                            return (
+                                x >= imgX + imgWidth - resizeHandleSize &&
+                                x <= imgX + imgWidth &&
+                                y >= imgY + imgHeight - resizeHandleSize &&
+                                y <= imgY + imgHeight
+                            );
+                        }
+
+                        // 檢查是否點擊在圖片上
+                        function isOverImage(x, y) {
+                            return x >= imgX && x <= imgX + imgWidth && y >= imgY && y <= imgY + imgHeight;
+                        }
+
+                        // 事件監聽器
+                        canvas.addEventListener('mousedown', (event) => {
+                            const mouseX = event.offsetX;
+                            const mouseY = event.offsetY;
+
+                            if (isOverResizeHandle(mouseX, mouseY)) {
+                                resizing = true;
+                            } else if (isOverImage(mouseX, mouseY)) {
+                                dragging = true;
                             }
+                        });
 
-                            drawImage();
+                        canvas.addEventListener('mousemove', (event) => {
+                            const mouseX = event.offsetX;
+                            const mouseY = event.offsetY;
 
-                            // 更新圖片後保存畫布狀態
-                            function updateCanvas() {
-                                imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                            if (resizing) {
+                                imgWidth = mouseX - imgX;
+                                imgHeight = mouseY - imgY;
+                                drawImage();
+                            } else if (dragging) {
+                                imgX = mouseX - imgWidth / 2;
+                                imgY = mouseY - imgHeight / 2;
+                                drawImage();
                             }
+                        });
 
-                            // 檢查控制點
-                            function isOverResizeHandle(x, y) {
-                                return (
-                                    x >= imgX + imgWidth - resizeHandleSize &&
-                                    x <= imgX + imgWidth &&
-                                    y >= imgY + imgHeight - resizeHandleSize &&
-                                    y <= imgY + imgHeight
-                                );
-                            }
-
-                            // 檢查圖片區域
-                            function isOverImage(x, y) {
-                                return x >= imgX && x <= imgX + imgWidth && y >= imgY && y <= imgY + imgHeight;
-                            }
-
-                            // 事件監聽
-                            canvas.addEventListener('mousedown', (event) => {
-                                const mouseX = event.offsetX;
-                                const mouseY = event.offsetY;
-
-                                if (isOverResizeHandle(mouseX, mouseY)) {
-                                    resizing = true;
-                                } else if (isOverImage(mouseX, mouseY)) {
-                                    dragging = true;
-                                }
-                            });
-
-                            canvas.addEventListener('mousemove', (event) => {
-                                const mouseX = event.offsetX;
-                                const mouseY = event.offsetY;
-
-                                if (resizing) {
-                                    imgWidth = mouseX - imgX;
-                                    imgHeight = mouseY - imgY;
-                                    drawImage();
-                                    updateCanvas();
-                                } else if (dragging) {
-                                    imgX = mouseX - imgWidth / 2;
-                                    imgY = mouseY - imgHeight / 2;
-                                    drawImage();
-                                    updateCanvas();
-                                }
-                            });
-
-                            canvas.addEventListener('mouseup', () => {
-                                dragging = false;
-                                resizing = false;
-                            });
-                        };
+                        canvas.addEventListener('mouseup', () => {
+                            dragging = false;
+                            resizing = false;
+                        });
                     };
-                    reader.readAsDataURL(file);
                 };
-                imageInput.click();
-            });
-
+                reader.readAsDataURL(file);
+            };
+            imageInput.click();
+        });
             // 保存畫布
             document.getElementById(`save-note-${id}`).addEventListener('click', async () => {
                 const textContent = document.getElementById(`text-content-${id}`).value;
-                const textColor = textColorPicker.value;  // 確保保存文字顏色
                 const dataURL = canvas.toDataURL();
-                
-                try {
-                    await db.collection('Users').doc(currentUser.uid).collection('Notes').doc(id).update({
-                        canvasData: dataURL,
-                        content: textContent,
-                        textColor: textColor,  // 保存文字顏色
-                        brushSize: brushSize   // 保存畫筆粗細
-                    });
-                    alert('筆記已成功保存！');
-                } catch (error) {
-                    console.error("保存筆記時發生錯誤：", error);
-                    alert('保存失敗，請再試一次。');
-                }
+                await db.collection('Users').doc(currentUser.uid).collection('Notes').doc(id).update({
+                    canvasData: dataURL,
+                    content: textContent,
+                    textColor: textColorPicker.value,  // 確保文字顏色也被保存
+                    brushSize: brushSize
+                });
             });
-        }
 
             // 載入保存的畫布
             if (note.canvasData) {
@@ -551,22 +532,14 @@
             // 文字顏色選擇
             const textContent = document.getElementById(`text-content-${id}`);
             const textColorPicker = document.getElementById(`text-color-picker-${id}`);
-
-            // 初始設置文字顏色
-            textContent.style.color = note.textColor || '#000000';  // 如果沒有保存的顏色，則默認黑色
-
             textColorPicker.addEventListener('input', async (event) => {
                 const newColor = event.target.value;
                 textContent.style.color = newColor;
-                
-                try {
-                    await db.collection('Users').doc(currentUser.uid).collection('Notes').doc(id).update({
-                        textColor: newColor
-                    });
-                } catch (error) {
-                    console.error("更新文字顏色時發生錯誤：", error);
-                }
+                await db.collection('Notes').doc(id).update({
+                    textColor: newColor
+                });
             });
+        }
 
         // 繪圖功能
         function draw(event, ctx, drawing, erasing, color, size) {
