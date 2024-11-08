@@ -392,7 +392,7 @@
             notesContainer.appendChild(noteElement);
 
             // 繪圖和編輯功能
-            const canvas = document.getElementById(`canvas-${id}`);
+             const canvas = document.getElementById(`canvas-${id}`);
             const ctx = canvas.getContext('2d');
             let drawing = false;
             let erasing = false;
@@ -423,180 +423,7 @@
             document.getElementById(`brush-${id}`).addEventListener('click', () => {
                 erasing = false;
             });
-
-            // const canvas = document.getElementById('canvas');
-            // const ctx = canvas.getContext('2d');
-
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-
-            let isDrawing = false;
-            let startX, startY;
-            let images = [];
-            let currentImage = null;
-            let isDragging = false;
-
-            // 初始化 Firestore
-            const firestore = firebase.firestore();
-
-            // 儲存畫布狀態的變數
-            let savedCanvasData;
-
-            // 畫畫功能
-            canvas.addEventListener('mousedown', (e) => {
-                if (checkImageHit(e.offsetX, e.offsetY)) {
-                    isDragging = true;
-                    return;
-                }
-                isDrawing = true;
-                startX = e.offsetX;
-                startY = e.offsetY;
-            });
-
-            canvas.addEventListener('mousemove', (e) => {
-                if (isDrawing) {
-                    ctx.beginPath();
-                    ctx.moveTo(startX, startY);
-                    ctx.lineTo(e.offsetX, e.offsetY);
-                    ctx.stroke();
-                    startX = e.offsetX;
-                    startY = e.offsetY;
-                    saveCanvasData();
-                } else if (isDragging && currentImage) {
-                    moveImage(e.offsetX, e.offsetY);
-                }
-            });
-
-            canvas.addEventListener('mouseup', () => {
-                isDrawing = false;
-                isDragging = false;
-                currentImage = null;
-                saveCanvasState();
-            });
-
-            // 新增圖片
-            function addImage(src) {
-                const img = new Image();
-                img.src = src;
-                img.onload = () => {
-                    const imageObj = {
-                        img: img,
-                        x: 50,
-                        y: 50,
-                        width: img.width,
-                        height: img.height
-                    };
-                    images.push(imageObj);
-                    drawCanvas();
-                };
-            }
-
-            // 繪製整個畫布內容
-            function drawCanvas() {
-                // 清空畫布
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-                // 繪製保存的繪畫內容
-                if (savedCanvasData) {
-                    const drawingImg = new Image();
-                    drawingImg.src = savedCanvasData;
-                    drawingImg.onload = () => {
-                        ctx.drawImage(drawingImg, 0, 0);
-                    };
-                }
-
-                // 繪製所有圖片
-                images.forEach((imageObj) => {
-                    ctx.drawImage(imageObj.img, imageObj.x, imageObj.y, imageObj.width, imageObj.height);
-                });
-            }
-
-            // 移動圖片
-            function moveImage(mouseX, mouseY) {
-                currentImage.x = mouseX - currentImage.width / 2;
-                currentImage.y = mouseY - currentImage.height / 2;
-                drawCanvas();
-            }
-
-            // 檢查是否點擊到圖片
-            function checkImageHit(mouseX, mouseY) {
-                for (let i = images.length - 1; i >= 0; i--) {
-                    const imageObj = images[i];
-                    if (
-                        mouseX > imageObj.x &&
-                        mouseX < imageObj.x + imageObj.width &&
-                        mouseY > imageObj.y &&
-                        mouseY < imageObj.y + imageObj.height
-                    ) {
-                        currentImage = imageObj;
-                        return true;
-                    }
-                }
-                return false;
-            }
-
-            // 保存畫布內容
-            function saveCanvasData() {
-                savedCanvasData = canvas.toDataURL();
-            }
-
-            // 保存畫布和圖片狀態到 Firestore
-            async function saveCanvasState() {
-                const imageData = images.map((imageObj) => ({
-                    src: imageObj.img.src,
-                    x: imageObj.x,
-                    y: imageObj.y,
-                    width: imageObj.width,
-                    height: imageObj.height
-                }));
-
-                await firestore.collection('canvasState').doc('state').set({
-                    drawingData: savedCanvasData,
-                    images: imageData
-                });
-            }
-
-            // 從 Firestore 還原畫布內容
-            async function loadCanvasState() {
-                const doc = await firestore.collection('canvasState').doc('state').get();
-                if (doc.exists) {
-                    const data = doc.data();
-
-                    // 還原繪畫內容
-                    const drawingImg = new Image();
-                    drawingImg.src = data.drawingData;
-                    drawingImg.onload = () => {
-                        ctx.drawImage(drawingImg, 0, 0);
-                        savedCanvasData = data.drawingData;
-                    };
-
-                    // 還原圖片內容
-                    data.images.forEach((imageData) => {
-                        const img = new Image();
-                        img.src = imageData.src;
-                        img.onload = () => {
-                            images.push({
-                                img: img,
-                                x: imageData.x,
-                                y: imageData.y,
-                                width: imageData.width,
-                                height: imageData.height
-                            });
-                            drawCanvas();
-                        };
-                    });
-                }
-            }
-
-            // 初始化時載入畫布狀態
-            window.onload = () => {
-                loadCanvasState();
-            };
-        
-
-
-
-            // 新增圖片
+            //新增圖片
             document.getElementById(`add-image-${id}`).addEventListener('click', () => {
             const imageInput = document.createElement('input');
             imageInput.type = 'file';
@@ -607,73 +434,54 @@
                 reader.onload = (e) => {
                     const img = new Image();
                     img.src = e.target.result;
-
                     img.onload = () => {
-                        let imgX = 50; // 圖片初始位置
-                        let imgY = 50;
-                        let imgWidth = img.width / 2; // 圖片初始大小
-                        let imgHeight = img.height / 2;
-                        let dragging = false;
-                        let resizing = false;
-                        let resizeHandleSize = 10;
+                        let imgWidth = img.width;
+                        let imgHeight = img.height;
+                        const canvas = document.getElementById(`canvas-${id}`);
+                        const ctx = canvas.getContext('2d');
 
-                        // 畫圖函數
-                        function drawImage() {
-                            ctx.clearRect(0, 0, canvas.width, canvas.height);
-                            ctx.drawImage(img, imgX, imgY, imgWidth, imgHeight);
+                        // 顯示調整大小的提示框
+                        const imgPreview = document.createElement('div');
+                        imgPreview.style.position = 'fixed';
+                        imgPreview.style.top = '10%';
+                        imgPreview.style.left = '10%';
+                        imgPreview.style.width = '300px';
+                        imgPreview.style.border = '1px solid #ced4da';
+                        imgPreview.style.backgroundColor = '#fff';
+                        imgPreview.style.zIndex = '1000';
+                        imgPreview.innerHTML = `
+                            <div style="padding: 10px; text-align: center;">
+                                <img id="preview-image" src="${img.src}" style="max-width: 100%; max-height: 200px;">
+                                <br>
+                                <label>寬度: <input type="number" id="img-width" value="${imgWidth}" style="width: 80px;"></label>
+                                <label>高度: <input type="number" id="img-height" value="${imgHeight}" style="width: 80px;"></label>
+                                <br>
+                                <button id="confirm-add-image">確認</button>
+                                <button id="cancel-add-image">取消</button>
+                            </div>
+                        `;
+                        document.body.appendChild(imgPreview);
 
-                            // 繪製控制點
-                            ctx.fillStyle = '#0056b3';
-                            ctx.fillRect(imgX + imgWidth - resizeHandleSize, imgY + imgHeight - resizeHandleSize, resizeHandleSize, resizeHandleSize);
-                        }
-
-                        drawImage();
-
-                        // 檢查是否點擊在控制點上
-                        function isOverResizeHandle(x, y) {
-                            return (
-                                x >= imgX + imgWidth - resizeHandleSize &&
-                                x <= imgX + imgWidth &&
-                                y >= imgY + imgHeight - resizeHandleSize &&
-                                y <= imgY + imgHeight
-                            );
-                        }
-
-                        // 檢查是否點擊在圖片上
-                        function isOverImage(x, y) {
-                            return x >= imgX && x <= imgX + imgWidth && y >= imgY && y <= imgY + imgHeight;
-                        }
-
-                        // 事件監聽器
-                        canvas.addEventListener('mousedown', (event) => {
-                            const mouseX = event.offsetX;
-                            const mouseY = event.offsetY;
-
-                            if (isOverResizeHandle(mouseX, mouseY)) {
-                                resizing = true;
-                            } else if (isOverImage(mouseX, mouseY)) {
-                                dragging = true;
-                            }
+                        // 調整寬高
+                        document.getElementById('img-width').addEventListener('input', (e) => {
+                            imgWidth = parseInt(e.target.value);
+                            document.getElementById('img-height').value = Math.round(imgWidth * (img.height / img.width));
                         });
 
-                        canvas.addEventListener('mousemove', (event) => {
-                            const mouseX = event.offsetX;
-                            const mouseY = event.offsetY;
-
-                            if (resizing) {
-                                imgWidth = mouseX - imgX;
-                                imgHeight = mouseY - imgY;
-                                drawImage();
-                            } else if (dragging) {
-                                imgX = mouseX - imgWidth / 2;
-                                imgY = mouseY - imgHeight / 2;
-                                drawImage();
-                            }
+                        document.getElementById('img-height').addEventListener('input', (e) => {
+                            imgHeight = parseInt(e.target.value);
+                            document.getElementById('img-width').value = Math.round(imgHeight * (img.width / img.height));
                         });
 
-                        canvas.addEventListener('mouseup', () => {
-                            dragging = false;
-                            resizing = false;
+                        // 確認上傳圖片
+                        document.getElementById('confirm-add-image').addEventListener('click', () => {
+                            ctx.drawImage(img, 0, 0, imgWidth, imgHeight);
+                            document.body.removeChild(imgPreview);
+                        });
+
+                        // 取消上傳圖片
+                        document.getElementById('cancel-add-image').addEventListener('click', () => {
+                            document.body.removeChild(imgPreview);
                         });
                     };
                 };
@@ -681,7 +489,7 @@
             };
             imageInput.click();
         });
-        
+
             // 保存畫布
             document.getElementById(`save-note-${id}`).addEventListener('click', async () => {
                 const textContent = document.getElementById(`text-content-${id}`).value;
