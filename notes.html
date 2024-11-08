@@ -377,12 +377,12 @@
                         <option value="15">15px</option>
                         <option value="20">20px</option>
                     </select>
-
+                    <button id="add-image-${id}">新增圖片</button>
                     <button id="brush-${id}">畫筆</button>
                     <button id="eraser-${id}">橡皮擦</button>
                     <button id="clear-canvas-${id}">清除畫布</button>
-                     <button id="upload-image-${id}">上傳圖片</button> <!-- 新增的上傳圖片按鈕 -->
                     <button id="save-note-${id}">保存</button>
+
                 </div>
                 <div class="actions">
                     <button onclick="editNote('${id}')">編輯</button>
@@ -423,7 +423,6 @@
             document.getElementById(`brush-${id}`).addEventListener('click', () => {
                 erasing = false;
             });
-
             //新增圖片
             document.getElementById(`add-image-${id}`).addEventListener('click', () => {
                 const imageInput = document.createElement('input');
@@ -444,48 +443,14 @@
                 imageInput.click();
             });
 
-            document.getElementById(`upload-image-${id}`).addEventListener('click', () => {
-            document.getElementById(`image-input-${id}`).click();
-        });
-
-        document.getElementById(`image-input-${id}`).addEventListener('change', (event) => {
-            const file = event.target.files[0];
-            if (file) {
-                const img = new Image();
-                const ctx = document.getElementById(`canvas-${id}`).getContext('2d');
-
-                img.onload = () => {
-                    let scale = 1;
-                    let imgWidth = img.width;
-                    let imgHeight = img.height;
-
-                    const drawImageWithScale = () => {
-                        ctx.clearRect(0, 0, canvas.width, canvas.height); // 清除畫布
-                        ctx.drawImage(img, 0, 0, imgWidth * scale, imgHeight * scale); // 繪製圖片
-                    };
-
-                    drawImageWithScale(); // 初次繪製圖片
-
-                    // 使用滑鼠滾輪縮放圖片
-                    canvas.addEventListener('wheel', (e) => {
-                        e.preventDefault();
-                        scale += e.deltaY * -0.001;
-                        scale = Math.min(Math.max(0.5, scale), 3); // 限制縮放範圍在0.5到3之間
-                        drawImageWithScale();
-                    });
-                };
-
-                img.src = URL.createObjectURL(file);
-            }
-        });
             // 保存畫布
-            document.getElementById(`save-note-${id}`).addEventListener('click', async () => {
+              document.getElementById(`save-note-${id}`).addEventListener('click', async () => {
                 const dataURL = canvas.toDataURL();
                 await db.collection('Users').doc(currentUser.uid).collection('Notes').doc(id).update({
                     canvasData: dataURL
                 });
             });
-
+        }
 
             // 載入保存的畫布
             if (note.canvasData) {
