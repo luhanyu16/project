@@ -94,12 +94,15 @@
     </div>
 
     <!-- 引入 Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-firestore.js"></script>
 
     <script>
-        // Firebase 初始化
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.21.0/firebase-app.js';
+        import { getAuth, GoogleAuthProvider, signInWithPopup } from 'https://www.gstatic.com/firebasejs/9.21.0/firebase-auth.js';
+        import { getFirestore, doc, getDoc, setDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/9.21.0/firebase-firestore.js';
+
         const firebaseConfig = {
             apiKey: "AIzaSyBEmo_Za0U52zNFBz-IikurtL0UWcco0sc",
             authDomain: "project-f7999.firebaseapp.com",
@@ -110,48 +113,36 @@
             measurementId: "G-GP2NN9Y1D5"
         };
 
-        // 初始化 Firebase
-        if (!firebase.apps.length) {
-            firebase.initializeApp(firebaseConfig);
-        } else {
-            firebase.app(); // 如果已經初始化過，使用已有的實例
-        }
-
-        const auth = firebase.auth();
-        const db = firebase.firestore(); // 初始化 Firestore
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
 
         // Google 登入
         const googleLoginButton = document.getElementById('google-login-button');
-        googleLoginButton.addEventListener('click', () => {
-            const provider = new firebase.auth.GoogleAuthProvider();
-            auth.signInWithPopup(provider)
-                .then((result) => {
-                    const user = result.user;
-                    console.log('登入成功:', user);
+        googleLoginButton.addEventListener('click', async () => {
+            const provider = new GoogleAuthProvider();
+            try {
+                const result = await signInWithPopup(auth, provider);
+                const user = result.user;
 
-                    // 將用戶資料寫入 Firestore
-                    const userRef = db.collection('users').doc(user.uid);
-                    userRef.get().then((doc) => {
-                        if (!doc.exists) {
-                            userRef.set({
-                                email: user.email,
-                                uid: user.uid,
-                                createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                            });
-                        }
-                    }).catch((error) => {
-                        console.error("寫入 Firestore 時發生錯誤:", error);
+                // 將用戶資料寫入 Firestore
+                const userRef = doc(db, 'users', user.uid);
+                const docSnap = await getDoc(userRef);
+
+                if (!docSnap.exists()) {
+                    await setDoc(userRef, {
+                        email: user.email,
+                        uid: user.uid,
+                        createdAt: serverTimestamp()
                     });
-
-                    // 生成用戶專屬的 notes 頁面 URL
-                    const userNotesUrl = `notes.html?uid=${user.uid}`;
-                    window.location.href = userNotesUrl; // 跳轉到專屬的筆記頁面
-                })
-                .catch((error) => {
-                    console.error('Google 登入錯誤:', error);
-                    const errorMessage = document.getElementById('error-message');
-                    errorMessage.textContent = `Google 登入失敗：${error.message}`;
-                });
+                    console.log("使用者資料已成功存入 Firestore");
+                }
+                // 跳轉到專屬的筆記頁面
+                window.location.href = `notes.html?uid=${user.uid}`;
+            } catch (error) {
+                console.error('Google 登入錯誤:', error);
+                document.getElementById('error-message').textContent = `Google 登入失敗：${error.message}`;
+            }
         });
     </script>
 </body>
