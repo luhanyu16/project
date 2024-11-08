@@ -449,9 +449,9 @@
                 const dataURL = canvas.toDataURL();
                 await db.collection('Users').doc(currentUser.uid).collection('Notes').doc(id).update({
                     canvasData: dataURL,
-                    // content: textContent,
-                    // textColor: textColorPicker.value,  // 確保文字顏色也被保存
-                    // brushSize: brushSize
+                    content: textContent,
+                    textColor: textColorPicker.value,  // 確保文字顏色也被保存
+                    brushSize: brushSize
                 });
             });
 
