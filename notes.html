@@ -425,23 +425,70 @@
             });
             //新增圖片
             document.getElementById(`add-image-${id}`).addEventListener('click', () => {
-                const imageInput = document.createElement('input');
-                imageInput.type = 'file';
-                imageInput.accept = 'image/*';
-                imageInput.onchange = (event) => {
-                    const file = event.target.files[0];
-                    const reader = new FileReader();
-                    reader.onload = (e) => {
-                        const img = new Image();
-                        img.src = e.target.result;
-                        img.onload = () => {
-                            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                        };
+            const imageInput = document.createElement('input');
+            imageInput.type = 'file';
+            imageInput.accept = 'image/*';
+            imageInput.onchange = (event) => {
+                const file = event.target.files[0];
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.src = e.target.result;
+                    img.onload = () => {
+                        let imgWidth = img.width;
+                        let imgHeight = img.height;
+                        const canvas = document.getElementById(`canvas-${id}`);
+                        const ctx = canvas.getContext('2d');
+
+                        // 顯示調整大小的提示框
+                        const imgPreview = document.createElement('div');
+                        imgPreview.style.position = 'fixed';
+                        imgPreview.style.top = '10%';
+                        imgPreview.style.left = '10%';
+                        imgPreview.style.width = '300px';
+                        imgPreview.style.border = '1px solid #ced4da';
+                        imgPreview.style.backgroundColor = '#fff';
+                        imgPreview.style.zIndex = '1000';
+                        imgPreview.innerHTML = `
+                            <div style="padding: 10px; text-align: center;">
+                                <img id="preview-image" src="${img.src}" style="max-width: 100%; max-height: 200px;">
+                                <br>
+                                <label>寬度: <input type="number" id="img-width" value="${imgWidth}" style="width: 80px;"></label>
+                                <label>高度: <input type="number" id="img-height" value="${imgHeight}" style="width: 80px;"></label>
+                                <br>
+                                <button id="confirm-add-image">確認</button>
+                                <button id="cancel-add-image">取消</button>
+                            </div>
+                        `;
+                        document.body.appendChild(imgPreview);
+
+                        // 調整寬高
+                        document.getElementById('img-width').addEventListener('input', (e) => {
+                            imgWidth = parseInt(e.target.value);
+                            document.getElementById('img-height').value = Math.round(imgWidth * (img.height / img.width));
+                        });
+
+                        document.getElementById('img-height').addEventListener('input', (e) => {
+                            imgHeight = parseInt(e.target.value);
+                            document.getElementById('img-width').value = Math.round(imgHeight * (img.width / img.height));
+                        });
+
+                        // 確認上傳圖片
+                        document.getElementById('confirm-add-image').addEventListener('click', () => {
+                            ctx.drawImage(img, 0, 0, imgWidth, imgHeight);
+                            document.body.removeChild(imgPreview);
+                        });
+
+                        // 取消上傳圖片
+                        document.getElementById('cancel-add-image').addEventListener('click', () => {
+                            document.body.removeChild(imgPreview);
+                        });
                     };
-                    reader.readAsDataURL(file);
                 };
-                imageInput.click();
-            });
+                reader.readAsDataURL(file);
+            };
+            imageInput.click();
+        });
 
             // 保存畫布
             document.getElementById(`save-note-${id}`).addEventListener('click', async () => {
