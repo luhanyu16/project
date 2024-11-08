@@ -396,6 +396,7 @@
         }
 
       // 建立筆記元素
+// 建立筆記元素
 function createNoteElement(id, note) {
     const noteElement = document.createElement('div');
     noteElement.className = 'note';
@@ -429,14 +430,13 @@ function createNoteElement(id, note) {
                 <button id="clear-canvas-${id}">清除畫布</button>
                 <button id="save-note-${id}">保存</button>
             </div>
-            <div>
-                <label for="image-upload-${id}">上傳圖片:</label>
-                <input type="file" id="image-upload-${id}" accept="image/*">
-            </div>
-            <div>
-                <label for="image-scale-${id}">圖片縮放:</label>
-                <input type="range" id="image-scale-${id}" min="0.1" max="2" step="0.1" value="1">
-            </div>
+        </div>
+        <div class="image-tools">
+            <label for="image-upload-${id}">上傳圖片:</label>
+            <input type="file" id="image-upload-${id}" accept="image/*">
+            <label for="image-scale-${id}">圖片縮放:</label>
+            <input type="range" id="image-scale-${id}" min="0.1" max="2" step="0.1" value="1">
+            <div id="image-container-${id}" style="text-align: center; margin-top: 10px;"></div>
         </div>
         <div class="actions">
             <button onclick="editNote('${id}')">編輯</button>
@@ -475,7 +475,6 @@ function createNoteElement(id, note) {
 
     document.getElementById(`clear-canvas-${id}`).addEventListener('click', () => {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-        uploadedImage = null; // 清除已上傳的圖片
     });
 
     document.getElementById(`brush-${id}`).addEventListener('click', () => {
@@ -493,8 +492,10 @@ function createNoteElement(id, note) {
         });
     });
 
-    // 上傳圖片並顯示在畫布上
+    // 單獨顯示並調整上傳圖片的縮放
     const imageUpload = document.getElementById(`image-upload-${id}`);
+    const imageContainer = document.getElementById(`image-container-${id}`);
+    const imageScaleInput = document.getElementById(`image-scale-${id}`);
     imageUpload.addEventListener('change', (event) => {
         const file = event.target.files[0];
         if (file) {
@@ -502,34 +503,21 @@ function createNoteElement(id, note) {
             reader.onload = (e) => {
                 uploadedImage = new Image();
                 uploadedImage.src = e.target.result;
-                uploadedImage.onload = () => {
-                    ctx.clearRect(0, 0, canvas.width, canvas.height);
-                    drawImageOnCanvas();
-                };
+                uploadedImage.style.width = `${imageScale * 100}%`; // 根據縮放設置初始寬度
+                uploadedImage.style.height = 'auto';
+                imageContainer.innerHTML = ''; // 清空容器再添加圖片
+                imageContainer.appendChild(uploadedImage);
             };
             reader.readAsDataURL(file);
         }
     });
 
-    // 縮放圖片
-    const imageScaleInput = document.getElementById(`image-scale-${id}`);
     imageScaleInput.addEventListener('input', (event) => {
         imageScale = parseFloat(event.target.value);
         if (uploadedImage) {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            drawImageOnCanvas();
+            uploadedImage.style.width = `${imageScale * 100}%`;
         }
     });
-
-    // 在畫布上繪製圖片並根據縮放比例調整大小
-    function drawImageOnCanvas() {
-        const width = uploadedImage.width * imageScale;
-        const height = uploadedImage.height * imageScale;
-        const x = (canvas.width - width) / 2;
-        const y = (canvas.height - height) / 2;
-        ctx.clearRect(0, 0, canvas.width, canvas.height); // 清除畫布
-        ctx.drawImage(uploadedImage, x, y, width, height); // 繪製圖片
-    }
 
     // 載入保存的畫布
     if (note.canvasData) {
@@ -551,6 +539,7 @@ function createNoteElement(id, note) {
         });
     });
 }
+
 
 
         function createSharedNoteElement(id, note) {
