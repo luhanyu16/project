@@ -434,54 +434,73 @@
                 reader.onload = (e) => {
                     const img = new Image();
                     img.src = e.target.result;
+
                     img.onload = () => {
-                        let imgWidth = img.width;
-                        let imgHeight = img.height;
-                        const canvas = document.getElementById(`canvas-${id}`);
-                        const ctx = canvas.getContext('2d');
+                        let imgX = 50; // 圖片初始位置
+                        let imgY = 50;
+                        let imgWidth = img.width / 2; // 圖片初始大小
+                        let imgHeight = img.height / 2;
+                        let dragging = false;
+                        let resizing = false;
+                        let resizeHandleSize = 10;
 
-                        // 顯示調整大小的提示框
-                        const imgPreview = document.createElement('div');
-                        imgPreview.style.position = 'fixed';
-                        imgPreview.style.top = '10%';
-                        imgPreview.style.left = '10%';
-                        imgPreview.style.width = '300px';
-                        imgPreview.style.border = '1px solid #ced4da';
-                        imgPreview.style.backgroundColor = '#fff';
-                        imgPreview.style.zIndex = '1000';
-                        imgPreview.innerHTML = `
-                            <div style="padding: 10px; text-align: center;">
-                                <img id="preview-image" src="${img.src}" style="max-width: 100%; max-height: 200px;">
-                                <br>
-                                <label>寬度: <input type="number" id="img-width" value="${imgWidth}" style="width: 80px;"></label>
-                                <label>高度: <input type="number" id="img-height" value="${imgHeight}" style="width: 80px;"></label>
-                                <br>
-                                <button id="confirm-add-image">確認</button>
-                                <button id="cancel-add-image">取消</button>
-                            </div>
-                        `;
-                        document.body.appendChild(imgPreview);
+                        // 畫圖函數
+                        function drawImage() {
+                            ctx.clearRect(0, 0, canvas.width, canvas.height);
+                            ctx.drawImage(img, imgX, imgY, imgWidth, imgHeight);
 
-                        // 調整寬高
-                        document.getElementById('img-width').addEventListener('input', (e) => {
-                            imgWidth = parseInt(e.target.value);
-                            document.getElementById('img-height').value = Math.round(imgWidth * (img.height / img.width));
+                            // 繪製控制點
+                            ctx.fillStyle = '#0056b3';
+                            ctx.fillRect(imgX + imgWidth - resizeHandleSize, imgY + imgHeight - resizeHandleSize, resizeHandleSize, resizeHandleSize);
+                        }
+
+                        drawImage();
+
+                        // 檢查是否點擊在控制點上
+                        function isOverResizeHandle(x, y) {
+                            return (
+                                x >= imgX + imgWidth - resizeHandleSize &&
+                                x <= imgX + imgWidth &&
+                                y >= imgY + imgHeight - resizeHandleSize &&
+                                y <= imgY + imgHeight
+                            );
+                        }
+
+                        // 檢查是否點擊在圖片上
+                        function isOverImage(x, y) {
+                            return x >= imgX && x <= imgX + imgWidth && y >= imgY && y <= imgY + imgHeight;
+                        }
+
+                        // 事件監聽器
+                        canvas.addEventListener('mousedown', (event) => {
+                            const mouseX = event.offsetX;
+                            const mouseY = event.offsetY;
+
+                            if (isOverResizeHandle(mouseX, mouseY)) {
+                                resizing = true;
+                            } else if (isOverImage(mouseX, mouseY)) {
+                                dragging = true;
+                            }
                         });
 
-                        document.getElementById('img-height').addEventListener('input', (e) => {
-                            imgHeight = parseInt(e.target.value);
-                            document.getElementById('img-width').value = Math.round(imgHeight * (img.width / img.height));
+                        canvas.addEventListener('mousemove', (event) => {
+                            const mouseX = event.offsetX;
+                            const mouseY = event.offsetY;
+
+                            if (resizing) {
+                                imgWidth = mouseX - imgX;
+                                imgHeight = mouseY - imgY;
+                                drawImage();
+                            } else if (dragging) {
+                                imgX = mouseX - imgWidth / 2;
+                                imgY = mouseY - imgHeight / 2;
+                                drawImage();
+                            }
                         });
 
-                        // 確認上傳圖片
-                        document.getElementById('confirm-add-image').addEventListener('click', () => {
-                            ctx.drawImage(img, 0, 0, imgWidth, imgHeight);
-                            document.body.removeChild(imgPreview);
-                        });
-
-                        // 取消上傳圖片
-                        document.getElementById('cancel-add-image').addEventListener('click', () => {
-                            document.body.removeChild(imgPreview);
+                        canvas.addEventListener('mouseup', () => {
+                            dragging = false;
+                            resizing = false;
                         });
                     };
                 };
