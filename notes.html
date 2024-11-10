@@ -199,21 +199,6 @@
             color: #0056b3;
             font-weight: 600;
         }
-        .editable-text {
-            width: 100%;
-            min-height: 120px;
-            padding: 12px;
-            font-size: 16px;
-            border: 1px solid #ced4da;
-            border-radius: 8px;
-            box-sizing: border-box;
-            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
-            background-color: #ffffff;
-            color: #333;
-            overflow-wrap: break-word;
-            white-space: pre-wrap; /* 讓空白字符保持換行 */
-        }
-
     </style>
 </head>
 
@@ -339,6 +324,7 @@
             });
         }
 
+
         // 搜尋筆記
         const searchButton = document.getElementById('search-button');
         searchButton.addEventListener('click', searchNotes);
@@ -374,13 +360,12 @@
             noteElement.innerHTML = `
                <div class="note-category"><strong>分類:</strong> ${note.category}</div>
                 <h2>${note.title}</h2>
-                <div id="text-content-${id}" contenteditable="true" class="editable-text" style="color: ${note.textColor};">${note.content}</div>
+                <textarea id="text-content-${id}" style="color: ${note.textColor};">${note.content}</textarea>
                 <div class="text-tools">
                     <label for="text-color-picker-${id}">文字顏色:</label>
                     <input type="color" id="text-color-picker-${id}" value="${note.textColor}">
-                    <button id="apply-text-color-${id}">變更顏色</button>
                 </div>
-                <canvas id="canvas-${id}" width="600" height="400"></canvas>
+                <canvas id="canvas-${id}" width="800" height="600"></canvas>
                 <div class="canvas-tools">
                     <label for="color-picker-${id}">畫筆顏色:</label>
                     <input type="color" id="color-picker-${id}" value="#000000">
@@ -392,10 +377,13 @@
                         <option value="15">15px</option>
                         <option value="20">20px</option>
                     </select>
+                    <button id="add-image-${id}">新增圖片</button>
+                    <button id="toggle-draw-mode-${id}">切換到繪圖模式</button>
                     <button id="brush-${id}">畫筆</button>
                     <button id="eraser-${id}">橡皮擦</button>
                     <button id="clear-canvas-${id}">清除畫布</button>
                     <button id="save-note-${id}">保存</button>
+
                 </div>
                 <div class="actions">
                     <button onclick="editNote('${id}')">編輯</button>
@@ -405,10 +393,11 @@
             notesContainer.appendChild(noteElement);
 
             // 繪圖和編輯功能
-             const canvas = document.getElementById(`canvas-${id}`);
+            const canvas = document.getElementById(`canvas-${id}`);
             const ctx = canvas.getContext('2d');
             let drawing = false;
             let erasing = false;
+            let drawMode = false; // 是否處於繪圖模式
             let currentColor = '#000000';
             let brushSize = note.brushSize || 5;
 
@@ -437,15 +426,122 @@
                 erasing = false;
             });
 
+            // 切換繪圖模式按鈕
+            document.getElementById(`toggle-draw-mode-${id}`).addEventListener('click', () => {
+                drawMode = true;
+                // if (drawMode) {
+                //     alert("已切換到繪圖模式");
+                // } else {
+                //     alert("已切換到圖片編輯模式");
+                // }
+            });
+
+            //新增圖片
+            document.getElementById(`add-image-${id}`).addEventListener('click', () => {
+            const imageInput = document.createElement('input');
+            imageInput.type = 'file';
+            imageInput.accept = 'image/*';
+            imageInput.onchange = (event) => {
+                const file = event.target.files[0];
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.src = e.target.result;
+
+                    img.onload = () => {
+                        let imgX = 50; // 圖片初始位置
+                        let imgY = 50;
+                        let imgWidth = img.width / 2; // 圖片初始大小
+                        let imgHeight = img.height / 2;
+                        let dragging = false;
+                        let resizing = false;
+                        let resizeHandleSize = 10;
+
+                        // 畫圖函數
+                        function drawImage() {
+                            ctx.clearRect(0, 0, canvas.width, canvas.height);
+                            ctx.drawImage(img, imgX, imgY, imgWidth, imgHeight);
+
+                            // 繪製控制點
+                            ctx.fillStyle = '#0056b3';
+                            ctx.fillRect(imgX + imgWidth - resizeHandleSize, imgY + imgHeight - resizeHandleSize, resizeHandleSize, resizeHandleSize);
+                        }
+
+                        drawImage();
+
+                        // 檢查是否點擊在控制點上
+                        function isOverResizeHandle(x, y) {
+                            return (
+                                x >= imgX + imgWidth - resizeHandleSize &&
+                                x <= imgX + imgWidth &&
+                                y >= imgY + imgHeight - resizeHandleSize &&
+                                y <= imgY + imgHeight
+                            );
+                        }
+
+                        // 檢查是否點擊在圖片上
+                        function isOverImage(x, y) {
+                            return x >= imgX && x <= imgX + imgWidth && y >= imgY && y <= imgY + imgHeight;
+                        }
+
+                        // 事件監聽器
+                        canvas.addEventListener('mousedown', (event) => {
+                            const mouseX = event.offsetX;
+                            const mouseY = event.offsetY;
+
+                            if (isOverResizeHandle(mouseX, mouseY)) {
+                                resizing = true;
+                            } else if (isOverImage(mouseX, mouseY)) {
+                                dragging = true;
+                            }
+                        });
+
+                        canvas.addEventListener('mousemove', (event) => {
+                            const mouseX = event.offsetX;
+                            const mouseY = event.offsetY;
+
+                            if (resizing) {
+                                imgWidth = mouseX - imgX;
+                                imgHeight = mouseY - imgY;
+                                drawImage();
+                            } else if (dragging) {
+                                imgX = mouseX - imgWidth / 2;
+                                imgY = mouseY - imgHeight / 2;
+                                drawImage();
+                            }
+                        });
+
+                        canvas.addEventListener('mouseup', () => {
+                            dragging = false;
+                            resizing = false;
+                        });
+                    };
+                };
+                reader.readAsDataURL(file);
+            };
+            imageInput.click();
+        });
+            // 保存畫布
             document.getElementById(`save-note-${id}`).addEventListener('click', async () => {
-                const textContent = document.getElementById(`text-content-${id}`).value;
-                const dataURL = canvas.toDataURL();
-                await db.collection('Users').doc(currentUser.uid).collection('Notes').doc(id).update({
-                    canvasData: dataURL,
-                    content: textContent,
-                    textColor: textColorPicker.value,  // 確保文字顏色也被保存
-                    brushSize: brushSize
-                });
+                try {
+                    const textContent = document.getElementById(`text-content-${id}`).value;
+                    const dataURL = canvas.toDataURL();
+                    const textColor = document.getElementById(`text-color-picker-${id}`).value;
+                    const brushSize = document.getElementById(`brush-size-${id}`).value;
+
+                    // 更新 Firebase 中的筆記資料
+                    await db.collection('Users').doc(currentUser.uid).collection('Notes').doc(id).update({
+                        canvasData: dataURL,
+                        content: textContent,
+                        textColor: textColor,
+                        brushSize: parseInt(brushSize, 10),
+                    });
+
+                    alert('筆記已成功保存！');
+                } catch (error) {
+                    console.error('保存筆記時發生錯誤:', error);
+                    alert('保存失敗，請重試。');
+                }
             });
 
             // 載入保存的畫布
@@ -460,30 +556,22 @@
             // 文字顏色選擇
             const textContent = document.getElementById(`text-content-${id}`);
             const textColorPicker = document.getElementById(`text-color-picker-${id}`);
-            const applyTextColorButton = document.getElementById(`apply-text-color-${id}`);
-
-            applyTextColorButton.addEventListener('click', () => {
-            const newColor = textColorPicker.value;
-
-            const selection = window.getSelection();
-            if (selection.rangeCount > 0 && selection.toString()) {
-                const range = selection.getRangeAt(0);
-                const span = document.createElement('span');
-                span.style.color = newColor;
-                range.surroundContents(span);
-            } else {
-                alert('請先選取文字');
-            }
-        });
-            }
+            textColorPicker.addEventListener('input', async (event) => {
+                const newColor = event.target.value;
+                textContent.style.color = newColor;
+                await db.collection('Notes').doc(id).update({
+                    textColor: newColor
+                });
+            });
+        }
 
         // 繪圖功能
-        function draw(event, ctx, drawing, erasing, color, size) {
-            if (!drawing) return;
+        function draw(event, ctx, drawing, erasing, currentColor, brushSize) {
+            if (!drawing || !drawMode) return;
 
-            ctx.lineWidth = size;
+            ctx.lineWidth = brushSize;
             ctx.lineCap = 'round';
-            ctx.strokeStyle = erasing ? '#ffffff' : color;
+            ctx.strokeStyle = erasing ? '#ffffff' : currentColor;
 
             ctx.lineTo(event.offsetX, event.offsetY);
             ctx.stroke();
