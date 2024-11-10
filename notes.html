@@ -447,10 +447,19 @@
         const textColorPicker = document.getElementById(`text-color-picker-${id}`);
         const applyColorButton = document.getElementById(`apply-color-button-${id}`);
 
-        applyColorButton.addEventListener('click', () => {
+        applyColorButton.addEventListener("click", () => {
             const selectedColor = textColorPicker.value;
-            document.execCommand('styleWithCSS', false, true);  // 啟用 CSS 樣式化
-            document.execCommand('foreColor', false, selectedColor);  // 應用新顏色
+
+            // 確保支援 execCommand 方法
+            if (typeof document.execCommand === "function") {
+                // 先啟用 CSS 設定
+                document.execCommand("styleWithCSS", false, true);
+
+                // 將選取文字顏色變更為選擇的顏色
+                document.execCommand("foreColor", false, selectedColor);
+            } else {
+                console.warn("此瀏覽器不支援 execCommand 方法。");
+            }
         });
                 }
 
