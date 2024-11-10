@@ -159,7 +159,7 @@
         .note-category {
             margin-bottom: 12px;
             font-size: 16px;
-            color: #000000;
+            color: #0056b3;
             font-weight: 600;
         }
 
@@ -371,9 +371,8 @@
             const noteElement = document.createElement('div');
             noteElement.className = 'note';
             noteElement.innerHTML = `
-                <div class="note-category"><strong>分類：</strong> ${note.category}
-                <h2 class="note-category">${note.title}</h2>
-                </div>
+               <div class="note-category"><strong>分類:</strong> ${note.category}</div>
+                <h2>${note.title}</h2>
                 <div id="text-content-${id}" contenteditable="true" class="editable-text" style="color: ${note.textColor};">${note.content}</div>
                 <div class="text-tools">
                     <label for="text-color-picker-${id}">文字顏色:</label>
