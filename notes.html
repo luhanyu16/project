@@ -371,8 +371,9 @@
             const noteElement = document.createElement('div');
             noteElement.className = 'note';
             noteElement.innerHTML = `
-               <div class="note-category"><strong>分類：</strong> ${note.category}</div>
-                <div class="note-category"><h2>${note.title}</h2></div>
+                <div class="note-category"><strong>分類：</strong> ${note.category}
+                <h2>${note.title}</h2>
+                </div>
                 <div id="text-content-${id}" contenteditable="true" class="editable-text" style="color: ${note.textColor};">${note.content}</div>
                 <div class="text-tools">
                     <label for="text-color-picker-${id}">文字顏色:</label>
