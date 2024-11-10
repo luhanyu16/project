@@ -566,12 +566,12 @@
         }
 
         // 繪圖功能
-        function draw(event, ctx, drawing, erasing, currentColor, brushSize) {
-            if (!drawing || !drawMode) return;
+        function draw(event, ctx, drawing, erasing, color, size) {
+            if (!drawing) return;
 
-            ctx.lineWidth = brushSize;
+            ctx.lineWidth = size;
             ctx.lineCap = 'round';
-            ctx.strokeStyle = erasing ? '#ffffff' : currentColor;
+            ctx.strokeStyle = erasing ? '#ffffff' : color;
 
             ctx.lineTo(event.offsetX, event.offsetY);
             ctx.stroke();
