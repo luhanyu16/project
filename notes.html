@@ -363,7 +363,7 @@
                 <div class="text-tools">
                     <label for="text-color-picker-${id}">文字顏色:</label>
                     <input type="color" id="text-color-picker-${id}" value="${note.textColor}">
-                    <button id="highlight-text-${id}">改變選取文字顏色</button>
+                    <button id="apply-text-color-${id}">應用顏色</button> <!-- 新增應用顏色按鈕 -->
                 </div>
                 <canvas id="canvas-${id}" width="600" height="400"></canvas>
                 <div class="canvas-tools">
@@ -422,19 +422,6 @@
                 erasing = false;
             });
 
-            // 新增選取文字變色功能
-            document.getElementById(`highlight-text-${id}`).addEventListener('click', () => {
-                const selection = window.getSelection();
-                const range = selection.getRangeAt(0);
-
-                if (!selection.isCollapsed) { // 檢查是否有選取文字
-                    const span = document.createElement("span");
-                    span.style.color = textColorPicker.value;  // 使用當前顏色選擇器的值
-                    range.surroundContents(span);  // 包裝選取文字
-                    selection.removeAllRanges();  // 清除選取狀態
-                }
-            });
-
             document.getElementById(`save-note-${id}`).addEventListener('click', async () => {
                 const textContent = document.getElementById(`text-content-${id}`).value;
                 const dataURL = canvas.toDataURL();
@@ -458,10 +445,15 @@
             // 文字顏色選擇
             const textContent = document.getElementById(`text-content-${id}`);
             const textColorPicker = document.getElementById(`text-color-picker-${id}`);
-            textColorPicker.addEventListener('input', async (event) => {
-                const newColor = event.target.value;
+            const applyTextColorButton = document.getElementById(`apply-text-color-${id}`);
+
+            // 當點擊「應用顏色」按鈕時，更新選取的文字顏色
+            applyTextColorButton.addEventListener('click', async () => {
+                const newColor = textColorPicker.value;
                 textContent.style.color = newColor;
-                await db.collection('Notes').doc(id).update({
+
+                // 保存顏色到資料庫
+                await db.collection('Users').doc(currentUser.uid).collection('Notes').doc(id).update({
                     textColor: newColor
                 });
             });
