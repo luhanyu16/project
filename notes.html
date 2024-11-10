@@ -379,8 +379,8 @@
                     <input type="color" id="text-color-picker-${id}" value="${note.textColor}">
                     <button id="apply-text-color-${id}">變更顏色</button>
                 </div>
-                <input type="file" id="upload-images-${id}" accept="image/*" multiple>
-                <div id="uploaded-images-${id}" style="display: flex; flex-wrap: wrap;"></div>
+                <input type="file" id="upload-image-${id}" accept="image/*">
+                <img id="uploaded-image-${id}" style="display:none; max-width: 100%; height: auto;">
                 <canvas id="canvas-${id}" width="600" height="400"></canvas>
                 <div class="canvas-tools">
                     <label for="color-picker-${id}">畫筆顏色:</label>
@@ -462,7 +462,7 @@
 
             // 載入保存的圖片
             if (note.imageSrc) {
-                const uploadedImage = document.getElementById(`uploaded-images-${id}`);
+                const uploadedImage = document.getElementById(`uploaded-image-${id}`);
                 uploadedImage.src = note.imageSrc;  // 將圖片的 dataURL 設置為 <img> 的 src
                 uploadedImage.style.display = 'block';  // 確保圖片顯示
             }
@@ -486,43 +486,21 @@
             });
 
             // 處理圖片上傳
-            document.getElementById(`upload-images-${id}`).addEventListener('change', function(event) {
-                const files = event.target.files;
-                if (files.length > 0) {
-                    const uploadedImagesContainer = document.getElementById(`uploaded-images-${id}`);
-                    uploadedImagesContainer.innerHTML = ''; // 清空現有的圖片
+            document.getElementById(`upload-image-${id}`).addEventListener('change', function(event) {
+                const file = event.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        const uploadedImage = document.getElementById(`uploaded-image-${id}`);
+                        uploadedImage.src = e.target.result; // 設置圖片的 src 為 dataURL
+                        uploadedImage.style.display = 'block'; // 顯示圖片
 
-                    // 儲存所有圖片的dataURL
-                    let imageURLs = [];
-
-                    Array.from(files).forEach((file, index) => {
-                        const reader = new FileReader();
-                        reader.onload = function(e) {
-                            // 創建一個 <img> 標籤來顯示圖片
-                            const img = document.createElement('img');
-                            img.src = e.target.result; // 設定圖片的 dataURL
-                            img.style.maxWidth = '100px';
-                            img.style.margin = '10px';
-                            uploadedImagesContainer.appendChild(img);
-
-                            // 儲存每個圖片的 dataURL
-                            imageURLs.push(e.target.result);
-
-                            // 儲存圖片資料到資料庫
-                            if (index === files.length - 1) { // 所有圖片讀取完後，儲存圖片
-                                saveImagesToDatabase(id, imageURLs);
-                            }
-                        };
-                        reader.readAsDataURL(file); // 讀取每個圖片的檔案
-                    });
+                        // 儲存圖片資料到資料庫
+                        const dataURL = reader.result;
+                        saveImageToDatabase(id, dataURL);
+                    };
+                    reader.readAsDataURL(file); // 讀取圖片為 dataURL
                 }
-            });
-        }
-
-        // 儲存多個圖片資料到資料庫
-        async function saveImagesToDatabase(id, imageURLs) {
-            await db.collection('Users').doc(currentUser.uid).collection('Notes').doc(id).update({
-                imageSrc: imageURLs // 儲存圖片的dataURL作為陣列
             });
         }
 
@@ -541,11 +519,11 @@
         }
 
         // 儲存圖片資料到資料庫
-        // async function saveImageToDatabase(id, dataURL) {
-        //     await db.collection('Users').doc(currentUser.uid).collection('Notes').doc(id).update({
-        //         imageSrc: dataURL // 儲存圖片的 dataURL
-        //     });
-        // }
+        async function saveImageToDatabase(id, dataURL) {
+            await db.collection('Users').doc(currentUser.uid).collection('Notes').doc(id).update({
+                imageSrc: dataURL // 儲存圖片的 dataURL
+            });
+        }
 
         // 儲存畫布內容至資料庫
         async function saveCanvasDataToDatabase(id, canvas) {
