@@ -1,144 +1,183 @@
 <!DOCTYPE html>
-<html lang="zh-TW">
+<html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>便條紙</title>
+    <title>網頁筆記</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
     <style>
-        .note {
-            width: 300px;
-            height: 300px;
-            background-color: #FFFBCC;
-            padding: 10px;
-            margin: 10px;
-            border: 1px solid #CCC;
-            display: inline-block;
-            position: relative;
-            resize: both;
-            overflow: auto;
+        /* 基本樣式 */
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #f2f4f8;
+            margin: 0;
+            padding: 0;
+            color: #333;
         }
-        .canvas-container {
-            border: 1px solid #333;
-            width: 100%;
-            height: 100%;
+
+        .container {
+            max-width: 1000px;
+            margin: 40px auto;
+            padding: 20px;
+            background-color: #ffffff;
+            border-radius: 15px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+            box-sizing: border-box;
         }
-        canvas {
-            width: 100%;
-            height: 100%;
-            background-color: white;
-        }
-        .canvas-tools {
+
+        .header {
             display: flex;
-            justify-content: space-between;
-            margin-bottom: 5px;
+            justify-content: flex-end;
+            align-items: center;
+            margin-bottom: 40px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #0056b3;
+            margin-bottom: 40px;
+            font-weight: 600;
+            font-size: 28px;
+        }
+
+        .note, .editable-text, .canvas-tools, .text-tools, .actions button, #search-container, #login-button, #logout-button, #new-note, #search-input, #search-button {
+            /* 顏色和樣式設置 */
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            padding: 12px;
+        }
+
+        #login-button:hover, #logout-button:hover, #new-note:hover, #search-button:hover, .actions button:hover {
+            background-color: #999999;
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+        }
+        
+        /* 其他樣式 */
+        .note textarea {
+            width: 100%;
+            height: 120px;
+        }
+
+        .note-category, #search-input, #text-color-picker, .text-tools label, #upload-image {
+            font-weight: 600;
+        }
+
+        #canvas {
+            cursor: crosshair;
         }
     </style>
 </head>
+
 <body>
-    <div id="note-container"></div>
-    <button id="add-note-btn">新增便條紙</button>
+    <div class="container">
+        <h1>網頁筆記</h1>
+        <div class="header">
+            <button id="login-button">Google 登入</button>
+            <button id="new-note" style="display: none;">新增筆記</button>
+            <button id="logout-button" style="display: none;">登出</button>
+        </div>
 
+        <!-- 搜尋輸入框和按鈕 -->
+        <div id="search-container" style="display: none;">
+            <input type="text" id="search-input" placeholder="搜尋筆記標題或分類">
+            <button id="search-button">搜尋</button>
+        </div>
+
+        <div id="notes-container"></div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-firestore-compat.js"></script>
     <script>
-        const noteContainer = document.getElementById("note-container");
-        const addNoteBtn = document.getElementById("add-note-btn");
+        // Firebase 初始化
+        const firebaseConfig = { /* firebase config */ };
+        const app = firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore(app);
 
-        addNoteBtn.addEventListener("click", createNoteElement);
+        const loginButton = document.getElementById('login-button');
+        const logoutButton = document.getElementById('logout-button');
+        const newNoteButton = document.getElementById('new-note');
+        const notesContainer = document.getElementById('notes-container');
+        const searchContainer = document.getElementById('search-container');
 
-        function createNoteElement() {
-            const id = Date.now();
-            const note = document.createElement("div");
-            note.classList.add("note");
+        let currentUser = null;
 
-            note.innerHTML = `
-                <div class="canvas-tools">
-                    <button id="upload-${id}">上傳圖片</button>
-                    <button id="zoom-in-${id}">放大</button>
-                    <button id="zoom-out-${id}">縮小</button>
-                </div>
-                <div class="canvas-container">
-                    <canvas id="canvas-${id}"></canvas>
-                </div>
-                <input type="file" id="image-input-${id}" style="display: none;">
-            `;
+        // Google 登入
+        loginButton.addEventListener('click', () => {
+            const provider = new firebase.auth.GoogleAuthProvider();
+            auth.signInWithPopup(provider)
+                .then(result => {
+                    currentUser = result.user;
+                    toggleUI();
+                })
+                .catch(error => console.error('Google 登入失敗:', error));
+        });
 
-            noteContainer.appendChild(note);
-
-            const canvas = document.getElementById(`canvas-${id}`);
-            const ctx = canvas.getContext("2d");
-            canvas.width = 300;
-            canvas.height = 300;
-
-            let scale = 1.0;
-            const zoomInButton = document.getElementById(`zoom-in-${id}`);
-            const zoomOutButton = document.getElementById(`zoom-out-${id}`);
-            const uploadButton = document.getElementById(`upload-${id}`);
-            const imageInput = document.getElementById(`image-input-${id}`);
-
-            // 繪畫功能
-            let isDrawing = false;
-            let startX = 0;
-            let startY = 0;
-
-            canvas.addEventListener("mousedown", (e) => {
-                isDrawing = true;
-                const rect = canvas.getBoundingClientRect();
-                startX = (e.clientX - rect.left) / scale;
-                startY = (e.clientY - rect.top) / scale;
+        // 登出
+        logoutButton.addEventListener('click', () => {
+            auth.signOut().then(() => {
+                currentUser = null;
+                toggleUI();
             });
+        });
 
-            canvas.addEventListener("mousemove", (e) => {
-                if (isDrawing) {
-                    const rect = canvas.getBoundingClientRect();
-                    const x = (e.clientX - rect.left) / scale;
-                    const y = (e.clientY - rect.top) / scale;
-                    ctx.beginPath();
-                    ctx.moveTo(startX, startY);
-                    ctx.lineTo(x, y);
-                    ctx.stroke();
-                    startX = x;
-                    startY = y;
-                }
-            });
-
-            canvas.addEventListener("mouseup", () => isDrawing = false);
-            canvas.addEventListener("mouseout", () => isDrawing = false);
-
-            // 放大和縮小功能
-            function applyZoom() {
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                ctx.save();
-                ctx.scale(scale, scale);
-                ctx.drawImage(image, 0, 0);
-                ctx.restore();
+        // 切換 UI 狀態
+        function toggleUI() {
+            if (currentUser) {
+                loginButton.style.display = 'none';
+                logoutButton.style.display = 'inline-block';
+                newNoteButton.style.display = 'inline-block';
+                searchContainer.style.display = 'flex';
+            } else {
+                loginButton.style.display = 'inline-block';
+                logoutButton.style.display = 'none';
+                newNoteButton.style.display = 'none';
+                searchContainer.style.display = 'none';
+                notesContainer.innerHTML = '';
             }
-
-            zoomInButton.addEventListener("click", () => {
-                scale = Math.min(scale + 0.1, 3); // 最大放大3倍
-                applyZoom();
-            });
-
-            zoomOutButton.addEventListener("click", () => {
-                scale = Math.max(scale - 0.1, 0.5); // 最小縮小到0.5倍
-                applyZoom();
-            });
-
-            // 上傳圖片功能
-            let image = new Image();
-            uploadButton.addEventListener("click", () => imageInput.click());
-            imageInput.addEventListener("change", (event) => {
-                const file = event.target.files[0];
-                if (file) {
-                    const reader = new FileReader();
-                    reader.onload = (e) => {
-                        image.onload = () => {
-                            applyZoom();
-                        };
-                        image.src = e.target.result;
-                    };
-                    reader.readAsDataURL(file);
-                }
-            });
         }
+
+        // 新增筆記
+        newNoteButton.addEventListener('click', () => {
+            const category = prompt('輸入筆記分類:');
+            const title = prompt('輸入標題:');
+            if (title && category && currentUser) {
+                db.collection('Users').doc(currentUser.uid).collection('Notes').add({
+                    category, title, content: '', canvasData: '', textColor: '#000000', brushSize: 5, timestamp: new Date()
+                }).then(displayNotes).catch(error => console.error('新增筆記時出錯:', error));
+            }
+        });
+
+        // 顯示筆記
+        async function displayNotes() {
+            if (!currentUser) return;
+            notesContainer.innerHTML = '';
+            const notesSnapshot = await db.collection('Users').doc(currentUser.uid).collection('Notes').orderBy('timestamp', 'desc').get();
+            notesSnapshot.forEach(doc => createNoteElement(doc.id, doc.data()));
+        }
+
+        // 建立筆記元素
+        function createNoteElement(id, note) {
+            const noteElement = document.createElement('div');
+            noteElement.className = 'note';
+            noteElement.innerHTML = `<div class="note-category"><strong>分類:</strong> ${note.category}</div>
+                <h2>${note.title}</h2>
+                <div contenteditable="true" class="editable-text">${note.content}</div>
+                <canvas width="600" height="400"></canvas>
+                <button onclick="editNote('${id}')">編輯</button>
+                <button onclick="deleteNote('${id}')">刪除</button>`;
+            notesContainer.appendChild(noteElement);
+        }
+
+        // 編輯和刪除筆記
+        async function editNote(noteId) { /* 編輯邏輯 */ }
+        function deleteNote(noteId) { /* 刪除邏輯 */ }
     </script>
 </body>
+
 </html>
