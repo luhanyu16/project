@@ -487,36 +487,37 @@
 
             // 處理圖片上傳
             document.getElementById(`upload-images-${id}`).addEventListener('change', function(event) {
-            const files = event.target.files;
-            if (files.length > 0) {
-                const uploadedImagesContainer = document.getElementById(`uploaded-images-${id}`);
-                uploadedImagesContainer.innerHTML = ''; // 清空現有的圖片
+                const files = event.target.files;
+                if (files.length > 0) {
+                    const uploadedImagesContainer = document.getElementById(`uploaded-images-${id}`);
+                    uploadedImagesContainer.innerHTML = ''; // 清空現有的圖片
 
-                // 儲存所有圖片的dataURL
-                let imageURLs = [];
+                    // 儲存所有圖片的dataURL
+                    let imageURLs = [];
 
-                Array.from(files).forEach((file, index) => {
-                    const reader = new FileReader();
-                    reader.onload = function(e) {
-                        // 創建一個 <img> 標籤來顯示圖片
-                        const img = document.createElement('img');
-                        img.src = e.target.result; // 設定圖片的 dataURL
-                        img.style.maxWidth = '100px';
-                        img.style.margin = '10px';
-                        uploadedImagesContainer.appendChild(img);
+                    Array.from(files).forEach((file, index) => {
+                        const reader = new FileReader();
+                        reader.onload = function(e) {
+                            // 創建一個 <img> 標籤來顯示圖片
+                            const img = document.createElement('img');
+                            img.src = e.target.result; // 設定圖片的 dataURL
+                            img.style.maxWidth = '100px';
+                            img.style.margin = '10px';
+                            uploadedImagesContainer.appendChild(img);
 
-                        // 儲存每個圖片的 dataURL
-                        imageURLs.push(e.target.result);
+                            // 儲存每個圖片的 dataURL
+                            imageURLs.push(e.target.result);
 
-                        // 儲存圖片資料到資料庫
-                        if (index === files.length - 1) { // 所有圖片讀取完後，儲存圖片
-                            saveImagesToDatabase(id, imageURLs);
-                        }
-                    };
-                    reader.readAsDataURL(file); // 讀取每個圖片的檔案
-                });
-            }
-        });
+                            // 儲存圖片資料到資料庫
+                            if (index === files.length - 1) { // 所有圖片讀取完後，儲存圖片
+                                saveImagesToDatabase(id, imageURLs);
+                            }
+                        };
+                        reader.readAsDataURL(file); // 讀取每個圖片的檔案
+                    });
+                }
+            });
+        }
 
         // 儲存多個圖片資料到資料庫
         async function saveImagesToDatabase(id, imageURLs) {
