@@ -379,11 +379,8 @@
                     <input type="color" id="text-color-picker-${id}" value="${note.textColor}">
                     <button id="apply-text-color-${id}">變更顏色</button>
                 </div>
-                <div class="image-upload">
-                    <label for="image-upload-${id}">上傳圖片:</label>
-                    <input type="file" id="image-upload-${id}" accept="image/*" multiple>
-                    <div id="image-preview-${id}" class="image-preview"></div>
-                </div>
+                <input type="file" id="upload-image-${id}" accept="image/*">
+                <img id="uploaded-image-${id}" style="display:none; max-width: 100%; height: auto;">
                 <canvas id="canvas-${id}" width="600" height="400"></canvas>
                 <div class="canvas-tools">
                     <label for="color-picker-${id}">畫筆顏色:</label>
@@ -407,27 +404,6 @@
                 </div>
             `;
             notesContainer.appendChild(noteElement);
-
-            const imageUpload = document.getElementById(`image-upload-${id}`);
-            const imagePreview = document.getElementById(`image-preview-${id}`);
-
-            // 處理多張圖片上傳
-            imageUpload.addEventListener('change', (event) => {
-                const files = event.target.files;
-                imagePreview.innerHTML = ''; // 清空先前的預覽
-                Array.from(files).forEach((file) => {
-                    const reader = new FileReader();
-                    reader.onload = (e) => {
-                        const imgElement = document.createElement('img');
-                        imgElement.src = e.target.result;
-                        imgElement.style.maxWidth = '200px';
-                        imgElement.style.margin = '5px';
-                        imagePreview.appendChild(imgElement);
-                        saveImageToDatabase(id, e.target.result); // 儲存圖片至資料庫
-                    };
-                    reader.readAsDataURL(file);
-                });
-            });
 
             // 繪圖和編輯功能
             const canvas = document.getElementById(`canvas-${id}`);
@@ -485,14 +461,10 @@
             }
 
             // 載入保存的圖片
-            if (note.images) {
-                note.images.forEach((imageDataURL) => {
-                    const imgElement = document.createElement('img');
-                    imgElement.src = imageDataURL;
-                    imgElement.style.maxWidth = '200px';
-                    imgElement.style.margin = '5px';
-                    imagePreview.appendChild(imgElement);
-                });
+            if (note.imageSrc) {
+                const uploadedImage = document.getElementById(`uploaded-image-${id}`);
+                uploadedImage.src = note.imageSrc;  // 將圖片的 dataURL 設置為 <img> 的 src
+                uploadedImage.style.display = 'block';  // 確保圖片顯示
             }
 
             // 文字顏色選擇
@@ -547,9 +519,9 @@
         }
 
         // 儲存圖片資料到資料庫
-        async function saveImageToDatabase(id, imageDataURL) {
+        async function saveImageToDatabase(id, dataURL) {
             await db.collection('Users').doc(currentUser.uid).collection('Notes').doc(id).update({
-                images: firebase.firestore.FieldValue.arrayUnion(imageDataURL) // 儲存圖片的DataURL
+                imageSrc: dataURL // 儲存圖片的 dataURL
             });
         }
 
