@@ -358,7 +358,7 @@
             const noteElement = document.createElement('div');
             noteElement.className = 'note';
             noteElement.innerHTML = `
-            <div class="note-category"><strong>分類:</strong> ${note.category}</div>
+               <div class="note-category"><strong>分類:</strong> ${note.category}</div>
                 <h2>${note.title}</h2>
                 <textarea id="text-content-${id}" style="color: ${note.textColor};">${note.content}</textarea>
                 <div class="text-tools">
@@ -382,6 +382,7 @@
                     <button id="eraser-${id}">橡皮擦</button>
                     <button id="clear-canvas-${id}">清除畫布</button>
                     <button id="save-note-${id}">保存</button>
+
                 </div>
                 <div class="actions">
                     <button onclick="editNote('${id}')">編輯</button>
@@ -390,100 +391,134 @@
             `;
             notesContainer.appendChild(noteElement);
 
-            // 初始化 fabric.Canvas
-            const canvas = new fabric.Canvas(`canvas-${id}`);
-            canvas.isDrawingMode = false;
+            // 繪圖和編輯功能
+             const canvas = document.getElementById(`canvas-${id}`);
+            const ctx = canvas.getContext('2d');
+            let drawing = false;
+            let erasing = false;
+            let currentColor = '#000000';
+            let brushSize = note.brushSize || 5;
 
-            // 畫筆設定
-            let brushColor = "#000000";
-            let brushSize = 5;
+            canvas.addEventListener('mousedown', () => { drawing = true; });
+            canvas.addEventListener('mouseup', () => { drawing = false; ctx.beginPath(); });
+            canvas.addEventListener('mousemove', (event) => draw(event, ctx, drawing, erasing, currentColor, brushSize));
+
             document.getElementById(`color-picker-${id}`).addEventListener('input', (event) => {
-                brushColor = event.target.value;
-                canvas.freeDrawingBrush.color = brushColor;
+                currentColor = event.target.value;
+                erasing = false;
             });
+
             document.getElementById(`brush-size-${id}`).addEventListener('change', (event) => {
-                brushSize = parseInt(event.target.value, 10);
-                canvas.freeDrawingBrush.width = brushSize;
+                brushSize = event.target.value;
             });
 
-            // 畫筆按鈕
-            document.getElementById(`brush-${id}`).addEventListener('click', () => {
-                canvas.isDrawingMode = true;
-                canvas.freeDrawingBrush.color = brushColor;
-                canvas.freeDrawingBrush.width = brushSize;
-            });
-
-            // 橡皮擦
             document.getElementById(`eraser-${id}`).addEventListener('click', () => {
-                canvas.isDrawingMode = true;
-                canvas.freeDrawingBrush.color = "#FFFFFF"; // 假設背景是白色
+                erasing = true;
             });
 
-            // 清除畫布
             document.getElementById(`clear-canvas-${id}`).addEventListener('click', () => {
-                canvas.clear();
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
             });
 
-            // 新增圖片
+            document.getElementById(`brush-${id}`).addEventListener('click', () => {
+                erasing = false;
+            });
+            //新增圖片
             document.getElementById(`add-image-${id}`).addEventListener('click', () => {
-                const imageInput = document.createElement('input');
-                imageInput.type = 'file';
-                imageInput.accept = 'image/*';
-                imageInput.onchange = (event) => {
-                    const file = event.target.files[0];
-                    const reader = new FileReader();
-                    reader.onload = (e) => {
-                        fabric.Image.fromURL(e.target.result, (img) => {
-                            img.set({ left: 50, top: 50, scaleX: 0.5, scaleY: 0.5 });
-                            canvas.add(img);
+            const imageInput = document.createElement('input');
+            imageInput.type = 'file';
+            imageInput.accept = 'image/*';
+            imageInput.onchange = (event) => {
+                const file = event.target.files[0];
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.src = e.target.result;
+
+                    img.onload = () => {
+                        let imgX = 50; // 圖片初始位置
+                        let imgY = 50;
+                        let imgWidth = img.width / 2; // 圖片初始大小
+                        let imgHeight = img.height / 2;
+                        let dragging = false;
+                        let resizing = false;
+                        let resizeHandleSize = 10;
+
+                        // 畫圖函數
+                        function drawImage() {
+                            ctx.clearRect(0, 0, canvas.width, canvas.height);
+                            ctx.drawImage(img, imgX, imgY, imgWidth, imgHeight);
+
+                            // 繪製控制點
+                            ctx.fillStyle = '#0056b3';
+                            ctx.fillRect(imgX + imgWidth - resizeHandleSize, imgY + imgHeight - resizeHandleSize, resizeHandleSize, resizeHandleSize);
+                        }
+
+                        drawImage();
+
+                        // 檢查是否點擊在控制點上
+                        function isOverResizeHandle(x, y) {
+                            return (
+                                x >= imgX + imgWidth - resizeHandleSize &&
+                                x <= imgX + imgWidth &&
+                                y >= imgY + imgHeight - resizeHandleSize &&
+                                y <= imgY + imgHeight
+                            );
+                        }
+
+                        // 檢查是否點擊在圖片上
+                        function isOverImage(x, y) {
+                            return x >= imgX && x <= imgX + imgWidth && y >= imgY && y <= imgY + imgHeight;
+                        }
+
+                        // 事件監聽器
+                        canvas.addEventListener('mousedown', (event) => {
+                            const mouseX = event.offsetX;
+                            const mouseY = event.offsetY;
+
+                            if (isOverResizeHandle(mouseX, mouseY)) {
+                                resizing = true;
+                            } else if (isOverImage(mouseX, mouseY)) {
+                                dragging = true;
+                            }
+                        });
+
+                        canvas.addEventListener('mousemove', (event) => {
+                            const mouseX = event.offsetX;
+                            const mouseY = event.offsetY;
+
+                            if (resizing) {
+                                imgWidth = mouseX - imgX;
+                                imgHeight = mouseY - imgY;
+                                drawImage();
+                            } else if (dragging) {
+                                imgX = mouseX - imgWidth / 2;
+                                imgY = mouseY - imgHeight / 2;
+                                drawImage();
+                            }
+                        });
+
+                        canvas.addEventListener('mouseup', () => {
+                            dragging = false;
+                            resizing = false;
                         });
                     };
-                    reader.readAsDataURL(file);
                 };
-                imageInput.click();
-            });
-
-            // 保存筆記與畫布
-            document.getElementById(`save-note-${id}`).addEventListener('click', () => {
-                const canvasData = canvas.toJSON();
-                const noteContent = document.getElementById(`text-content-${id}`).value;
-                saveNoteToDatabase(id, noteContent, canvasData);
-            });
-
-            // 載入畫布資料
-            loadCanvasFromDatabase(id, canvas);
-        }
-
-        // 保存畫布和筆記至資料庫
-        function saveNoteToDatabase(noteId, noteContent, canvasData) {
-            firebase.firestore().collection('notes').doc(noteId).set({
-                content: noteContent,
-                canvasData: canvasData
-            }, { merge: true });
-        }
-
-        // 從資料庫載入畫布
-        function loadCanvasFromDatabase(noteId, canvas) {
-            firebase.firestore().collection('notes').doc(noteId).get()
-                .then((doc) => {
-                    if (doc.exists) {
-                        const data = doc.data();
-                        canvas.loadFromJSON(data.canvasData, canvas.renderAll.bind(canvas));
-                    }
-                });
-        }
-
-        // 保存畫布
-        document.getElementById(`save-note-${id}`).addEventListener('click', async () => {
-            const textContent = document.getElementById(`text-content-${id}`).value;
-            const dataURL = canvas.toDataURL();
-            await db.collection('Users').doc(currentUser.uid).collection('Notes').doc(id).update({
-                canvasData: dataURL,
-                content: textContent,
-                textColor: textColorPicker.value,  // 確保文字顏色也被保存
-                brushSize: brushSize
-            });
+                reader.readAsDataURL(file);
+            };
+            imageInput.click();
         });
+            // 保存畫布
+            document.getElementById(`save-note-${id}`).addEventListener('click', async () => {
+                const textContent = document.getElementById(`text-content-${id}`).value;
+                const dataURL = canvas.toDataURL();
+                await db.collection('Users').doc(currentUser.uid).collection('Notes').doc(id).update({
+                    canvasData: dataURL,
+                    content: textContent,
+                    textColor: textColorPicker.value,  // 確保文字顏色也被保存
+                    brushSize: brushSize
+                });
+            });
 
             // 載入保存的畫布
             if (note.canvasData) {
@@ -494,16 +529,17 @@
                 };
             }
 
-        // 文字顏色選擇
-        const textContent = document.getElementById(`text-content-${id}`);
-        const textColorPicker = document.getElementById(`text-color-picker-${id}`);
-        textColorPicker.addEventListener('input', async (event) => {
-            const newColor = event.target.value;
-            textContent.style.color = newColor;
-            await db.collection('Notes').doc(id).update({
-                textColor: newColor
+            // 文字顏色選擇
+            const textContent = document.getElementById(`text-content-${id}`);
+            const textColorPicker = document.getElementById(`text-color-picker-${id}`);
+            textColorPicker.addEventListener('input', async (event) => {
+                const newColor = event.target.value;
+                textContent.style.color = newColor;
+                await db.collection('Notes').doc(id).update({
+                    textColor: newColor
+                });
             });
-        });
+        }
 
         // 繪圖功能
         function draw(event, ctx, drawing, erasing, color, size) {
