@@ -445,7 +445,7 @@
                 await saveCanvasDataToDatabase(id, canvas);
                 await db.collection('Users').doc(currentUser.uid).collection('Notes').doc(id).update({
                     content: textContent,
-                    textColor: document.getElementById(`text-color-picker-${id}`).value,
+                    textColor: textColorPicker.innerHTML,
                     imageSrc: imageSrc, // 儲存圖片的 dataURL
                     brushSize: brushSize
                 });
