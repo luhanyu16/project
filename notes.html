@@ -395,11 +395,12 @@
                     <button id="brush-${id}">畫筆</button>
                     <button id="eraser-${id}">橡皮擦</button>
                     <button id="clear-canvas-${id}">清除畫布</button>
-                    <button id="save-note-${id}">保存</button>
+                    
                 </div>
                 <div class="actions">
                     <button onclick="editNote('${id}')">編輯</button>
                     <button onclick="deleteNote('${id}')">刪除</button>
+                    <button id="save-note-${id}">保存</button>
                 </div>
             `;
             notesContainer.appendChild(noteElement);
