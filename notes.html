@@ -443,7 +443,7 @@
                 await db.collection('Users').doc(currentUser.uid).collection('Notes').doc(id).update({
                     canvasData: dataURL,
                     content: textContent,
-                    textColor: textColorPicker.value,  // 確保文字顏色也被保存
+                    textColor: textColorPicker.innerHTML,  // 確保文字顏色也被保存
                     brushSize: brushSize
                 });
             });
