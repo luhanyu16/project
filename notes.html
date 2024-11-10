@@ -486,22 +486,26 @@
             });
 
             // 處理圖片上傳
-            document.getElementById(`upload-image-${id}`).addEventListener('change', function(event) {
-                const file = event.target.files[0];
-                if (file) {
-                    const reader = new FileReader();
-                    reader.onload = function(e) {
-                        const uploadedImage = document.getElementById(`uploaded-image-${id}`);
-                        uploadedImage.src = e.target.result; // 設置圖片的 src 為 dataURL
-                        uploadedImage.style.display = 'block'; // 顯示圖片
-
-                        // 儲存圖片資料到資料庫
-                        const dataURL = reader.result;
-                        saveImageToDatabase(id, dataURL);
-                    };
-                    reader.readAsDataURL(file); // 讀取圖片為 dataURL
-                }
-            });
+                document.getElementById(`upload-image-${id}`).addEventListener('change', function(event) {
+                    const file = event.target.files[0];
+                    if (file) {
+                        const reader = new FileReader();
+                        reader.onload = function(e) {
+                            const uploadedImage = document.getElementById(`uploaded-image-${id}`);
+                            const canvas = document.getElementById(`canvas-${id}`);
+                            const ctx = canvas.getContext('2d');
+                            const img = new Image();
+                            img.onload = function() {
+                                // 清空畫布，並將上傳的圖片顯示在畫布上
+                                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                            };
+                            img.src = e.target.result;
+                            uploadedImage.style.display = 'none'; // 隱藏原本的 <img>，直接在 canvas 上繪圖
+                        };
+                        reader.readAsDataURL(file);
+                    }
+                });
         }
 
         // 繪圖功能
