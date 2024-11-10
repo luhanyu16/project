@@ -7,6 +7,7 @@
     <title>網頁筆記</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
     <style>
+	
         body {
             font-family: 'Poppins', sans-serif;
             background-color: #f2f4f8;
@@ -486,22 +487,117 @@
             });
 
             // 處理圖片上傳
-            document.getElementById(`upload-image-${id}`).addEventListener('change', function(event) {
-                const file = event.target.files[0];
-                if (file) {
-                    const reader = new FileReader();
-                    reader.onload = function(e) {
-                        const uploadedImage = document.getElementById(`uploaded-image-${id}`);
-                        uploadedImage.src = e.target.result; // 設置圖片的 src 為 dataURL
-                        uploadedImage.style.display = 'block'; // 顯示圖片
+             <title>圖片上傳與繪畫</title>
+    <style>
+        /* 基本樣式 */
+        .container {
+            width: 800px;
+            margin: 0 auto;
+        }
+        .canvas-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            margin: 20px 0;
+        }
+        .uploaded-image {
+            display: none;
+            max-width: 100%;
+        }
+        .overlay-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <input type="file" id="upload-image" />
+        <div class="canvas-container">
+            <img id="uploaded-image" class="uploaded-image" alt="Uploaded Image">
+            <canvas id="overlay-canvas" class="overlay-canvas"></canvas>
+        </div>
+        <button onclick="zoomIn()">放大</button>
+        <button onclick="zoomOut()">縮小</button>
+    </div>
 
-                        // 儲存圖片資料到資料庫
-                        const dataURL = reader.result;
-                        saveImageToDatabase(id, dataURL);
+    <script>
+        const uploadImageInput = document.getElementById('upload-image');
+        const uploadedImage = document.getElementById('uploaded-image');
+        const canvas = document.getElementById('overlay-canvas');
+        const ctx = canvas.getContext('2d');
+        let scale = 1;
+        let isDrawing = false;
+        let startX, startY;
+
+        // 監聽圖片上傳
+        uploadImageInput.addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    uploadedImage.src = e.target.result;
+                    uploadedImage.style.display = 'block';
+                    uploadedImage.onload = function() {
+                        setCanvasSize();
                     };
-                    reader.readAsDataURL(file); // 讀取圖片為 dataURL
-                }
-            });
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // 設置 Canvas 大小
+        function setCanvasSize() {
+            canvas.width = uploadedImage.width * scale;
+            canvas.height = uploadedImage.height * scale;
+            redrawCanvas();
+        }
+
+        // 繪畫功能
+        canvas.addEventListener('mousedown', function(event) {
+            isDrawing = true;
+            startX = event.offsetX;
+            startY = event.offsetY;
+        });
+        canvas.addEventListener('mousemove', function(event) {
+            if (isDrawing) {
+                ctx.lineWidth = 5;
+                ctx.lineCap = 'round';
+                ctx.strokeStyle = 'red';
+                ctx.beginPath();
+                ctx.moveTo(startX, startY);
+                ctx.lineTo(event.offsetX, event.offsetY);
+                ctx.stroke();
+                startX = event.offsetX;
+                startY = event.offsetY;
+            }
+        });
+        canvas.addEventListener('mouseup', function() {
+            isDrawing = false;
+        });
+        canvas.addEventListener('mouseout', function() {
+            isDrawing = false;
+        });
+
+        // 放大功能
+        function zoomIn() {
+            scale += 0.1;
+            setCanvasSize();
+        }
+
+        // 縮小功能
+        function zoomOut() {
+            if (scale > 0.2) {
+                scale -= 0.1;
+                setCanvasSize();
+            }
+        }
+
+        // 重繪 Canvas
+        function redrawCanvas() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.drawImage(uploadedImage, 0, 0, canvas.width, canvas.height);
         }
 
         // 繪圖功能
