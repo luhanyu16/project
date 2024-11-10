@@ -325,42 +325,32 @@
         }
 
         // 搜尋筆記
-        // const searchButton = document.getElementById('search-button');
-        // searchButton.addEventListener('click', searchNotes);
+        const searchButton = document.getElementById('search-button');
+        searchButton.addEventListener('click', searchNotes);
 
-        // function searchNotes() {
-        //     const searchTerm = document.getElementById('search-input').value.trim().toLowerCase();
-        //     if (searchTerm === '') {
-        //         displayNotes();
-        //         return;
-        //     }
-
-        //     db.collection('Users').doc(currentUser.uid).collection('Notes').get()
-        //         .then(querySnapshot => {
-        //             notesContainer.innerHTML = '';
-        //             querySnapshot.forEach(doc => {
-        //                 const note = doc.data();
-        //                 const titleMatches = note.title && note.title.toLowerCase().includes(searchTerm);
-        //                 const categoryMatches = note.category && note.category.toLowerCase().includes(searchTerm);
-        //                 if (titleMatches || categoryMatches) {
-        //                     createNoteElement(doc.id, note);
-        //                 }
-        //             });
-        //         })
-        //         .catch(error => {
-        //             console.error('搜尋筆記時出錯:', error);
-        //         });
-        // }
-
-        const searchInput = document.getElementById('search-input');
-        searchInput.addEventListener('input', () => {
-            const searchTerm = searchInput.value.trim().toLowerCase();
+        function searchNotes() {
+            const searchTerm = document.getElementById('search-input').value.trim().toLowerCase();
             if (searchTerm === '') {
                 displayNotes();
-            } else {
-                searchNotes();
+                return;
             }
-        });
+
+            db.collection('Users').doc(currentUser.uid).collection('Notes').get()
+                .then(querySnapshot => {
+                    notesContainer.innerHTML = '';
+                    querySnapshot.forEach(doc => {
+                        const note = doc.data();
+                        const titleMatches = note.title && note.title.toLowerCase().includes(searchTerm);
+                        const categoryMatches = note.category && note.category.toLowerCase().includes(searchTerm);
+                        if (titleMatches || categoryMatches) {
+                            createNoteElement(doc.id, note);
+                        }
+                    });
+                })
+                .catch(error => {
+                    console.error('搜尋筆記時出錯:', error);
+                });
+        }
 
         // 建立筆記元素
         function createNoteElement(id, note) {
