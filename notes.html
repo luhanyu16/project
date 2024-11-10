@@ -443,17 +443,23 @@
             }
 
             // 文字顏色選擇
-const textContent = document.getElementById(`text-content-${id}`);
-const textColorPicker = document.getElementById(`text-color-picker-${id}`);
-const applyTextColorButton = document.getElementById(`apply-text-color-${id}`);
+            const textContent = document.getElementById(`text-content-${id}`);
+            const textColorPicker = document.getElementById(`text-color-picker-${id}`);
+            const applyTextColorButton = document.getElementById(`apply-text-color-${id}`);
 
-// 當按下應用顏色按鈕時，變更選取文字的顏色
-applyTextColorButton.addEventListener('click', () => {
-    const newColor = textColorPicker.value;
-    textContent.focus();
-    document.execCommand('styleWithCSS', false, true); // 啟用樣式化
-    document.execCommand('foreColor', false, newColor); // 更改選取文字的顏色
-});
+            // 當按下應用顏色按鈕時，變更選取文字的顏色
+            applyTextColorButton.addEventListener('click', () => {
+                const newColor = textColorPicker.value;
+                textContent.focus();
+                if (window.getSelection().toString()) {
+                    // 啟用樣式化指令
+                    document.execCommand('styleWithCSS', false, true);
+                    // 變更選取文字的顏色
+                    document.execCommand('foreColor', false, newColor);
+                } else {
+                    alert('請先選取文字');
+                }
+            });
                 }
 
         // 繪圖功能
