@@ -372,12 +372,12 @@
             const noteElement = document.createElement('div');
             noteElement.className = 'note';
             noteElement.innerHTML = `
-               <div class="note-category"><strong>分類:</strong> ${note.category}</div>
-               <div class="actions">
+                <div class="actions">
                     <button onclick="editNote('${id}')">編輯</button>
                     <button onclick="deleteNote('${id}')">刪除</button>
                     <button id="save-note-${id}">保存</button>
                 </div>
+                <div class="note-category"><strong>分類:</strong> ${note.category}</div>
                 <h2>${note.title}</h2>
                 <div id="text-content-${id}" contenteditable="true" class="editable-text" style="color: ${note.textColor};">${note.content}</div>
                 <div class="text-tools">
