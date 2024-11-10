@@ -241,6 +241,8 @@
     <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-storage-compat.js"></script>
+
     <script>
         // Firebase 初始化
         const firebaseConfig = {
@@ -372,14 +374,13 @@
             const noteElement = document.createElement('div');
             noteElement.className = 'note';
             noteElement.innerHTML = `
-                <div class="actions">
-                    <button onclick="editNote('${id}')">編輯</button>
-                    <button onclick="deleteNote('${id}')">刪除</button>
-                    <button id="save-note-${id}">保存</button>
-                </div>
-                <div class="note-category"><strong>分類:</strong> ${note.category}</div>
+               <div class="note-category"><strong>分類:</strong> ${note.category}</div>
                 <h2>${note.title}</h2>
                 <div id="text-content-${id}" contenteditable="true" class="editable-text" style="color: ${note.textColor};">${note.content}</div>
+                
+                <input type="file" id="image-upload-${id}" accept="image/*" style="margin-top: 10px;">
+                <img id="image-preview-${id}" src="${note.imageUrl || ''}" alt="筆記圖片" style="max-width: 100%; margin-top: 10px;">
+                
                 <div class="text-tools">
                     <label for="text-color-picker-${id}">文字顏色:</label>
                     <input type="color" id="text-color-picker-${id}" value="${note.textColor}">
@@ -400,13 +401,27 @@
                     <button id="brush-${id}">畫筆</button>
                     <button id="eraser-${id}">橡皮擦</button>
                     <button id="clear-canvas-${id}">清除畫布</button>
-                    
+                </div>
+                <div class="actions">
+                    <button onclick="editNote('${id}')">編輯</button>
+                    <button onclick="deleteNote('${id}')">刪除</button>
+                    <button id="save-note-${id}">保存</button>
                 </div>
             `;
             notesContainer.appendChild(noteElement);
 
+            // 為圖片上傳設置監聽器
+            document.getElementById(`image-upload-${id}`).addEventListener('change', (event) => {
+                uploadImage(event.target.files[0], id);
+            });
+
+            // 顯示載入的圖片
+            if (note.imageUrl) {
+                document.getElementById(`image-preview-${id}`).src = note.imageUrl;
+            }
+
             // 繪圖和編輯功能
-             const canvas = document.getElementById(`canvas-${id}`);
+            const canvas = document.getElementById(`canvas-${id}`);
             const ctx = canvas.getContext('2d');
             let drawing = false;
             let erasing = false;
@@ -444,10 +459,31 @@
                 await db.collection('Users').doc(currentUser.uid).collection('Notes').doc(id).update({
                     canvasData: dataURL,
                     content: textContent,
-                    textColor: textColorPicker.innerHTML,  // 確保文字顏色也被保存
+                    textColor: textColorPicker.innerHTML,
                     brushSize: brushSize
                 });
             });
+
+            // 上傳圖片到 Firebase Storage 並儲存圖片 URL 到 Firestore
+            async function uploadImage(file, noteId) {
+                const storageRef = firebase.storage().ref();
+                const imageRef = storageRef.child(`images/${currentUser.uid}/${noteId}/${file.name}`);
+                try {
+                    // 上傳圖片到 Firebase Storage
+                    await imageRef.put(file);
+                    const imageUrl = await imageRef.getDownloadURL();
+
+                    // 更新資料庫中的圖片 URL
+                    await db.collection('Users').doc(currentUser.uid).collection('Notes').doc(noteId).update({
+                        imageUrl: imageUrl
+                    });
+
+                    // 更新前端圖片顯示
+                    document.getElementById(`image-preview-${noteId}`).src = imageUrl;
+                } catch (error) {
+                    console.error("圖片上傳失敗:", error);
+                }
+            }
 
             // 載入保存的畫布
             if (note.canvasData) {
