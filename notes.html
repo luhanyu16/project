@@ -324,6 +324,7 @@
             });
         }
 
+
         // 搜尋筆記
         const searchButton = document.getElementById('search-button');
         searchButton.addEventListener('click', searchNotes);
@@ -357,15 +358,14 @@
             const noteElement = document.createElement('div');
             noteElement.className = 'note';
             noteElement.innerHTML = `
-               <div class="note-category"><strong>分類:</strong> ${note.category}</div>
+            <div class="note-category"><strong>分類:</strong> ${note.category}</div>
                 <h2>${note.title}</h2>
                 <textarea id="text-content-${id}" style="color: ${note.textColor};">${note.content}</textarea>
                 <div class="text-tools">
                     <label for="text-color-picker-${id}">文字顏色:</label>
                     <input type="color" id="text-color-picker-${id}" value="${note.textColor}">
-                    <button id="apply-text-color-${id}">變更顏色</button>
                 </div>
-                <canvas id="canvas-${id}" width="600" height="400"></canvas>
+                <canvas id="canvas-${id}" width="800" height="600"></canvas>
                 <div class="canvas-tools">
                     <label for="color-picker-${id}">畫筆顏色:</label>
                     <input type="color" id="color-picker-${id}" value="#000000">
@@ -377,6 +377,7 @@
                         <option value="15">15px</option>
                         <option value="20">20px</option>
                     </select>
+                    <button id="add-image-${id}">新增圖片</button>
                     <button id="brush-${id}">畫筆</button>
                     <button id="eraser-${id}">橡皮擦</button>
                     <button id="clear-canvas-${id}">清除畫布</button>
@@ -389,49 +390,100 @@
             `;
             notesContainer.appendChild(noteElement);
 
-            // 繪圖和編輯功能
-             const canvas = document.getElementById(`canvas-${id}`);
-            const ctx = canvas.getContext('2d');
-            let drawing = false;
-            let erasing = false;
-            let currentColor = '#000000';
-            let brushSize = note.brushSize || 5;
+            // 初始化 fabric.Canvas
+            const canvas = new fabric.Canvas(`canvas-${id}`);
+            canvas.isDrawingMode = false;
 
-            canvas.addEventListener('mousedown', () => { drawing = true; });
-            canvas.addEventListener('mouseup', () => { drawing = false; ctx.beginPath(); });
-            canvas.addEventListener('mousemove', (event) => draw(event, ctx, drawing, erasing, currentColor, brushSize));
-
+            // 畫筆設定
+            let brushColor = "#000000";
+            let brushSize = 5;
             document.getElementById(`color-picker-${id}`).addEventListener('input', (event) => {
-                currentColor = event.target.value;
-                erasing = false;
+                brushColor = event.target.value;
+                canvas.freeDrawingBrush.color = brushColor;
             });
-
             document.getElementById(`brush-size-${id}`).addEventListener('change', (event) => {
-                brushSize = event.target.value;
+                brushSize = parseInt(event.target.value, 10);
+                canvas.freeDrawingBrush.width = brushSize;
             });
 
-            document.getElementById(`eraser-${id}`).addEventListener('click', () => {
-                erasing = true;
-            });
-
-            document.getElementById(`clear-canvas-${id}`).addEventListener('click', () => {
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-            });
-
+            // 畫筆按鈕
             document.getElementById(`brush-${id}`).addEventListener('click', () => {
-                erasing = false;
+                canvas.isDrawingMode = true;
+                canvas.freeDrawingBrush.color = brushColor;
+                canvas.freeDrawingBrush.width = brushSize;
             });
 
-            document.getElementById(`save-note-${id}`).addEventListener('click', async () => {
-                const textContent = document.getElementById(`text-content-${id}`).value;
-                const dataURL = canvas.toDataURL();
-                await db.collection('Users').doc(currentUser.uid).collection('Notes').doc(id).update({
-                    canvasData: dataURL,
-                    content: textContent,
-                    textColor: textColorPicker.value,  // 確保文字顏色也被保存
-                    brushSize: brushSize
-                });
+            // 橡皮擦
+            document.getElementById(`eraser-${id}`).addEventListener('click', () => {
+                canvas.isDrawingMode = true;
+                canvas.freeDrawingBrush.color = "#FFFFFF"; // 假設背景是白色
             });
+
+            // 清除畫布
+            document.getElementById(`clear-canvas-${id}`).addEventListener('click', () => {
+                canvas.clear();
+            });
+
+            // 新增圖片
+            document.getElementById(`add-image-${id}`).addEventListener('click', () => {
+                const imageInput = document.createElement('input');
+                imageInput.type = 'file';
+                imageInput.accept = 'image/*';
+                imageInput.onchange = (event) => {
+                    const file = event.target.files[0];
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        fabric.Image.fromURL(e.target.result, (img) => {
+                            img.set({ left: 50, top: 50, scaleX: 0.5, scaleY: 0.5 });
+                            canvas.add(img);
+                        });
+                    };
+                    reader.readAsDataURL(file);
+                };
+                imageInput.click();
+            });
+
+            // 保存筆記與畫布
+            document.getElementById(`save-note-${id}`).addEventListener('click', () => {
+                const canvasData = canvas.toJSON();
+                const noteContent = document.getElementById(`text-content-${id}`).value;
+                saveNoteToDatabase(id, noteContent, canvasData);
+            });
+
+            // 載入畫布資料
+            loadCanvasFromDatabase(id, canvas);
+        }
+
+        // 保存畫布和筆記至資料庫
+        function saveNoteToDatabase(noteId, noteContent, canvasData) {
+            firebase.firestore().collection('notes').doc(noteId).set({
+                content: noteContent,
+                canvasData: canvasData
+            }, { merge: true });
+        }
+
+        // 從資料庫載入畫布
+        function loadCanvasFromDatabase(noteId, canvas) {
+            firebase.firestore().collection('notes').doc(noteId).get()
+                .then((doc) => {
+                    if (doc.exists) {
+                        const data = doc.data();
+                        canvas.loadFromJSON(data.canvasData, canvas.renderAll.bind(canvas));
+                    }
+                });
+        }
+
+        // 保存畫布
+        document.getElementById(`save-note-${id}`).addEventListener('click', async () => {
+            const textContent = document.getElementById(`text-content-${id}`).value;
+            const dataURL = canvas.toDataURL();
+            await db.collection('Users').doc(currentUser.uid).collection('Notes').doc(id).update({
+                canvasData: dataURL,
+                content: textContent,
+                textColor: textColorPicker.value,  // 確保文字顏色也被保存
+                brushSize: brushSize
+            });
+        });
 
             // 載入保存的畫布
             if (note.canvasData) {
@@ -442,25 +494,16 @@
                 };
             }
 
-            // 文字顏色選擇
-            const textContent = document.getElementById(`text-content-${id}`);
-            const textColorPicker = document.getElementById(`text-color-picker-${id}`);
-            const applyTextColorButton = document.getElementById(`apply-text-color-${id}`);
-
-            // 當按下應用顏色按鈕時，變更選取文字的顏色
-            applyTextColorButton.addEventListener('click', () => {
-                const newColor = textColorPicker.value;
-                textContent.focus();
-                if (window.getSelection().toString()) {
-                    // 啟用樣式化指令
-                    document.execCommand('styleWithCSS', false, true);
-                    // 變更選取文字的顏色
-                    document.execCommand('foreColor', false, newColor);
-                } else {
-                    alert('請先選取文字');
-                }
+        // 文字顏色選擇
+        const textContent = document.getElementById(`text-content-${id}`);
+        const textColorPicker = document.getElementById(`text-color-picker-${id}`);
+        textColorPicker.addEventListener('input', async (event) => {
+            const newColor = event.target.value;
+            textContent.style.color = newColor;
+            await db.collection('Notes').doc(id).update({
+                textColor: newColor
             });
-                }
+        });
 
         // 繪圖功能
         function draw(event, ctx, drawing, erasing, color, size) {
