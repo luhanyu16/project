@@ -442,10 +442,12 @@
                 const textContent = document.getElementById(`text-content-${id}`).innerHTML;
                 const imageSrc = document.getElementById(`uploaded-image-${id}`).src; // 獲取圖片的 dataURL
 
+                await saveCanvasDataToDatabase(id, canvas);
                 await db.collection('Users').doc(currentUser.uid).collection('Notes').doc(id).update({
                     content: textContent,
                     textColor: document.getElementById(`text-color-picker-${id}`).value,
-                    imageSrc: imageSrc // 儲存圖片的 dataURL
+                    imageSrc: imageSrc, // 儲存圖片的 dataURL
+                    brushSize: brushSize
                 });
             });
 
@@ -520,6 +522,14 @@
         async function saveImageToDatabase(id, dataURL) {
             await db.collection('Users').doc(currentUser.uid).collection('Notes').doc(id).update({
                 imageSrc: dataURL // 儲存圖片的 dataURL
+            });
+        }
+
+        // 儲存畫布內容至資料庫
+        async function saveCanvasDataToDatabase(id, canvas) {
+            const dataURL = canvas.toDataURL(); // 取得畫布的dataURL
+            await db.collection('Users').doc(currentUser.uid).collection('Notes').doc(id).update({
+                canvasData: dataURL // 儲存畫布的dataURL
             });
         }
 
