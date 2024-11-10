@@ -445,13 +445,14 @@
             // 文字顏色選擇
             const textContent = document.getElementById(`text-content-${id}`);
             const textColorPicker = document.getElementById(`text-color-picker-${id}`);
-            const applyColorButton = document.getElementById(`apply-color-button-${id}`);
-
-            applyColorButton.addEventListener('click', () => {
-                const selectedColor = textColorPicker.value;
-                document.execCommand('styleWithCSS', false, true);  // 啟用 CSS 樣式化
-                document.execCommand('foreColor', false, selectedColor);  // 應用新顏色
+            textColorPicker.addEventListener('input', async (event) => {
+                const newColor = event.target.value;
+                textContent.style.color = newColor;
+                await db.collection('Notes').doc(id).update({
+                    textColor: newColor
+                });
             });
+        }
 
         // 繪圖功能
         function draw(event, ctx, drawing, erasing, color, size) {
