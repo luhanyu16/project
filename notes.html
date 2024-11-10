@@ -536,12 +536,21 @@
                     const textColor = document.getElementById(`text-color-picker-${id}`).value;
                     const brushSize = document.getElementById(`brush-size-${id}`).value;
 
+                    // 新增圖片狀態
+                    const imageData = {
+                        x: imgX,    // 圖片X座標
+                        y: imgY,    // 圖片Y座標
+                        width: imgWidth,  // 圖片寬度
+                        height: imgHeight // 圖片高度
+                    };
+
                     // 更新 Firebase 中的筆記資料
                     await db.collection('Users').doc(currentUser.uid).collection('Notes').doc(id).update({
                         canvasData: dataURL,
                         content: textContent,
                         textColor: textColor,
                         brushSize: parseInt(brushSize, 10),
+                        imageData: imageData  // 保存圖片位置與大小
                     });
 
                 } catch (error) {
@@ -549,12 +558,22 @@
                 }
             });
 
-            // 載入保存的畫布
+            // 載入保存的畫布及圖片狀態
             if (note.canvasData) {
                 const img = new Image();
                 img.src = note.canvasData;
                 img.onload = () => {
                     ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                };
+            }
+
+            if (note.imageData) {
+                // 讀取圖片位置與大小
+                const { x, y, width, height } = note.imageData;
+                const img = new Image();
+                img.src = note.canvasData;  // 或者你需要在此加載具體的圖片
+                img.onload = () => {
+                    ctx.drawImage(img, x, y, width, height);  // 根據保存的數據繪製圖片
                 };
             }
 
