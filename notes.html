@@ -379,9 +379,9 @@
                     <input type="color" id="text-color-picker-${id}" value="${note.textColor}">
                     <button id="apply-text-color-${id}">變更顏色</button>
                 </div>
-                <input type="file" id="image-upload-${id}" accept="image/*" style="display: none;">
+                <input type="file" id="upload-image-${id}" accept="image/*">
                 <button id="upload-image-btn-${id}">上傳圖片</button>
-                <img id="uploaded-image-${id}" style="display: block; max-width: 600px; max-height: 400px; margin-bottom: 10px;">
+                <img id="uploaded-image-${id}" style="display:none; max-width: 100%; height: auto;">
                 <canvas id="canvas-${id}" width="600" height="400"></canvas>
                 <div class="canvas-tools">
                     <label for="color-picker-${id}">畫筆顏色:</label>
@@ -464,8 +464,9 @@
 
             // 載入保存的圖片
             if (note.imageSrc) {
+                const uploadedImage = document.getElementById(`uploaded-image-${id}`);
                 uploadedImage.src = note.imageSrc;  // 將圖片的 dataURL 設置為 <img> 的 src
-                uploadedImage.style.display = 'display';  // 確保圖片顯示
+                uploadedImage.style.display = 'block';  // 確保圖片顯示
             }
 
             // 文字顏色選擇
@@ -486,21 +487,21 @@
                 }
             });
 
-            // 圖片上傳功能
-            const imageUploadInput = document.getElementById(`image-upload-${id}`);
-            const uploadedImage = document.getElementById(`uploaded-image-${id}`);
-            document.getElementById(`upload-image-btn-${id}`).addEventListener('click', () => {
-                imageUploadInput.click();
-            });
-
-            imageUploadInput.addEventListener('change', (event) => {
+            // 處理圖片上傳
+            document.getElementById(`upload-image-${id}`).addEventListener('change', function(event) {
                 const file = event.target.files[0];
                 if (file) {
                     const reader = new FileReader();
-                    reader.onload = (e) => {
+                    reader.onload = function(e) {
+                        const uploadedImage = document.getElementById(`uploaded-image-${id}`);
                         uploadedImage.src = e.target.result;
+                        uploadedImage.style.display = 'block'; // 顯示圖片
                     };
                     reader.readAsDataURL(file);
+
+                    // 儲存圖片資料到資料庫
+                    const dataURL = reader.result;
+                    saveImageToDatabase(id, dataURL);
                 }
             });
         }
@@ -517,6 +518,13 @@
             ctx.stroke();
             ctx.beginPath();
             ctx.moveTo(event.offsetX, event.offsetY);
+        }
+
+        // 儲存圖片資料到資料庫
+        async function saveImageToDatabase(id, dataURL) {
+            await db.collection('Users').doc(currentUser.uid).collection('Notes').doc(id).update({
+                imageSrc: dataURL // 儲存圖片的資料
+            });
         }
 
         // 編輯筆記
