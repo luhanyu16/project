@@ -324,7 +324,6 @@
             });
         }
 
-
         // 搜尋筆記
         const searchButton = document.getElementById('search-button');
         searchButton.addEventListener('click', searchNotes);
@@ -364,8 +363,9 @@
                 <div class="text-tools">
                     <label for="text-color-picker-${id}">文字顏色:</label>
                     <input type="color" id="text-color-picker-${id}" value="${note.textColor}">
+                    <button id="highlight-text-${id}">改變選取文字顏色</button>
                 </div>
-                <canvas id="canvas-${id}" width="800" height="600"></canvas>
+                <canvas id="canvas-${id}" width="600" height="400"></canvas>
                 <div class="canvas-tools">
                     <label for="color-picker-${id}">畫筆顏色:</label>
                     <input type="color" id="color-picker-${id}" value="#000000">
@@ -377,12 +377,10 @@
                         <option value="15">15px</option>
                         <option value="20">20px</option>
                     </select>
-                    <button id="add-image-${id}">新增圖片</button>
                     <button id="brush-${id}">畫筆</button>
                     <button id="eraser-${id}">橡皮擦</button>
                     <button id="clear-canvas-${id}">清除畫布</button>
                     <button id="save-note-${id}">保存</button>
-
                 </div>
                 <div class="actions">
                     <button onclick="editNote('${id}')">編輯</button>
@@ -423,92 +421,20 @@
             document.getElementById(`brush-${id}`).addEventListener('click', () => {
                 erasing = false;
             });
-            //新增圖片
-            document.getElementById(`add-image-${id}`).addEventListener('click', () => {
-            const imageInput = document.createElement('input');
-            imageInput.type = 'file';
-            imageInput.accept = 'image/*';
-            imageInput.onchange = (event) => {
-                const file = event.target.files[0];
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    const img = new Image();
-                    img.src = e.target.result;
 
-                    img.onload = () => {
-                        let imgX = 50; // 圖片初始位置
-                        let imgY = 50;
-                        let imgWidth = img.width / 2; // 圖片初始大小
-                        let imgHeight = img.height / 2;
-                        let dragging = false;
-                        let resizing = false;
-                        let resizeHandleSize = 10;
+            // 新增選取文字變色功能
+            document.getElementById(`highlight-text-${id}`).addEventListener('click', () => {
+                const selection = window.getSelection();
+                const range = selection.getRangeAt(0);
 
-                        // 畫圖函數
-                        function drawImage() {
-                            ctx.clearRect(0, 0, canvas.width, canvas.height);
-                            ctx.drawImage(img, imgX, imgY, imgWidth, imgHeight);
+                if (!selection.isCollapsed) { // 檢查是否有選取文字
+                    const span = document.createElement("span");
+                    span.style.color = textColorPicker.value;  // 使用當前顏色選擇器的值
+                    range.surroundContents(span);  // 包裝選取文字
+                    selection.removeAllRanges();  // 清除選取狀態
+                }
+            });
 
-                            // 繪製控制點
-                            ctx.fillStyle = '#0056b3';
-                            ctx.fillRect(imgX + imgWidth - resizeHandleSize, imgY + imgHeight - resizeHandleSize, resizeHandleSize, resizeHandleSize);
-                        }
-
-                        drawImage();
-
-                        // 檢查是否點擊在控制點上
-                        function isOverResizeHandle(x, y) {
-                            return (
-                                x >= imgX + imgWidth - resizeHandleSize &&
-                                x <= imgX + imgWidth &&
-                                y >= imgY + imgHeight - resizeHandleSize &&
-                                y <= imgY + imgHeight
-                            );
-                        }
-
-                        // 檢查是否點擊在圖片上
-                        function isOverImage(x, y) {
-                            return x >= imgX && x <= imgX + imgWidth && y >= imgY && y <= imgY + imgHeight;
-                        }
-
-                        // 事件監聽器
-                        canvas.addEventListener('mousedown', (event) => {
-                            const mouseX = event.offsetX;
-                            const mouseY = event.offsetY;
-
-                            if (isOverResizeHandle(mouseX, mouseY)) {
-                                resizing = true;
-                            } else if (isOverImage(mouseX, mouseY)) {
-                                dragging = true;
-                            }
-                        });
-
-                        canvas.addEventListener('mousemove', (event) => {
-                            const mouseX = event.offsetX;
-                            const mouseY = event.offsetY;
-
-                            if (resizing) {
-                                imgWidth = mouseX - imgX;
-                                imgHeight = mouseY - imgY;
-                                drawImage();
-                            } else if (dragging) {
-                                imgX = mouseX - imgWidth / 2;
-                                imgY = mouseY - imgHeight / 2;
-                                drawImage();
-                            }
-                        });
-
-                        canvas.addEventListener('mouseup', () => {
-                            dragging = false;
-                            resizing = false;
-                        });
-                    };
-                };
-                reader.readAsDataURL(file);
-            };
-            imageInput.click();
-        });
-            // 保存畫布
             document.getElementById(`save-note-${id}`).addEventListener('click', async () => {
                 const textContent = document.getElementById(`text-content-${id}`).value;
                 const dataURL = canvas.toDataURL();
