@@ -221,6 +221,16 @@
             <!-- 筆記列表將顯示在這裡 -->
         </div>
     </div>
+    <div class="note">
+        <h2>筆記標題</h2>
+        <div id="note-content" class="note-content" contenteditable="true">請在這裡輸入內容...</div>
+        
+        <div class="text-tools">
+            <label for="text-color-picker">文字顏色:</label>
+            <input type="color" id="text-color-picker" value="#333333">
+            <button id="apply-color-button">應用顏色</button>
+        </div>
+    </div>
 
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-app-compat.js"></script>
@@ -363,7 +373,7 @@
                 <div class="text-tools">
                     <label for="text-color-picker-${id}">文字顏色:</label>
                     <input type="color" id="text-color-picker-${id}" value="${note.textColor}">
-                    <button id="apply-text-color-${id}">應用顏色</button> <!-- 新增應用顏色按鈕 -->
+                    <button id="apply-text-color-${id}">應用顏色</button>
                 </div>
                 <canvas id="canvas-${id}" width="600" height="400"></canvas>
                 <div class="canvas-tools">
@@ -421,6 +431,25 @@
             document.getElementById(`brush-${id}`).addEventListener('click', () => {
                 erasing = false;
             });
+
+            document.getElementById('apply-color-button').addEventListener('click', () => {
+            const colorPicker = document.getElementById('text-color-picker');
+            const selectedColor = colorPicker.value;
+
+            const selection = window.getSelection();
+            if (!selection.isCollapsed) { // 確認有選取文字
+                const range = selection.getRangeAt(0); // 獲取選取範圍
+
+                const span = document.createElement('span');
+                span.style.color = selectedColor; // 設定選取顏色
+                range.surroundContents(span); // 將選取內容包裹在 span 中
+
+                // 清除選取
+                selection.removeAllRanges();
+                selection.addRange(range);
+            }
+        });
+
 
             document.getElementById(`save-note-${id}`).addEventListener('click', async () => {
                 const textContent = document.getElementById(`text-content-${id}`).value;
