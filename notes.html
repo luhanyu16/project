@@ -441,12 +441,15 @@
 
             document.getElementById(`save-note-${id}`).addEventListener('click', async () => {
                 const textContent = document.getElementById(`text-content-${id}`).innerHTML;
-                const dataURL = canvas.toDataURL();
+                const canvasDataURL = canvas.toDataURL();
+                const imageSrc = uploadedImage.src;  // 獲取圖片的 dataURL
+
                 await db.collection('Users').doc(currentUser.uid).collection('Notes').doc(id).update({
-                    canvasData: dataURL,
+                    canvasData: canvasDataURL,
                     content: textContent,
-                    textColor: textColorPicker.innerHTML,  // 確保文字顏色也被保存
-                    brushSize: brushSize
+                    textColor: textColorPicker.value, // 更新以儲存正確的文字顏色
+                    brushSize: brushSize,
+                    imageSrc: imageSrc  // 儲存圖片的 dataURL
                 });
             });
 
@@ -457,6 +460,12 @@
                 img.onload = () => {
                     ctx.drawImage(img, 0, 0);
                 };
+            }
+
+            // 載入保存的圖片
+            if (note.imageSrc) {
+                uploadedImage.src = note.imageSrc;  // 將圖片的 dataURL 設置為 <img> 的 src
+                uploadedImage.style.display = 'block';  // 確保圖片顯示
             }
 
             // 文字顏色選擇
