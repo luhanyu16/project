@@ -448,26 +448,19 @@
             const applyTextColorButton = document.getElementById(`apply-text-color-${id}`);
 
             applyTextColorButton.addEventListener('click', () => {
-                const newColor = textColorPicker.value;
-                const selection = window.getSelection();
+            const newColor = textColorPicker.value;
 
-                if (selection.rangeCount > 0) {
-                    const range = selection.getRangeAt(0);
-
-                    // 創建一個 span 並設定文字顏色
-                    const span = document.createElement('span');
-                    span.style.color = newColor;
-
-                    // 把選取的文字包裹在這個 span 裡
-                    range.surroundContents(span);
-
-                    // 清除選取狀態
-                    selection.removeAllRanges();
-                } else {
-                    alert('請先選取文字');
-                }
-            });
-                }
+            const selection = window.getSelection();
+            if (selection.rangeCount > 0 && selection.toString()) {
+                const range = selection.getRangeAt(0);
+                const span = document.createElement('span');
+                span.style.color = newColor;
+                range.surroundContents(span);
+            } else {
+                alert('請先選取文字');
+            }
+        });
+            }
 
         // 繪圖功能
         function draw(event, ctx, drawing, erasing, color, size) {
