@@ -360,9 +360,10 @@
                <div class="note-category"><strong>分類:</strong> ${note.category}</div>
                 <h2>${note.title}</h2>
                 <textarea id="text-content-${id}" style="color: ${note.textColor};">${note.content}</textarea>
-                <div class="text-tools">
+                 <div class="text-tools">
                     <label for="text-color-picker-${id}">文字顏色:</label>
                     <input type="color" id="text-color-picker-${id}" value="${note.textColor}">
+                    <button id="apply-color-button-${id}">變更顏色</button>
                 </div>
                 <canvas id="canvas-${id}" width="600" height="400"></canvas>
                 <div class="canvas-tools">
@@ -442,16 +443,16 @@
             }
 
             // 文字顏色選擇
-            const textContent = document.getElementById(`text-content-${id}`);
-            const textColorPicker = document.getElementById(`text-color-picker-${id}`);
-            textColorPicker.addEventListener('input', async (event) => {
-                const newColor = event.target.value;
-                textContent.style.color = newColor;
-                await db.collection('Notes').doc(id).update({
-                    textColor: newColor
-                });
-            });
-        }
+        const textContent = document.getElementById(`text-content-${id}`);
+        const textColorPicker = document.getElementById(`text-color-picker-${id}`);
+        const applyColorButton = document.getElementById(`apply-color-button-${id}`);
+
+        applyColorButton.addEventListener('click', () => {
+            const selectedColor = textColorPicker.value;
+            document.execCommand('styleWithCSS', false, true);  // 啟用 CSS 樣式化
+            document.execCommand('foreColor', false, selectedColor);  // 應用新顏色
+        });
+                }
 
         // 繪圖功能
         function draw(event, ctx, drawing, erasing, color, size) {
