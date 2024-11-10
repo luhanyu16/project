@@ -462,7 +462,7 @@
 
             // 載入保存的圖片
             if (note.imageSrc) {
-                const uploadedImage = document.getElementById(`uploaded-image-${id}`);
+                const uploadedImage = document.getElementById(`uploaded-images-${id}`);
                 uploadedImage.src = note.imageSrc;  // 將圖片的 dataURL 設置為 <img> 的 src
                 uploadedImage.style.display = 'block';  // 確保圖片顯示
             }
