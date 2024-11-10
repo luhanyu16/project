@@ -221,16 +221,6 @@
             <!-- 筆記列表將顯示在這裡 -->
         </div>
     </div>
-    <div class="note">
-        <h2>筆記標題</h2>
-        <div id="note-content" class="note-content" contenteditable="true">請在這裡輸入內容...</div>
-        
-        <div class="text-tools">
-            <label for="text-color-picker">文字顏色:</label>
-            <input type="color" id="text-color-picker" value="#333333">
-            <button id="apply-color-button">應用顏色</button>
-        </div>
-    </div>
 
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-app-compat.js"></script>
@@ -373,7 +363,7 @@
                 <div class="text-tools">
                     <label for="text-color-picker-${id}">文字顏色:</label>
                     <input type="color" id="text-color-picker-${id}" value="${note.textColor}">
-                    <button id="apply-text-color-${id}">應用顏色</button>
+                    <button id="apply-color-button-${id}">變更顏色</button>
                 </div>
                 <canvas id="canvas-${id}" width="600" height="400"></canvas>
                 <div class="canvas-tools">
@@ -432,25 +422,6 @@
                 erasing = false;
             });
 
-            document.getElementById('apply-color-button').addEventListener('click', () => {
-            const colorPicker = document.getElementById('text-color-picker');
-            const selectedColor = colorPicker.value;
-
-            const selection = window.getSelection();
-            if (!selection.isCollapsed) { // 確認有選取文字
-                const range = selection.getRangeAt(0); // 獲取選取範圍
-
-                const span = document.createElement('span');
-                span.style.color = selectedColor; // 設定選取顏色
-                range.surroundContents(span); // 將選取內容包裹在 span 中
-
-                // 清除選取
-                selection.removeAllRanges();
-                selection.addRange(range);
-            }
-        });
-
-
             document.getElementById(`save-note-${id}`).addEventListener('click', async () => {
                 const textContent = document.getElementById(`text-content-${id}`).value;
                 const dataURL = canvas.toDataURL();
@@ -474,19 +445,13 @@
             // 文字顏色選擇
             const textContent = document.getElementById(`text-content-${id}`);
             const textColorPicker = document.getElementById(`text-color-picker-${id}`);
-            const applyTextColorButton = document.getElementById(`apply-text-color-${id}`);
+            const applyColorButton = document.getElementById(`apply-color-button-${id}`);
 
-            // 當點擊「應用顏色」按鈕時，更新選取的文字顏色
-            applyTextColorButton.addEventListener('click', async () => {
-                const newColor = textColorPicker.value;
-                textContent.style.color = newColor;
-
-                // 保存顏色到資料庫
-                await db.collection('Users').doc(currentUser.uid).collection('Notes').doc(id).update({
-                    textColor: newColor
-                });
+            applyColorButton.addEventListener('click', () => {
+                const selectedColor = textColorPicker.value;
+                document.execCommand('styleWithCSS', false, true);  // 啟用 CSS 樣式化
+                document.execCommand('foreColor', false, selectedColor);  // 應用新顏色
             });
-        }
 
         // 繪圖功能
         function draw(event, ctx, drawing, erasing, color, size) {
