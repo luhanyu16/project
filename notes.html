@@ -360,10 +360,10 @@
                <div class="note-category"><strong>分類:</strong> ${note.category}</div>
                 <h2>${note.title}</h2>
                 <textarea id="text-content-${id}" style="color: ${note.textColor};">${note.content}</textarea>
-                 <div class="text-tools">
+                <div class="text-tools">
                     <label for="text-color-picker-${id}">文字顏色:</label>
                     <input type="color" id="text-color-picker-${id}" value="${note.textColor}">
-                    <button id="apply-color-button-${id}">變更顏色</button>
+                    <button id="apply-text-color-${id}">變更顏色</button>
                 </div>
                 <canvas id="canvas-${id}" width="600" height="400"></canvas>
                 <div class="canvas-tools">
@@ -443,24 +443,17 @@
             }
 
             // 文字顏色選擇
-        const textContent = document.getElementById(`text-content-${id}`);
-        const textColorPicker = document.getElementById(`text-color-picker-${id}`);
-        const applyColorButton = document.getElementById(`apply-color-button-${id}`);
+const textContent = document.getElementById(`text-content-${id}`);
+const textColorPicker = document.getElementById(`text-color-picker-${id}`);
+const applyTextColorButton = document.getElementById(`apply-text-color-${id}`);
 
-        applyColorButton.addEventListener("click", () => {
-            const selectedColor = textColorPicker.value;
-
-            // 確保支援 execCommand 方法
-            if (typeof document.execCommand === "function") {
-                // 先啟用 CSS 設定
-                document.execCommand("styleWithCSS", false, true);
-
-                // 將選取文字顏色變更為選擇的顏色
-                document.execCommand("foreColor", false, selectedColor);
-            } else {
-                console.warn("此瀏覽器不支援 execCommand 方法。");
-            }
-        });
+// 當按下應用顏色按鈕時，變更選取文字的顏色
+applyTextColorButton.addEventListener('click', () => {
+    const newColor = textColorPicker.value;
+    textContent.focus();
+    document.execCommand('styleWithCSS', false, true); // 啟用樣式化
+    document.execCommand('foreColor', false, newColor); // 更改選取文字的顏色
+});
                 }
 
         // 繪圖功能
