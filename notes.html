@@ -324,7 +324,6 @@
             });
         }
 
-
         // 搜尋筆記
         const searchButton = document.getElementById('search-button');
         searchButton.addEventListener('click', searchNotes);
@@ -426,14 +425,13 @@
                 erasing = false;
             });
 
-            // 切換繪圖模式按鈕
             document.getElementById(`toggle-draw-mode-${id}`).addEventListener('click', () => {
-                drawMode = true;
-                // if (drawMode) {
-                //     alert("已切換到繪圖模式");
-                // } else {
-                //     alert("已切換到圖片編輯模式");
-                // }
+                drawMode = !drawMode;
+                if (drawMode) {
+                    alert('已切換到繪圖模式');
+                } else {
+                    alert('已切換到圖片操作模式');
+                }
             });
 
             //新增圖片
@@ -500,7 +498,9 @@
                             const mouseX = event.offsetX;
                             const mouseY = event.offsetY;
 
-                            if (resizing) {
+                            if (drawMode) {
+                                draw(event, ctx, drawing, erasing, currentColor, brushSize);
+                            } else if (resizing) {
                                 imgWidth = mouseX - imgX;
                                 imgHeight = mouseY - imgY;
                                 drawImage();
@@ -537,10 +537,8 @@
                         brushSize: parseInt(brushSize, 10),
                     });
 
-                    alert('筆記已成功保存！');
                 } catch (error) {
                     console.error('保存筆記時發生錯誤:', error);
-                    alert('保存失敗，請重試。');
                 }
             });
 
@@ -549,7 +547,7 @@
                 const img = new Image();
                 img.src = note.canvasData;
                 img.onload = () => {
-                    ctx.drawImage(img, 0, 0);
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
                 };
             }
 
