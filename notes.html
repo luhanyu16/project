@@ -600,6 +600,11 @@
 
             folderSelect.innerHTML = '<option value="">選擇資料夾</option>';  // 清空選單
 
+            if (folderSnapshot.empty) {
+                // 沒有資料夾時，顯示提示
+                alert('目前沒有資料夾，請先新增資料夾');
+            }
+
             folderSnapshot.forEach(doc => {
                 const folder = doc.data();
                 const option = document.createElement('option');
@@ -613,8 +618,10 @@
                 const selectedFolderId = folderSelect.value;
                 if (selectedFolderId) {
                     deleteFolderButton.style.display = 'inline-block'; // 顯示刪除按鈕
+                    loadNotes(selectedFolderId); // 顯示該資料夾中的筆記
                 } else {
                     deleteFolderButton.style.display = 'none'; // 隱藏刪除按鈕
+                    notesContainer.innerHTML = ''; // 清空筆記內容
                 }
             });
         }
@@ -666,7 +673,7 @@
             const category = prompt('輸入筆記分類:');
             const title = prompt('輸入標題:');
             if (title && category && currentUser) {
-                const notesRef = currentFolderId  // 確保使用當前選擇的資料夾 ID
+                const notesRef = currentFolderId  // 使用當前選擇的資料夾 ID
                     ? db.collection('Users').doc(currentUser.uid).collection('Folders').doc(currentFolderId).collection('Notes')
                     : db.collection('Users').doc(currentUser.uid).collection('Notes');
                 
@@ -832,7 +839,8 @@
             if (user) {
                 currentUser = user;
                 toggleUI();
-                displayNotes(); // 只呼叫一次顯示筆記
+                // displayNotes(); // 只呼叫一次顯示筆記
+                loadFolders();
             } else {
                 currentUser = null;
                 toggleUI();
