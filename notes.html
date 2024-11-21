@@ -426,36 +426,36 @@
             });
 
             document.getElementById(`save-note-${id}`).addEventListener('click', async () => {
-            try {
-                // 獲取文字內容
-                const textContentElement = document.getElementById(`text-content-${id}`);
-                const textContent = textContentElement ? textContentElement.innerHTML : '';
+                try {
+                    // 獲取文字內容，儲存帶顏色的 innerHTML
+                    const textContentElement = document.getElementById(`text-content-${id}`);
+                    const textContent = textContentElement ? textContentElement.innerHTML : ''; // 儲存 HTML 內容
 
-                // 獲取文字顏色
-                const textColorPicker = document.getElementById(`text-color-picker-${id}`);
-                const textColor = textColorPicker ? textColorPicker.value : '#000000';
+                    // 獲取文字顏色
+                    const textColorPicker = document.getElementById(`text-color-picker-${id}`);
+                    const textColor = textColorPicker ? textColorPicker.value : '#000000';
 
-                // 獲取圖片資料
-                const imageSrc = document.getElementById(`uploaded-image-${id}`).src;
+                    // 獲取圖片資料
+                    const imageSrc = document.getElementById(`uploaded-image-${id}`).src;
 
-                // 儲存畫布資料
-                await saveCanvasDataToDatabase(id, canvas);
+                    // 儲存畫布資料
+                    await saveCanvasDataToDatabase(id, canvas);
 
-                // 更新資料到 Firebase
-                await db.collection('Users').doc(currentUser.uid).collection('Folders').doc(currentFolderId).collection('Notes').doc(id).update({
-                    content: textContent,
-                    textColor: textColor,
-                    imageSrc: imageSrc,
-                    brushSize: brushSize,
-                    timestamp: firebase.firestore.FieldValue.serverTimestamp() // 更新時間戳
-                });
+                    // 更新資料到 Firebase
+                    await db.collection('Users').doc(currentUser.uid).collection('Folders').doc(currentFolderId).collection('Notes').doc(id).update({
+                        content: textContent, // 儲存帶顏色的 HTML
+                        textColor: textColorPicker.innerHTML,
+                        imageSrc: imageSrc,
+                        brushSize: brushSize,
+                        timestamp: firebase.firestore.FieldValue.serverTimestamp() // 更新時間戳
+                    });
 
-                alert('筆記儲存成功！');
-            } catch (error) {
-                console.error('筆記儲存失敗:', error);
-                alert('儲存失敗，請重試');
-            }
-        });
+                    alert('筆記儲存成功！');
+                } catch (error) {
+                    console.error('筆記儲存失敗:', error);
+                    alert('儲存失敗，請重試');
+                }
+            });
 
             // 載入保存的畫布
             if (note.canvasData) {
@@ -471,6 +471,12 @@
                 const uploadedImage = document.getElementById(`uploaded-image-${id}`);
                 uploadedImage.src = note.imageSrc;  // 將圖片的 dataURL 設置為 <img> 的 src
                 uploadedImage.style.display = 'block';  // 確保圖片顯示
+            }
+
+            // 載入筆記內容並保留顏色樣式
+            if (note.content) {
+                const textContentElement = document.getElementById(`text-content-${id}`);
+                textContentElement.innerHTML = note.content; // 使用 innerHTML 來載入帶顏色的內容
             }
 
             // 文字顏色選擇
