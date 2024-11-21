@@ -455,7 +455,7 @@
             }
 
             // 文字顏色選擇
-            // const textContent = document.getElementById(`text-content-${id}`);
+            const textContent = document.getElementById(`text-content-${id}`);
             const textColorPicker = document.getElementById(`text-color-picker-${id}`);
             const applyTextColorButton = document.getElementById(`apply-text-color-${id}`);
 
@@ -490,7 +490,7 @@
                 }
             });
 
-            const textContent = noteElement.querySelector(`#text-content-${id}`);
+            // const textContent = noteElement.querySelector(`#text-content-${id}`);
             textContent.addEventListener('input', async () => {
                 await db.collection('Users').doc(currentUser.uid)
                     .collection('Folders').doc(currentFolderId)
