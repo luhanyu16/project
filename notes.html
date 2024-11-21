@@ -455,7 +455,7 @@
             }
 
             // 文字顏色選擇
-            const textContent = document.getElementById(`text-content-${id}`);
+            // const textContent = document.getElementById(`text-content-${id}`);
             const textColorPicker = document.getElementById(`text-color-picker-${id}`);
             const applyTextColorButton = document.getElementById(`apply-text-color-${id}`);
 
@@ -490,13 +490,44 @@
                 }
             });
 
-            // const textContent = noteElement.querySelector(`#text-content-${id}`);
+            // 儲存文字內容
+            const textContent = noteElement.querySelector(`#text-content-${id}`);
             textContent.addEventListener('input', async () => {
-                await db.collection('Users').doc(currentUser.uid)
-                    .collection('Folders').doc(currentFolderId)
-                    .collection('Notes').doc(id).update({
-                        content: textContent.value,
-                    });
+                try {
+                    await db.collection('Users').doc(currentUser.uid)
+                        .collection('Folders').doc(currentFolderId)
+                        .collection('Notes').doc(id).update({
+                            content: textContent.value,
+                        });
+                } catch (error) {
+                    console.error('儲存文字內容時出錯:', error);
+                }
+            });
+
+            // 儲存圖片內容
+            const imageInput = noteElement.querySelector(`#upload-image-${id}`);
+            imageInput.addEventListener('change', function (event) {
+                const file = event.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = async function (e) {
+                        const dataURL = e.target.result;
+                        const uploadedImage = noteElement.querySelector(`#uploaded-image-${id}`);
+                        uploadedImage.src = dataURL;
+                        uploadedImage.style.display = 'block'; // 確保圖片顯示
+
+                        try {
+                            await db.collection('Users').doc(currentUser.uid)
+                                .collection('Folders').doc(currentFolderId)
+                                .collection('Notes').doc(id).update({
+                                    imageSrc: dataURL,
+                                });
+                        } catch (error) {
+                            console.error('儲存圖片內容時出錯:', error);
+                        }
+                    };
+                    reader.readAsDataURL(file);
+                }
             });
 
             notesContainer.appendChild(noteElement);
