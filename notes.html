@@ -655,45 +655,73 @@
             }
         });
 
-        // 刪除資料夾及其內容
-        async function deleteFolder(folderId) {
-            if (!currentUser) {
-                console.error('未登入的用戶無法刪除資料夾。');
-                return;
-            }
-            
-            const folderRef = db.collection('Users')
-                                .doc(currentUser.uid)
-                                .collection('Folders') // 假設資料夾存於 'Folders' 集合
-                                .doc(folderId);
-            
+        // 防止重複新增資料夾
+        async function addFolder(folderName) {
+            const folderRef = db.collection('Users').doc(currentUser.uid).collection('Folders');
+
             try {
-                // 1. 確認該資料夾是否存在
-                const folderDoc = await folderRef.get();
-                if (!folderDoc.exists) {
-                    console.error('資料夾不存在，無法刪除。');
+                // 檢查名稱是否重複
+                const existingFolder = await folderRef.where('name', '==', folderName).get();
+                if (!existingFolder.empty) {
+                    console.error('資料夾名稱已存在，無法新增相同名稱的資料夾。');
                     return;
                 }
-                
-                // 2. 刪除資料夾下的所有筆記
-                const notesSnapshot = await folderRef.collection('Notes').get();
-                const batch = db.batch(); // 使用批次操作提高效率
 
-                notesSnapshot.forEach(doc => {
-                    batch.delete(doc.ref);
+                // 新增資料夾
+                await folderRef.add({ name: folderName, createdAt: new Date() });
+                console.log('資料夾已成功新增！');
+            } catch (error) {
+                console.error('新增資料夾時發生錯誤：', error);
+            }
+        }
+
+        // 更新前端清單
+        async function displayFolders() {
+            const folderRef = db.collection('Users').doc(currentUser.uid).collection('Folders');
+            const folderSelect = document.getElementById('folderDropdown'); // 假設選單的 ID 為 folderDropdown
+            folderSelect.innerHTML = ''; // 清空選單
+
+            try {
+                const foldersSnapshot = await folderRef.orderBy('createdAt', 'asc').get();
+                foldersSnapshot.forEach(doc => {
+                    const option = document.createElement('option');
+                    option.value = doc.id;
+                    option.textContent = doc.data().name;
+                    folderSelect.appendChild(option);
+                });
+            } catch (error) {
+                console.error('顯示資料夾清單時發生錯誤：', error);
+            }
+        }
+
+        // 移除重複項目邏輯
+        async function removeDuplicateFolders() {
+            const folderRef = db.collection('Users').doc(currentUser.uid).collection('Folders');
+            try {
+                // 取得所有資料夾
+                const foldersSnapshot = await folderRef.get();
+                const folderNames = new Set();
+                const duplicates = [];
+
+                foldersSnapshot.forEach(doc => {
+                    const folderName = doc.data().name; // 假設資料夾名稱存於 `name` 欄位
+                    if (folderNames.has(folderName)) {
+                        duplicates.push(doc.id); // 紀錄重複資料夾的 ID
+                    } else {
+                        folderNames.add(folderName);
+                    }
                 });
 
-                // 提交刪除操作
+                // 刪除重複的資料夾
+                const batch = db.batch();
+                duplicates.forEach(folderId => {
+                    batch.delete(folderRef.doc(folderId));
+                });
+
                 await batch.commit();
-
-                // 3. 刪除資料夾本身
-                await folderRef.delete();
-
-                console.log('資料夾及其內容已成功刪除。');
-                displayFolders(); // 更新 UI
-
+                console.log('重複資料夾已成功移除！');
             } catch (error) {
-                console.error('刪除資料夾時發生錯誤：', error);
+                console.error('刪除重複資料夾時發生錯誤：', error);
             }
         }
 
