@@ -311,28 +311,6 @@
             }
         }
 
-        // 新增筆記
-        // newNoteButton.addEventListener('click', async () => {
-        //     const category = prompt('輸入筆記分類:');
-        //     const title = prompt('輸入標題:');
-        //     if (title && category && currentUser) {
-        //         try {
-        //             await db.collection('Users').doc(currentUser.uid).collection('Notes').add({
-        //                 category: category,
-        //                 title: title,
-        //                 content: '',
-        //                 canvasData: '',
-        //                 textColor: '#000000',
-        //                 brushSize: 5,
-        //                 timestamp: new Date()
-        //             });
-        //             displayNotes(); // 更新 UI
-        //         } catch (error) {
-        //             console.error('新增筆記時出錯:', error);
-        //         }
-        //     }
-        // });
-
         // 顯示筆記
         async function displayNotes() {
             if (!currentUser) return;
@@ -378,7 +356,7 @@
         // 建立筆記元素
         function createNoteElement(id, note) {
             const noteElement = document.createElement('div');
-            noteElement.className = 'note';
+            noteElement.classList.add('note');
             noteElement.innerHTML = `
                <div class="note-category"><strong>分類:</strong> ${note.category}</div>
                 <h2>${note.title}</h2>
@@ -477,7 +455,7 @@
             }
 
             // 文字顏色選擇
-            const textContent = document.getElementById(`text-content-${id}`);
+            // const textContent = document.getElementById(`text-content-${id}`);
             const textColorPicker = document.getElementById(`text-color-picker-${id}`);
             const applyTextColorButton = document.getElementById(`apply-text-color-${id}`);
 
@@ -511,6 +489,17 @@
                     reader.readAsDataURL(file); // 讀取圖片為 dataURL
                 }
             });
+
+            const textContent = noteElement.querySelector(`#text-content-${id}`);
+            textContent.addEventListener('input', async () => {
+                await db.collection('Users').doc(currentUser.uid)
+                    .collection('Folders').doc(currentFolderId)
+                    .collection('Notes').doc(id).update({
+                        content: textContent.value,
+                    });
+            });
+
+            notesContainer.appendChild(noteElement);
         }
 
         // 繪圖功能
@@ -536,10 +525,12 @@
 
         // 儲存畫布內容至資料庫
         async function saveCanvasDataToDatabase(id, canvas) {
-            const dataURL = canvas.toDataURL(); // 取得畫布的dataURL
-            await db.collection('Users').doc(currentUser.uid).collection('Notes').doc(id).update({
-                canvasData: dataURL // 儲存畫布的dataURL
-            });
+            const dataURL = canvas.toDataURL(); // 取得畫布的 dataURL
+            await db.collection('Users').doc(currentUser.uid)
+                .collection('Folders').doc(currentFolderId)
+                .collection('Notes').doc(id).update({
+                    canvasData: dataURL, // 儲存畫布的 dataURL
+                });
         }
 
         // 編輯筆記
@@ -671,7 +662,8 @@
         }
 
         // 新增筆記時選擇資料夾
-        newNoteButton.addEventListener('click', () => {
+        // 新增筆記
+        newNoteButton.addEventListener('click', async () => {
             const category = prompt('輸入筆記分類:');
             const title = prompt('輸入標題:');
             if (title && category && currentUser) {
@@ -679,7 +671,7 @@
                     ? db.collection('Users').doc(currentUser.uid).collection('Folders').doc(currentFolderId).collection('Notes')
                     : db.collection('Users').doc(currentUser.uid).collection('Notes');
                 
-                notesRef.add({
+                const noteDoc = await notesRef.add({
                     category: category,
                     title: title,
                     content: '', // 預設內容是空
@@ -687,11 +679,16 @@
                     textColor: '#000000',
                     brushSize: 5,
                     timestamp: new Date()
-                }).then(() => {
-                    alert('筆記已新增');
-                    loadNotes(currentFolderId);  // 更新資料夾中的筆記列表
-                }).catch(error => {
-                    console.error('新增筆記時出錯:', error);
+                });
+
+                // 初始化筆記元素到畫面
+                createNoteElement(noteDoc.id, {
+                    category,
+                    title,
+                    content: '',
+                    canvasData: '',
+                    textColor: '#000000',
+                    brushSize: 5,
                 });
             }
         });
@@ -760,35 +757,35 @@
         }
 
         // 移除重複項目邏輯
-        async function removeDuplicateFolders() {
-            const folderRef = db.collection('Users').doc(currentUser.uid).collection('Folders');
-            try {
-                // 取得所有資料夾
-                const foldersSnapshot = await folderRef.get();
-                const folderNames = new Set();
-                const duplicates = [];
+        // async function removeDuplicateFolders() {
+        //     const folderRef = db.collection('Users').doc(currentUser.uid).collection('Folders');
+        //     try {
+        //         // 取得所有資料夾
+        //         const foldersSnapshot = await folderRef.get();
+        //         const folderNames = new Set();
+        //         const duplicates = [];
 
-                foldersSnapshot.forEach(doc => {
-                    const folderName = doc.data().name; // 假設資料夾名稱存於 `name` 欄位
-                    if (folderNames.has(folderName)) {
-                        duplicates.push(doc.id); // 紀錄重複資料夾的 ID
-                    } else {
-                        folderNames.add(folderName);
-                    }
-                });
+        //         foldersSnapshot.forEach(doc => {
+        //             const folderName = doc.data().name; // 假設資料夾名稱存於 `name` 欄位
+        //             if (folderNames.has(folderName)) {
+        //                 duplicates.push(doc.id); // 紀錄重複資料夾的 ID
+        //             } else {
+        //                 folderNames.add(folderName);
+        //             }
+        //         });
 
-                // 刪除重複的資料夾
-                const batch = db.batch();
-                duplicates.forEach(folderId => {
-                    batch.delete(folderRef.doc(folderId));
-                });
+        //         // 刪除重複的資料夾
+        //         const batch = db.batch();
+        //         duplicates.forEach(folderId => {
+        //             batch.delete(folderRef.doc(folderId));
+        //         });
 
-                await batch.commit();
-                console.log('重複資料夾已成功移除！');
-            } catch (error) {
-                console.error('刪除重複資料夾時發生錯誤：', error);
-            }
-        }
+        //         await batch.commit();
+        //         console.log('重複資料夾已成功移除！');
+        //     } catch (error) {
+        //         console.error('刪除重複資料夾時發生錯誤：', error);
+        //     }
+        // }
 
         // 刪除資料夾
         document.getElementById('delete-folder-button').addEventListener('click', async () => {
