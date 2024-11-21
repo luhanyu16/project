@@ -130,13 +130,6 @@
             margin-bottom: 20px;         /* 與下面的內容保持間距 */
         }
 
-        #folder-select {
-            display: flex;               /* 讓搜尋框和按鈕在同一行 */
-            justify-content: flex-start; /* 讓它們在左邊對齊 */
-            gap: 10px;                   /* 添加一個 10px 的間距 */
-            margin-bottom: 20px;         /* 與下面的內容保持間距 */
-        }
-
         #search-input {
             padding: 8px;
             font-size: 16px;
@@ -227,7 +220,7 @@
     <div class="container">
         <h1>網頁筆記</h1>
         <div class="header">
-            <select id="folder-select">
+            <select id="folder-select" style="width: 200px; height: 50px;">
                 <option value="">所有筆記</option>
             </select>
             <button id="login-button">Google 登入</button>
