@@ -442,7 +442,7 @@
                     await saveCanvasDataToDatabase(id, canvas);
 
                     // 更新資料到 Firebase
-                    await db.collection('Users').doc(currentUser.uid).collection('Notes').doc(id).update({
+                    await db.collection('Users').doc(currentUser.uid).collection('Folders').doc(currentFolderId).collection('Notes').doc(id).update({
                         content: textContent,
                         textColor: textColor,
                         imageSrc: imageSrc,
@@ -474,7 +474,7 @@
             }
 
             // 文字顏色選擇
-            const textContent = document.getElementById(`text-content-${id}`);
+            // const textContent = document.getElementById(`text-content-${id}`);
             const textColorPicker = document.getElementById(`text-color-picker-${id}`);
             const applyTextColorButton = document.getElementById(`apply-text-color-${id}`);
 
@@ -510,13 +510,13 @@
             });
 
             // 儲存文字內容
-            // const textContent = noteElement.querySelector(`#text-content-${id}`);
+            const textContent = noteElement.querySelector(`#text-content-${id}`);
             textContent.addEventListener('input', async () => {
                 try {
                     await db.collection('Users').doc(currentUser.uid)
                         .collection('Folders').doc(currentFolderId)
                         .collection('Notes').doc(id).update({
-                            content: textContent.value,
+                            content: textContent.innerHTML, // 使用 innerHTML 來儲存文字內容
                         });
                 } catch (error) {
                     console.error('儲存文字內容時出錯:', error);
