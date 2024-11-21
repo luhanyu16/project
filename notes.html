@@ -541,22 +541,23 @@
         }
 
         // 編輯筆記
-        async function editNote(noteId) {
-            const noteRef = db.collection('Users').doc(currentUser.uid).collection('Notes').doc(noteId);
-            const noteDoc = await noteRef.get();
-            if (noteDoc.exists) {
-                const note = noteDoc.data();
-                const newCategory = prompt('修改分類:', note.category);
-                const newTitle = prompt('修改標題:', note.title);
-                if (newCategory !== null && newTitle !== null) {
-                    noteRef.update({
-                        category: newCategory,
-                        title: newTitle
-                    }).then(() => {
-                        displayNotes();
-                    }).catch(error => {
-                        console.error('更新筆記時出錯:', error);
-                    });
+        async function editNote(noteId, folderId) {
+            const newContent = prompt('輸入新的筆記內容:');
+            
+            if (newContent && currentUser) {
+                try {
+                    await db.collection('Users').doc(currentUser.uid)
+                        .collection('Folders').doc(folderId)
+                        .collection('Notes').doc(noteId).update({
+                            content: newContent,
+                            timestamp: new Date()  // 更新時間戳
+                        });
+
+                    alert('筆記已更新');
+                    loadNotes(folderId);  // 更新筆記列表
+                } catch (error) {
+                    console.error('更新筆記時出錯:', error);
+                    alert('更新筆記失敗');
                 }
             }
         }
@@ -618,6 +619,20 @@
             });
         }
 
+        // 顯示資料夾中的筆記
+        async function loadNotes(folderId) {
+            const notesSnapshot = await db.collection('Users').doc(currentUser.uid)
+                .collection('Folders').doc(folderId)
+                .collection('Notes').get();
+
+            notesContainer.innerHTML = ''; // 清空現有筆記內容
+
+            notesSnapshot.forEach(doc => {
+                const note = doc.data();
+                createNoteElement(doc.id, note); // 創建筆記元素並顯示
+            });
+        }
+
         // 切換資料夾時顯示對應筆記
         folderSelect.addEventListener('change', () => {
             currentFolderId = folderSelect.value; // 設定目前選擇的資料夾
@@ -670,6 +685,30 @@
                 });
             }
         });
+
+        // 新增筆記
+        async function addNewNoteToFolder(folderId) {
+            const title = prompt('輸入筆記標題:');
+            const content = prompt('輸入筆記內容:');
+            
+            if (title && content && currentUser) {
+                try {
+                    await db.collection('Users').doc(currentUser.uid)
+                        .collection('Folders').doc(folderId)
+                        .collection('Notes').add({
+                            title: title,
+                            content: content,
+                            timestamp: new Date()
+                        });
+
+                    alert('筆記已新增');
+                    loadNotes(folderId);  // 更新資料夾中的筆記列表
+                } catch (error) {
+                    console.error('新增筆記時出錯:', error);
+                    alert('新增筆記失敗');
+                }
+            }
+        }
 
         // 防止重複新增資料夾
         async function addFolder(folderName) {
@@ -768,6 +807,7 @@
 
                     alert('資料夾已刪除');
                     loadFolders(); // 更新資料夾列表
+                    notesContainer.innerHTML = '';  // 清空顯示筆記區域
                 } catch (error) {
                     console.error('刪除資料夾時出錯:', error);
                     alert('刪除資料夾時出錯，請再試一次');
