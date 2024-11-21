@@ -613,15 +613,21 @@
 
         // 刪除筆記
         function deleteNote(noteId) {
-            if (confirm('確定要刪除這個筆記嗎?')) {
-                db.collection('Users').doc(currentUser.uid).collection('Notes').doc(noteId).delete()
-                    .then(() => {
-                        displayNotes();
-                    })
-                    .catch(error => {
-                        console.error('刪除筆記時出錯:', error);
-                    });
-            }
+            const userRef = db.collection('Users').doc(currentUser.uid);
+            const noteRef = userRef.collection('Folders').doc(currentFolderId).collection('Notes').doc(noteId);
+
+            // 刪除筆記
+            noteRef.delete()
+                .then(() => {
+                    console.log('筆記已成功刪除');
+                    alert('筆記已成功刪除');
+                    // 刪除後重新載入筆記列表
+                    displayNotes();
+                })
+                .catch(error => {
+                    console.error('刪除筆記失敗:', error);
+                    alert('刪除筆記失敗，請稍後再試');
+                });
         }
 
         // 新增資料夾
