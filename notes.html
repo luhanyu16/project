@@ -225,11 +225,6 @@
             <button id="logout-button" style="display: none;">登出</button>
         </div>
 
-        <div id="folders-container">
-            <button id="create-folder-btn">Create Folder</button>
-            <ul id="folders-list"></ul>
-        </div>
-
         <!-- 搜尋輸入框和按鈕 -->
         <div id="search-container" style="display: none;">
             <input type="text" id="search-input" placeholder="搜尋筆記標題或分類">
@@ -569,98 +564,6 @@
                     .catch(error => {
                         console.error('刪除筆記時出錯:', error);
                     });
-            }
-        }
-
-        // Fetch 使用者的資料夾
-        // async function loadFolders(userId) {
-        //     const response = await fetch(`/folders/${userId}`);
-        //     const folders = await response.json();
-        //     const foldersList = document.getElementById('folders-list');
-        //     foldersList.innerHTML = ''; // 清空舊資料
-        //     folders.forEach(folder => {
-        //         const li = document.createElement('li');
-        //         li.textContent = folder.folder_name;
-        //         li.dataset.folderId = folder.folder_id;
-        //         li.addEventListener('click', () => loadNotes(folder.folder_id));
-        //         foldersList.appendChild(li);
-        //     });
-        // }
-
-        // 建立新資料夾按鈕
-        document.getElementById('create-folder-btn').addEventListener('click', async () => {
-            const folderName = prompt('Enter folder name:');
-            if (folderName) {
-                await createFolder(currentUser, folderName); // 呼叫新增資料夾函數
-                renderFolders(); // 更新資料夾清單
-            }
-        });
-
-        // 顯示資料夾清單
-        async function renderFolders() {
-            const folders = await getFolders(currentUser);
-            const foldersList = document.getElementById('folders-list');
-            foldersList.innerHTML = ''; // 清空現有資料
-            folders.forEach(folder => {
-                const li = document.createElement('li');
-                li.textContent = folder.folderName;
-                li.dataset.folderId = folder.id;
-                li.addEventListener('click', () => loadNotes(folder.id)); // 點擊切換筆記
-                foldersList.appendChild(li);
-            });
-        }
-
-        // 刪除資料夾按鈕
-        async function handleDeleteFolder(folderId) {
-            const confirmDelete = confirm('Are you sure you want to delete this folder and its notes?');
-            if (confirmDelete) {
-                await deleteFolder(folderId); // 呼叫刪除資料夾函數
-                renderFolders(); // 更新資料夾清單
-            }
-        }
-
-        // 新增資料夾
-        import { db } from './firebaseConfig'; // 確保已正確導入 Firebase
-
-        async function createFolder(userId, folderName) {
-            try {
-                const folderRef = await db.collection('folders').add({
-                    userId,
-                    folderName,
-                    createdAt: new Date(),
-                });
-                console.log('Folder created with ID:', folderRef.id);
-                return folderRef.id;
-            } catch (error) {
-                console.error('Error creating folder:', error);
-            }
-        }
-
-        // 獲取使用者的資料夾列表
-        async function getFolders(userId) {
-            try {
-                const snapshot = await db.collection('folders').where('userId', '==', userId).get();
-                const folders = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                return folders;
-            } catch (error) {
-                console.error('Error fetching folders:', error);
-            }
-        }
-
-        // 刪除資料夾
-        async function deleteFolder(folderId) {
-            try {
-                // 刪除資料夾內的筆記
-                const notesSnapshot = await db.collection('notes').where('folderId', '==', folderId).get();
-                const batch = db.batch();
-                notesSnapshot.forEach(doc => batch.delete(doc.ref));
-                await batch.commit();
-
-                // 刪除資料夾
-                await db.collection('folders').doc(folderId).delete();
-                console.log('Folder and its notes deleted successfully');
-            } catch (error) {
-                console.error('Error deleting folder:', error);
             }
         }
 
