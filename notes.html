@@ -497,7 +497,7 @@
                     await db.collection('Users').doc(currentUser.uid)
                         .collection('Folders').doc(currentFolderId)
                         .collection('Notes').doc(id).update({
-                            content: textAreaElement.value,
+                            content: textContent.value,
                         });
                 } catch (error) {
                     console.error('儲存文字內容時出錯:', error);
