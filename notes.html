@@ -265,7 +265,6 @@
         const loginButton = document.getElementById('login-button');
         const logoutButton = document.getElementById('logout-button');
         const newNoteButton = document.getElementById('new-note');
-        const deleteFolderButton = document.getElementById('delete-folder-button');
         const notesContainer = document.getElementById('notes-container');
         const searchContainer = document.getElementById('search-container');
 
@@ -300,17 +299,11 @@
                 loginButton.style.display = 'none';
                 logoutButton.style.display = 'inline-block';
                 newNoteButton.style.display = 'inline-block';
-                newFolderButton.style.display = 'inline-block';
-                deleteFolderButton.style.display = 'inline-block';
-                folderSelect.style.display = 'inline-block';
                 searchContainer.style.display = 'flex';
             } else {
                 loginButton.style.display = 'inline-block';
                 logoutButton.style.display = 'none';
                 newNoteButton.style.display = 'none';
-                newFolderButton.style.display = 'none';
-                deleteFolderButton.style.display = 'none';
-                folderSelect.style.display = 'none';
                 searchContainer.style.display = 'none';
                 notesContainer.innerHTML = '';
             }
@@ -648,7 +641,6 @@
                     name: folderName,
                     timestamp: new Date()
                 });
-                toggleUI();
                 loadFolders();
             }
         });
