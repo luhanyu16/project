@@ -655,6 +655,59 @@
             }
         });
 
+        // 刪除資料夾及其內容
+        async function deleteFolder(folderId) {
+            if (!currentUser) {
+                console.error('未登入的用戶無法刪除資料夾。');
+                return;
+            }
+            
+            const folderRef = db.collection('Users')
+                                .doc(currentUser.uid)
+                                .collection('Folders') // 假設資料夾存於 'Folders' 集合
+                                .doc(folderId);
+            
+            try {
+                // 1. 確認該資料夾是否存在
+                const folderDoc = await folderRef.get();
+                if (!folderDoc.exists) {
+                    console.error('資料夾不存在，無法刪除。');
+                    return;
+                }
+                
+                // 2. 刪除資料夾下的所有筆記
+                const notesSnapshot = await folderRef.collection('Notes').get();
+                const batch = db.batch(); // 使用批次操作提高效率
+
+                notesSnapshot.forEach(doc => {
+                    batch.delete(doc.ref);
+                });
+
+                // 提交刪除操作
+                await batch.commit();
+
+                // 3. 刪除資料夾本身
+                await folderRef.delete();
+
+                console.log('資料夾及其內容已成功刪除。');
+                displayFolders(); // 更新 UI
+
+            } catch (error) {
+                console.error('刪除資料夾時發生錯誤：', error);
+            }
+        }
+
+        // 假設每個資料夾旁有刪除按鈕，綁定刪除事件
+        document.querySelectorAll('.delete-folder-button').forEach(button => {
+            button.addEventListener('click', async () => {
+                const folderId = button.dataset.folderId; // 假設按鈕有 folderId 資料屬性
+                const confirmation = confirm('確定要刪除此資料夾及其內容嗎？');
+                if (confirmation) {
+                    await deleteFolder(folderId);
+                }
+            });
+        });
+
         // 監聽使用者登入狀態
         auth.onAuthStateChanged(user => {
             if (user) {
