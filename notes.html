@@ -829,10 +829,13 @@
                     const notesSnapshot = await db.collection('Users').doc(currentUser.uid)
                         .collection('Folders').doc(selectedFolderId).collection('Notes').get();
 
-                    // 刪除每一筆筆記
-                    notesSnapshot.forEach(async (noteDoc) => {
+                    // 刪除每一筆筆記並等待所有筆記刪除完成
+                    const deletePromises = notesSnapshot.docs.map(async (noteDoc) => {
                         await noteDoc.ref.delete();
                     });
+
+                    // 等待所有刪除筆記的 Promise 完成
+                    await Promise.all(deletePromises);
 
                     // 刪除資料夾本身
                     await db.collection('Users').doc(currentUser.uid).collection('Folders').doc(selectedFolderId).delete();
