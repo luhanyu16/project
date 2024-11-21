@@ -223,7 +223,8 @@
             <button id="login-button">Google 登入</button>
             <button id="new-note" style="display: none;">新增筆記</button>
             <button id="logout-button" style="display: none;">登出</button>
-            <button id="new-folder">新增資料夾</button>
+            <button id="new-folder" style="display: none;">新增資料夾</button>
+            <button id="delete-folder-button" style="display: none;">刪除資料夾</button>
             <select id="folder-select">
                 <option value="">所有筆記</option>
             </select>
@@ -276,6 +277,7 @@
                 .then(result => {
                     currentUser = result.user;
                     toggleUI();
+                    loadFolders(); // 載入資料夾
                     // displayNotes();
                 })
                 .catch(error => {
@@ -591,14 +593,28 @@
 
         // 載入資料夾
         async function loadFolders() {
-            const folderSnapshot = await db.collection('Users').doc(currentUser.uid).collection('Folders').orderBy('timestamp').get();
-            folderSelect.innerHTML = '<option value="">所有筆記</option>'; // 預設為顯示所有筆記
+            const folderSelect = document.getElementById('folder-select');
+            const deleteFolderButton = document.getElementById('delete-folder-button');
+            const folderSnapshot = await db.collection('Users').doc(currentUser.uid).collection('Folders').get();
+
+            folderSelect.innerHTML = '<option value="">選擇資料夾</option>';  // 清空選單
+
             folderSnapshot.forEach(doc => {
                 const folder = doc.data();
                 const option = document.createElement('option');
                 option.value = doc.id;
-                option.textContent = folder.name;
+                option.textContent = folder.name;  // 顯示資料夾名稱
                 folderSelect.appendChild(option);
+            });
+
+            // 當選擇資料夾時，顯示刪除資料夾的按鈕
+            folderSelect.addEventListener('change', () => {
+                const selectedFolderId = folderSelect.value;
+                if (selectedFolderId) {
+                    deleteFolderButton.style.display = 'inline-block'; // 顯示刪除按鈕
+                } else {
+                    deleteFolderButton.style.display = 'none'; // 隱藏刪除按鈕
+                }
             });
         }
 
@@ -724,6 +740,40 @@
                 console.error('刪除重複資料夾時發生錯誤：', error);
             }
         }
+
+        // 刪除資料夾
+        document.getElementById('delete-folder-button').addEventListener('click', async () => {
+            const folderSelect = document.getElementById('folder-select');
+            const selectedFolderId = folderSelect.value;
+
+            if (!selectedFolderId) {
+                alert('請選擇要刪除的資料夾');
+                return;
+            }
+
+            const confirmation = confirm('確定要刪除這個資料夾嗎？');
+            if (confirmation) {
+                try {
+                    // 刪除資料夾中的所有筆記
+                    const notesSnapshot = await db.collection('Users').doc(currentUser.uid)
+                        .collection('Folders').doc(selectedFolderId).collection('Notes').get();
+
+                    // 刪除每一筆筆記
+                    notesSnapshot.forEach(async (noteDoc) => {
+                        await noteDoc.ref.delete();
+                    });
+
+                    // 刪除資料夾本身
+                    await db.collection('Users').doc(currentUser.uid).collection('Folders').doc(selectedFolderId).delete();
+
+                    alert('資料夾已刪除');
+                    loadFolders(); // 更新資料夾列表
+                } catch (error) {
+                    console.error('刪除資料夾時出錯:', error);
+                    alert('刪除資料夾時出錯，請再試一次');
+                }
+            }
+        });
 
         // 假設每個資料夾旁有刪除按鈕，綁定刪除事件
         document.querySelectorAll('.delete-folder-button').forEach(button => {
