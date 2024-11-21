@@ -223,6 +223,10 @@
             <button id="login-button">Google 登入</button>
             <button id="new-note" style="display: none;">新增筆記</button>
             <button id="logout-button" style="display: none;">登出</button>
+            <button id="new-folder">新增資料夾</button>
+            <select id="folder-select">
+                <option value="">所有筆記</option>
+            </select>
         </div>
 
         <!-- 搜尋輸入框和按鈕 -->
@@ -566,6 +570,89 @@
                     });
             }
         }
+
+        // 新增資料夾
+        const newFolderButton = document.getElementById('new-folder');
+        const folderSelect = document.getElementById('folder-select');
+        let currentFolderId = null; // 儲存目前選擇的資料夾
+
+        newFolderButton.addEventListener('click', async () => {
+            const folderName = prompt('輸入資料夾名稱:');
+            if (folderName && currentUser) {
+                const folderRef = db.collection('Users').doc(currentUser.uid).collection('Folders');
+                await folderRef.add({
+                    name: folderName,
+                    timestamp: new Date()
+                });
+                loadFolders();
+            }
+        });
+
+        // 載入資料夾
+        async function loadFolders() {
+            const folderSnapshot = await db.collection('Users').doc(currentUser.uid).collection('Folders').orderBy('timestamp').get();
+            folderSelect.innerHTML = '<option value="">所有筆記</option>'; // 預設為顯示所有筆記
+            folderSnapshot.forEach(doc => {
+                const folder = doc.data();
+                const option = document.createElement('option');
+                option.value = doc.id;
+                option.textContent = folder.name;
+                folderSelect.appendChild(option);
+            });
+        }
+
+        // 切換資料夾時顯示對應筆記
+        folderSelect.addEventListener('change', () => {
+            currentFolderId = folderSelect.value; // 設定目前選擇的資料夾
+            displayNotes(); // 重新顯示筆記
+        });
+
+        // 顯示對應資料夾
+        async function displayNotes() {
+            if (!currentUser) return;
+
+            notesContainer.innerHTML = ''; // 清空筆記容器
+
+            let notesQuery;
+            if (currentFolderId) {
+                // 顯示選定資料夾的筆記
+                notesQuery = db.collection('Users').doc(currentUser.uid).collection('Folders').doc(currentFolderId).collection('Notes').orderBy('timestamp', 'desc');
+            } else {
+                // 顯示所有筆記
+                notesQuery = db.collection('Users').doc(currentUser.uid).collection('Notes').orderBy('timestamp', 'desc');
+            }
+
+            const notesSnapshot = await notesQuery.get();
+            notesSnapshot.forEach(doc => {
+                const note = doc.data();
+                createNoteElement(doc.id, note);
+            });
+        }
+
+        // 新增筆記時選擇資料夾
+        newNoteButton.addEventListener('click', () => {
+            const category = prompt('輸入筆記分類:');
+            const title = prompt('輸入標題:');
+            if (title && category && currentUser) {
+                const notesRef = currentFolderId
+                    ? db.collection('Users').doc(currentUser.uid).collection('Folders').doc(currentFolderId).collection('Notes')
+                    : db.collection('Users').doc(currentUser.uid).collection('Notes');
+                
+                notesRef.add({
+                    category: category,
+                    title: title,
+                    content: '',
+                    canvasData: '',
+                    textColor: '#000000',
+                    brushSize: 5,
+                    timestamp: new Date()
+                }).then(() => {
+                    displayNotes();
+                }).catch(error => {
+                    console.error('新增筆記時出錯:', error);
+                });
+            }
+        });
 
         // 監聽使用者登入狀態
         auth.onAuthStateChanged(user => {
