@@ -636,7 +636,7 @@
         // 切換資料夾時顯示對應筆記
         folderSelect.addEventListener('change', () => {
             currentFolderId = folderSelect.value; // 設定目前選擇的資料夾
-            displayNotes(); // 重新顯示筆記
+            loadNotes(currentFolderId); // 重新顯示筆記
         });
 
         // 顯示對應資料夾
@@ -666,20 +666,21 @@
             const category = prompt('輸入筆記分類:');
             const title = prompt('輸入標題:');
             if (title && category && currentUser) {
-                const notesRef = currentFolderId
+                const notesRef = currentFolderId  // 確保使用當前選擇的資料夾 ID
                     ? db.collection('Users').doc(currentUser.uid).collection('Folders').doc(currentFolderId).collection('Notes')
                     : db.collection('Users').doc(currentUser.uid).collection('Notes');
                 
                 notesRef.add({
                     category: category,
                     title: title,
-                    content: '',
-                    canvasData: '',
+                    content: '', // 預設內容是空
+                    canvasData: '', // 預設畫布資料為空
                     textColor: '#000000',
                     brushSize: 5,
                     timestamp: new Date()
                 }).then(() => {
-                    displayNotes();
+                    alert('筆記已新增');
+                    loadNotes(currentFolderId);  // 更新資料夾中的筆記列表
                 }).catch(error => {
                     console.error('新增筆記時出錯:', error);
                 });
