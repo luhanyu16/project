@@ -426,16 +426,35 @@
             });
 
             document.getElementById(`save-note-${id}`).addEventListener('click', async () => {
-                const textContent = document.getElementById(`text-content-${id}`).innerHTML;
-                const imageSrc = document.getElementById(`uploaded-image-${id}`).src; // 獲取圖片的 dataURL
+                try {
+                    // 獲取文字內容
+                    const textContentElement = document.getElementById(`text-content-${id}`);
+                    const textContent = textContentElement ? textContentElement.innerHTML : '';
 
-                await saveCanvasDataToDatabase(id, canvas);
-                await db.collection('Users').doc(currentUser.uid).collection('Notes').doc(id).update({
-                    content: textContent,
-                    textColor: textColorPicker.innerHTML,
-                    imageSrc: imageSrc, // 儲存圖片的 dataURL
-                    brushSize: brushSize
-                });
+                    // 獲取文字顏色
+                    const textColorPicker = document.getElementById(`text-color-picker-${id}`);
+                    const textColor = textColorPicker ? textColorPicker.value : '#000000';
+
+                    // 獲取圖片資料
+                    const imageSrc = document.getElementById(`uploaded-image-${id}`).src;
+
+                    // 儲存畫布資料
+                    await saveCanvasDataToDatabase(id, canvas);
+
+                    // 更新資料到 Firebase
+                    await db.collection('Users').doc(currentUser.uid).collection('Notes').doc(id).update({
+                        content: textContent,
+                        textColor: textColor,
+                        imageSrc: imageSrc,
+                        brushSize: brushSize,
+                        timestamp: firebase.firestore.FieldValue.serverTimestamp() // 更新時間戳
+                    });
+
+                    alert('筆記儲存成功！');
+                } catch (error) {
+                    console.error('筆記儲存失敗:', error);
+                    alert('儲存失敗，請重試');
+                }
             });
 
             // 載入保存的畫布
@@ -786,37 +805,6 @@
                 console.error('顯示資料夾清單時發生錯誤：', error);
             }
         }
-
-        // 移除重複項目邏輯
-        // async function removeDuplicateFolders() {
-        //     const folderRef = db.collection('Users').doc(currentUser.uid).collection('Folders');
-        //     try {
-        //         // 取得所有資料夾
-        //         const foldersSnapshot = await folderRef.get();
-        //         const folderNames = new Set();
-        //         const duplicates = [];
-
-        //         foldersSnapshot.forEach(doc => {
-        //             const folderName = doc.data().name; // 假設資料夾名稱存於 `name` 欄位
-        //             if (folderNames.has(folderName)) {
-        //                 duplicates.push(doc.id); // 紀錄重複資料夾的 ID
-        //             } else {
-        //                 folderNames.add(folderName);
-        //             }
-        //         });
-
-        //         // 刪除重複的資料夾
-        //         const batch = db.batch();
-        //         duplicates.forEach(folderId => {
-        //             batch.delete(folderRef.doc(folderId));
-        //         });
-
-        //         await batch.commit();
-        //         console.log('重複資料夾已成功移除！');
-        //     } catch (error) {
-        //         console.error('刪除重複資料夾時發生錯誤：', error);
-        //     }
-        // }
 
         // 刪除資料夾
         document.getElementById('delete-folder-button').addEventListener('click', async () => {
