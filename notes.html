@@ -226,10 +226,8 @@
         </div>
 
         <div id="folders-container">
-            <button id="create-folder-btn">+ New Folder</button>
-            <ul id="folders-list">
-                <!-- 動態載入資料夾 -->
-            </ul>
+            <button id="create-folder-btn">Create Folder</button>
+            <ul id="folders-list"></ul>
         </div>
 
         <!-- 搜尋輸入框和按鈕 -->
@@ -593,14 +591,14 @@
         document.getElementById('create-folder-btn').addEventListener('click', async () => {
             const folderName = prompt('Enter folder name:');
             if (folderName) {
-                await createFolder(currentUserId, folderName); // 呼叫新增資料夾函數
+                await createFolder(currentUser, folderName); // 呼叫新增資料夾函數
                 renderFolders(); // 更新資料夾清單
             }
         });
 
         // 顯示資料夾清單
         async function renderFolders() {
-            const folders = await getFolders(currentUserId);
+            const folders = await getFolders(currentUser);
             const foldersList = document.getElementById('folders-list');
             foldersList.innerHTML = ''; // 清空現有資料
             folders.forEach(folder => {
