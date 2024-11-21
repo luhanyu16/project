@@ -628,120 +628,257 @@
                 });
         }
 
-        // 初始化參數
-const newNoteButton = document.getElementById('new-note');
-const notesContainer = document.getElementById('notes-container');
-const folderContainer = document.getElementById('folder-container');
+        // 新增資料夾
+        const newFolderButton = document.getElementById('new-folder');
+        const folderSelect = document.getElementById('folder-select');
+        let currentFolderId = null; // 儲存目前選擇的資料夾
 
-let currentUser = null;
-
-// Firebase 初始化
-firebase.initializeApp({
-    apiKey: "YOUR_API_KEY",
-    authDomain: "YOUR_AUTH_DOMAIN",
-    projectId: "YOUR_PROJECT_ID",
-});
-const db = firebase.firestore();
-const auth = firebase.auth();
-
-// 新增筆記
-newNoteButton.addEventListener('click', async () => {
-    const title = prompt('輸入筆記標題:');
-    if (title && currentUser) {
-        const noteRef = db.collection('Users').doc(currentUser.uid).collection('Notes');
-        const noteDoc = await noteRef.add({
-            title: title,
-            folderId: null, // 預設未分配資料夾
-            timestamp: new Date(),
-        });
-
-        // 將筆記顯示於畫面
-        createNoteElement(noteDoc.id, { title });
-    }
-});
-
-// 創建筆記元素
-function createNoteElement(noteId, noteData) {
-    const noteDiv = document.createElement('div');
-    noteDiv.classList.add('note');
-    noteDiv.textContent = noteData.title;
-    noteDiv.draggable = true; // 允許拖曳
-    noteDiv.dataset.id = noteId; // 綁定筆記 ID
-    notesContainer.appendChild(noteDiv);
-
-    // 拖曳事件
-    noteDiv.addEventListener('dragstart', (e) => {
-        e.dataTransfer.setData('noteId', noteId);
-    });
-}
-
-// 加載資料夾
-async function loadFolders() {
-    folderContainer.innerHTML = ''; // 清空資料夾容器
-    const folderSnapshot = await db.collection('Users').doc(currentUser.uid).collection('Folders').get();
-
-    folderSnapshot.forEach((doc) => {
-        const folderData = doc.data();
-        const folderDiv = document.createElement('div');
-        folderDiv.classList.add('folder');
-        folderDiv.textContent = folderData.name;
-        folderDiv.dataset.id = doc.id; // 綁定資料夾 ID
-        folderDiv.style.border = '1px solid #000';
-        folderDiv.style.padding = '10px';
-        folderDiv.style.margin = '5px';
-        folderDiv.style.display = 'inline-block';
-
-        // 允許放置
-        folderDiv.addEventListener('dragover', (e) => {
-            e.preventDefault(); // 允許放置
-        });
-
-        folderDiv.addEventListener('drop', async (e) => {
-            e.preventDefault();
-            const noteId = e.dataTransfer.getData('noteId');
-            if (noteId) {
-                // 更新筆記的 folderId
-                await db.collection('Users').doc(currentUser.uid).collection('Notes').doc(noteId).update({
-                    folderId: doc.id,
+        newFolderButton.addEventListener('click', async () => {
+            const folderName = prompt('輸入資料夾名稱:');
+            if (folderName && currentUser) {
+                const folderRef = db.collection('Users').doc(currentUser.uid).collection('Folders');
+                await folderRef.add({
+                    name: folderName,
+                    timestamp: new Date()
                 });
-
-                alert(`筆記已移動到資料夾: ${folderData.name}`);
-                // 更新畫面
-                loadNotes();
+                loadFolders();
             }
         });
 
-        folderContainer.appendChild(folderDiv);
-    });
-}
+        // 載入資料夾
+        async function loadFolders() {
+            const folderSelect = document.getElementById('folder-select');
+            const deleteFolderButton = document.getElementById('delete-folder-button');
+            const folderSnapshot = await db.collection('Users').doc(currentUser.uid).collection('Folders').get();
 
-// 加載所有筆記
-async function loadNotes() {
-    notesContainer.innerHTML = ''; // 清空筆記容器
-    const notesSnapshot = await db.collection('Users').doc(currentUser.uid).collection('Notes').get();
+            folderSelect.innerHTML = '<option value="">選擇資料夾</option>';  // 清空選單
 
-    notesSnapshot.forEach((doc) => {
-        const noteData = doc.data();
-        if (!noteData.folderId) {
-            // 只顯示未分配資料夾的筆記
-            createNoteElement(doc.id, noteData);
+            if (folderSnapshot.empty) {
+                // 沒有資料夾時，顯示提示
+                alert('目前沒有資料夾，請先新增資料夾');
+            }
+
+            folderSnapshot.forEach(doc => {
+                const folder = doc.data();
+                const option = document.createElement('option');
+                option.value = doc.id;
+                option.textContent = folder.name;  // 顯示資料夾名稱
+                folderSelect.appendChild(option);
+            });
+
+            // 當選擇資料夾時，顯示刪除資料夾的按鈕
+            folderSelect.addEventListener('change', () => {
+                const selectedFolderId = folderSelect.value;
+                if (selectedFolderId) {
+                    deleteFolderButton.style.display = 'inline-block'; // 顯示刪除按鈕
+                    loadNotes(selectedFolderId); // 顯示該資料夾中的筆記
+                } else {
+                    deleteFolderButton.style.display = 'none'; // 隱藏刪除按鈕
+                    notesContainer.innerHTML = ''; // 清空筆記內容
+                }
+            });
         }
-    });
-}
 
-// 監聽使用者登入狀態
-auth.onAuthStateChanged(async (user) => {
-    if (user) {
-        currentUser = user;
-        await loadFolders(); // 加載資料夾
-        await loadNotes();   // 加載未分配資料夾的筆記
-    } else {
-        currentUser = null;
-        notesContainer.innerHTML = ''; // 清空筆記區域
-        folderContainer.innerHTML = ''; // 清空資料夾區域
-    }
-});
+        // 顯示資料夾中的筆記
+        async function loadNotes(folderId) {
+            const notesSnapshot = await db.collection('Users').doc(currentUser.uid)
+                .collection('Folders').doc(folderId)
+                .collection('Notes').get();
 
+            notesContainer.innerHTML = ''; // 清空現有筆記內容
+
+            notesSnapshot.forEach(doc => {
+                const note = doc.data();
+                createNoteElement(doc.id, note); // 創建筆記元素並顯示
+            });
+        }
+
+        // 切換資料夾時顯示對應筆記
+        folderSelect.addEventListener('change', () => {
+            currentFolderId = folderSelect.value; // 設定目前選擇的資料夾
+            loadNotes(currentFolderId); // 重新顯示筆記
+        });
+
+        // 顯示對應資料夾
+        async function displayNotes() {
+            if (!currentUser) return;
+
+            notesContainer.innerHTML = ''; // 清空筆記容器
+
+            let notesQuery;
+            if (currentFolderId) {
+                // 顯示選定資料夾的筆記
+                notesQuery = db.collection('Users').doc(currentUser.uid).collection('Folders').doc(currentFolderId).collection('Notes').orderBy('timestamp', 'desc');
+            } else {
+                // 顯示所有筆記
+                notesQuery = db.collection('Users').doc(currentUser.uid).collection('Notes').orderBy('timestamp', 'desc');
+            }
+
+            const notesSnapshot = await notesQuery.get();
+            notesSnapshot.forEach(doc => {
+                const note = doc.data();
+                createNoteElement(doc.id, note);
+            });
+        }
+
+        // 新增筆記時選擇資料夾
+        // 新增筆記
+        newNoteButton.addEventListener('click', async () => {
+            const category = prompt('輸入筆記分類:');
+            const title = prompt('輸入標題:');
+            if (title && category && currentUser) {
+                const notesRef = currentFolderId  // 使用當前選擇的資料夾 ID
+                    ? db.collection('Users').doc(currentUser.uid).collection('Folders').doc(currentFolderId).collection('Notes')
+                    : db.collection('Users').doc(currentUser.uid).collection('Notes');
+                
+                const noteDoc = await notesRef.add({
+                    category: category,
+                    title: title,
+                    content: '', // 預設內容是空
+                    canvasData: '', // 預設畫布資料為空
+                    textColor: '#000000',
+                    brushSize: 5,
+                    timestamp: new Date()
+                });
+
+                // 初始化筆記元素到畫面
+                createNoteElement(noteDoc.id, {
+                    category,
+                    title,
+                    content: '',
+                    canvasData: '',
+                    textColor: '#000000',
+                    brushSize: 5,
+                });
+            }
+        });
+
+        // 新增筆記
+        async function addNewNoteToFolder(folderId) {
+            const title = prompt('輸入筆記標題:');
+            const content = prompt('輸入筆記內容:');
+            
+            if (title && content && currentUser) {
+                try {
+                    await db.collection('Users').doc(currentUser.uid)
+                        .collection('Folders').doc(folderId)
+                        .collection('Notes').add({
+                            title: title,
+                            content: content,
+                            timestamp: new Date()
+                        });
+
+                    alert('筆記已新增');
+                    loadNotes(folderId);  // 更新資料夾中的筆記列表
+                } catch (error) {
+                    console.error('新增筆記時出錯:', error);
+                    alert('新增筆記失敗');
+                }
+            }
+        }
+
+        // 防止重複新增資料夾
+        async function addFolder(folderName) {
+            const folderRef = db.collection('Users').doc(currentUser.uid).collection('Folders');
+
+            try {
+                // 檢查名稱是否重複
+                const existingFolder = await folderRef.where('name', '==', folderName).get();
+                if (!existingFolder.empty) {
+                    console.error('資料夾名稱已存在，無法新增相同名稱的資料夾。');
+                    return;
+                }
+
+                // 新增資料夾
+                await folderRef.add({ name: folderName, createdAt: new Date() });
+                console.log('資料夾已成功新增！');
+            } catch (error) {
+                console.error('新增資料夾時發生錯誤：', error);
+            }
+        }
+
+        // 更新前端清單
+        async function displayFolders() {
+            const folderRef = db.collection('Users').doc(currentUser.uid).collection('Folders');
+            const folderSelect = document.getElementById('folderDropdown'); // 假設選單的 ID 為 folderDropdown
+            folderSelect.innerHTML = ''; // 清空選單
+
+            try {
+                const foldersSnapshot = await folderRef.orderBy('createdAt', 'asc').get();
+                foldersSnapshot.forEach(doc => {
+                    const option = document.createElement('option');
+                    option.value = doc.id;
+                    option.textContent = doc.data().name;
+                    folderSelect.appendChild(option);
+                });
+            } catch (error) {
+                console.error('顯示資料夾清單時發生錯誤：', error);
+            }
+        }
+
+        // 刪除資料夾
+        document.getElementById('delete-folder-button').addEventListener('click', async () => {
+            const folderSelect = document.getElementById('folder-select');
+            const selectedFolderId = folderSelect.value;
+
+            if (!selectedFolderId) {
+                alert('請選擇要刪除的資料夾');
+                return;
+            }
+
+            const confirmation = confirm('確定要刪除這個資料夾嗎？');
+            if (confirmation) {
+                try {
+                    // 刪除資料夾中的所有筆記
+                    const notesSnapshot = await db.collection('Users').doc(currentUser.uid)
+                        .collection('Folders').doc(selectedFolderId).collection('Notes').get();
+
+                    // 刪除每一筆筆記並等待所有筆記刪除完成
+                    const deletePromises = notesSnapshot.docs.map(async (noteDoc) => {
+                        await noteDoc.ref.delete();
+                    });
+
+                    // 等待所有刪除筆記的 Promise 完成
+                    await Promise.all(deletePromises);
+
+                    // 刪除資料夾本身
+                    await db.collection('Users').doc(currentUser.uid).collection('Folders').doc(selectedFolderId).delete();
+
+                    alert('資料夾已刪除');
+                    loadFolders(); // 更新資料夾列表
+                    notesContainer.innerHTML = '';  // 清空顯示筆記區域
+                } catch (error) {
+                    console.error('刪除資料夾時出錯:', error);
+                    alert('刪除資料夾時出錯，請再試一次');
+                }
+            }
+        });
+
+        // 假設每個資料夾旁有刪除按鈕，綁定刪除事件
+        document.querySelectorAll('.delete-folder-button').forEach(button => {
+            button.addEventListener('click', async () => {
+                const folderId = button.dataset.folderId; // 假設按鈕有 folderId 資料屬性
+                const confirmation = confirm('確定要刪除此資料夾及其內容嗎？');
+                if (confirmation) {
+                    await deleteFolder(folderId);
+                }
+            });
+        });
+
+        // 監聽使用者登入狀態
+        auth.onAuthStateChanged(user => {
+            if (user) {
+                currentUser = user;
+                toggleUI();
+                // displayNotes(); // 只呼叫一次顯示筆記
+                loadFolders();
+            } else {
+                currentUser = null;
+                toggleUI();
+            }
+        });
+
+        // displayNotes(); // 初始加載筆記列表
     </script>
 </body>
 
