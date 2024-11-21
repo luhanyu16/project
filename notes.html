@@ -552,6 +552,12 @@
             notesContainer.appendChild(noteElement);
         }
 
+        // 載入儲存的文字內容並保留顏色樣式
+        if (note.content) {
+            const textContentElement = document.getElementById(`text-content-${id}`);
+            textContentElement.innerHTML = note.content;  // 使用 innerHTML 來保留顏色樣式
+        }
+
         // 繪圖功能
         function draw(event, ctx, drawing, erasing, color, size) {
             if (!drawing) return;
