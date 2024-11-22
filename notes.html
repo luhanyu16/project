@@ -103,6 +103,41 @@
             box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
         }
 
+        button {
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            background-color: transparent;
+            appearance: none;
+            box-shadow: none;
+            border: none;
+            width: 70px;
+            height: 40px;
+            padding: 20px;
+        }
+
+        #login-button {
+            background-image: url('google.png');
+        }
+
+        #new-folder {
+            background-image: url('add_folder.png');
+        }
+
+        #delete-folder-button {
+            background-image: url('dfolder.png');
+        }
+
+        #new-note {
+            display: none;
+            background-image: url('addnote.png');
+        }
+
+        #logout-button {
+            display: none;
+            background-image: url('logout.png');
+        }
+
         #search-container {
             display: flex;               /* 讓搜尋框和按鈕在同一行 */
             justify-content: flex-start; /* 讓它們在左邊對齊 */
@@ -204,11 +239,11 @@
             <select id="folder-select" style="width: 150px; height: 30px;">
                 <option value="">所有筆記</option>
             </select>
-            <button id="login-button" style="background-image: url('google.png'); background-size: contain; background-repeat: no-repeat; background-position: center; background-color: transparent; appearance: none; box-shadow: none; border: none; width: 70px; height: 40px; padding: 20px;"></button>
-            <button id="new-folder" style="background-image: url('add_folder.png'); background-size: contain; background-repeat: no-repeat; background-position: center; background-color: transparent; appearance: none; box-shadow: none; border: none; width: 70px; height: 40px; padding: 20px;"></button>
-            <button id="delete-folder-button" style="background-image: url('dfolder.png'); background-size: contain; background-repeat: no-repeat; background-position: center; background-color: transparent; appearance: none; box-shadow: none; border: none; width: 70px; height: 40px; padding: 20px;"></button>
-            <button id="new-note" style="display: none; background-image: url('addnote.png'); background-size: contain; background-repeat: no-repeat; background-position: center; background-color: transparent; appearance: none; box-shadow: none; border: none; width: 70px; height: 40px; padding: 20px;"></button>
-            <button id="logout-button" style="display: none; background-image: url('logout.png'); background-size: contain; background-repeat: no-repeat; background-position: center; background-color: transparent; appearance: none; box-shadow: none; border: none; width: 70px; height: 40px; padding: 20px;"></button>
+            <button id="login-button"></button>
+            <button id="new-folder"></button>
+            <button id="delete-folder-button"></button>
+            <button id="new-note"></button>
+            <button id="logout-button"></button>
         </div>
 
         <!-- 搜尋輸入框和按鈕 -->
