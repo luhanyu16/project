@@ -389,12 +389,45 @@
         });
 
         // 監聽下拉選單變化
-        folderSelect.addEventListener('click', () => {
+        // folderSelect.addEventListener('click', () => {
+        //     if (folderSelect.value) {
+        //         // 當選擇了資料夾時顯示刪除按鈕
+        //         deleteFolderButton.style.display = 'inline-block';
+        //     } else {
+        //         // 未選擇資料夾時隱藏刪除按鈕
+        //         deleteFolderButton.style.display = 'none';
+        //     }
+        // });
+
+        // 切換 UI 狀態
+        // function toggleUI() {
+        //     if (currentUser) {
+        //         loginButton.style.display = 'none';
+        //         logoutButton.style.display = 'inline-block';
+        //         newNoteButton.style.display = 'inline-block';
+        //         newFolderButton.style.display = 'inline-block';
+        //         deleteFolderButton.style.display = 'inline-block';
+        //         folderSelect.style.display = 'inline-block';
+        //         searchContainer.style.display = 'flex';
+        //     } else {
+        //         loginButton.style.display = 'inline-block';
+        //         logoutButton.style.display = 'none';
+        //         newNoteButton.style.display = 'none';
+        //         newFolderButton.style.display = 'none';
+        //         deleteFolderButton.style.display = 'none';
+        //         folderSelect.style.display = 'none';
+        //         searchContainer.style.display = 'none';
+        //         notesContainer.innerHTML = '';
+        //     }
+        // }
+
+        // 新增資料夾選單變更事件監聽
+        folderSelect.addEventListener('change', () => {
             if (folderSelect.value) {
-                // 當選擇了資料夾時顯示刪除按鈕
+                // 如果有選擇資料夾，顯示刪除按鈕
                 deleteFolderButton.style.display = 'inline-block';
             } else {
-                // 未選擇資料夾時隱藏刪除按鈕
+                // 如果未選擇資料夾，隱藏刪除按鈕
                 deleteFolderButton.style.display = 'none';
             }
         });
@@ -406,9 +439,11 @@
                 logoutButton.style.display = 'inline-block';
                 newNoteButton.style.display = 'inline-block';
                 newFolderButton.style.display = 'inline-block';
-                deleteFolderButton.style.display = 'inline-block';
                 folderSelect.style.display = 'inline-block';
                 searchContainer.style.display = 'flex';
+                
+                // 初始隱藏刪除按鈕
+                deleteFolderButton.style.display = 'none';
             } else {
                 loginButton.style.display = 'inline-block';
                 logoutButton.style.display = 'none';
@@ -420,7 +455,7 @@
                 notesContainer.innerHTML = '';
             }
         }
-
+        
         // 顯示筆記
         async function displayNotes() {
             if (!currentUser) return;
