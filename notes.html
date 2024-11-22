@@ -117,10 +117,6 @@
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
 
-        #new-folder {
-            background-image: url('add_folder.png');
-        }
-
         #login-button:hover, #logout-button:hover, #new-note:hover, #delete-folder-button:hover {
             background-color: #999999;
             box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
@@ -228,7 +224,7 @@
                 <option value="">所有筆記</option>
             </select>
             <button id="login-button">Google 登入</button>
-            <button id="new-folder">新增資料夾</button>
+            <button id="new-folder" style="background-image: url('add_folder.png'); background-size: cover; background-position: center; color: white; border: none; padding: 10px 20px;">新增資料夾</button>
             <button id="delete-folder-button">刪除資料夾</button>
             <button id="new-note" style="display: none;">新增筆記</button>
             <button id="logout-button" style="display: none;">登出</button>
