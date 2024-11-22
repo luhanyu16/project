@@ -362,6 +362,8 @@
         const deleteFolderButton = document.getElementById('delete-folder-button');
         const notesContainer = document.getElementById('notes-container');
         const searchContainer = document.getElementById('search-container');
+        const newFolderButton = document.getElementById('new-folder');
+        const folderSelect = document.getElementById('folder-select');
 
         let currentUser = null;
 
@@ -441,9 +443,7 @@
                 newFolderButton.style.display = 'inline-block';
                 folderSelect.style.display = 'inline-block';
                 searchContainer.style.display = 'flex';
-                
-                // 初始隱藏刪除按鈕
-                deleteFolderButton.style.display = 'none';
+                deleteFolderButton.style.display = 'none'; // 確保登錄後初始隱藏刪除按鈕
             } else {
                 loginButton.style.display = 'inline-block';
                 logoutButton.style.display = 'none';
@@ -455,7 +455,7 @@
                 notesContainer.innerHTML = '';
             }
         }
-        
+
         // 顯示筆記
         async function displayNotes() {
             if (!currentUser) return;
@@ -776,8 +776,6 @@
         }
 
         // 新增資料夾
-        const newFolderButton = document.getElementById('new-folder');
-        const folderSelect = document.getElementById('folder-select');
         let currentFolderId = null; // 儲存目前選擇的資料夾
 
         newFolderButton.addEventListener('click', async () => {
