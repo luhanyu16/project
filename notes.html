@@ -992,6 +992,11 @@
 
                     alert('資料夾已刪除');
                     loadFolders(); // 更新資料夾列表
+
+                    // 跳回「所有筆記」
+                    folderSelect.value = '';  // 將選單的值設為空
+                    folderSelect.dispatchEvent(new Event('change'));  // 觸發 change 事件來隱藏刪除按鈕
+                    
                     notesContainer.innerHTML = '';  // 清空顯示筆記區域
                 } catch (error) {
                     console.error('刪除資料夾時出錯:', error);
