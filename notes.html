@@ -103,7 +103,7 @@
             box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
         }
 
-        #login-button, #logout-button, #new-note, #new-folder, #delete-folder-button {
+        #login-button, #logout-button, #new-note, #delete-folder-button {
             background-color: #cccccc;
             color: #333333;
             padding: 12px 18px;
@@ -115,6 +115,10 @@
             font-weight: 600;
             font-size: 16px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        #new-folder {
+            background-image: url('add_folder.png');
         }
 
         #login-button:hover, #logout-button:hover, #new-note:hover, #new-folder:hover, #delete-folder-button:hover {
@@ -265,6 +269,7 @@
         const loginButton = document.getElementById('login-button');
         const logoutButton = document.getElementById('logout-button');
         const newNoteButton = document.getElementById('new-note');
+        const deleteFolderButton = document.getElementById('delete-folder-button');
         const notesContainer = document.getElementById('notes-container');
         const searchContainer = document.getElementById('search-container');
 
@@ -299,11 +304,17 @@
                 loginButton.style.display = 'none';
                 logoutButton.style.display = 'inline-block';
                 newNoteButton.style.display = 'inline-block';
+                newFolderButton.style.display = 'inline-block';
+                deleteFolderButton.style.display = 'inline-block';
+                folderSelect.style.display = 'inline-block';
                 searchContainer.style.display = 'flex';
             } else {
                 loginButton.style.display = 'inline-block';
                 logoutButton.style.display = 'none';
                 newNoteButton.style.display = 'none';
+                newFolderButton.style.display = 'none';
+                deleteFolderButton.style.display = 'none';
+                folderSelect.style.display = 'none';
                 searchContainer.style.display = 'none';
                 notesContainer.innerHTML = '';
             }
@@ -641,6 +652,7 @@
                     name: folderName,
                     timestamp: new Date()
                 });
+                toggleUI();
                 loadFolders();
             }
         });
