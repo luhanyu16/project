@@ -208,6 +208,38 @@
             background-color: #999999;
             box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
         } */
+        
+        /* 下拉選單樣式 */
+        #folder-select {
+            width: 150px; /* 設定寬度 */
+            height: 40px; /* 設定高度 */
+            padding: 5px 10px; /* 調整內部留白 */
+            font-size: 16px; /* 字體大小 */
+            color: #333; /* 字體顏色 */
+            background-color: #f9f9f9; /* 背景顏色 */
+            border: 2px solid #ccc; /* 邊框顏色與粗細 */
+            border-radius: 8px; /* 圓角外框 */
+            outline: none; /* 移除聚焦樣式 */
+            appearance: none; /* 移除預設箭頭樣式 */
+            background-image: url('arrow-down.svg'); /* 自訂下拉箭頭 */
+            background-repeat: no-repeat; /* 防止箭頭重複 */
+            background-position: right 10px center; /* 定位箭頭 */
+            background-size: 15px; /* 調整箭頭大小 */
+            cursor: pointer; /* 滑鼠指標為手型 */
+            transition: border-color 0.3s ease; /* 邊框過渡效果 */
+        }
+
+        /* 聚焦時的樣式 */
+        #folder-select:focus {
+            border-color: #007bff; /* 聚焦時的邊框顏色 */
+        }
+
+        /* 下拉選單的選項樣式 */
+        #folder-select option {
+            font-size: 16px; /* 選項字體大小 */
+            color: #333; /* 選項文字顏色 */
+            background-color: #ffffff; /* 選項背景色 */
+        }
 
         /* 搜尋容器外框樣式 */
         #search-container {
@@ -314,7 +346,7 @@
     <div class="container">
         <h1>網頁筆記</h1>
         <div class="header">
-            <select id="folder-select" style="width: 150px; height: 30px;">
+            <select id="folder-select">
                 <option value="">所有筆記</option>
             </select>
             <button id="login-button"></button>
