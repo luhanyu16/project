@@ -923,45 +923,6 @@
             }
         }
 
-        // 防止重複新增資料夾
-        async function addFolder(folderName) {
-            const folderRef = db.collection('Users').doc(currentUser.uid).collection('Folders');
-
-            try {
-                // 檢查名稱是否重複
-                const existingFolder = await folderRef.where('name', '==', folderName).get();
-                if (!existingFolder.empty) {
-                    console.error('資料夾名稱已存在，無法新增相同名稱的資料夾。');
-                    return;
-                }
-
-                // 新增資料夾
-                await folderRef.add({ name: folderName, createdAt: new Date() });
-                console.log('資料夾已成功新增！');
-            } catch (error) {
-                console.error('新增資料夾時發生錯誤：', error);
-            }
-        }
-
-        // 更新前端清單
-        async function displayFolders() {
-            const folderRef = db.collection('Users').doc(currentUser.uid).collection('Folders');
-            const folderSelect = document.getElementById('folderDropdown'); // 假設選單的 ID 為 folderDropdown
-            folderSelect.innerHTML = ''; // 清空選單
-
-            try {
-                const foldersSnapshot = await folderRef.orderBy('createdAt', 'asc').get();
-                foldersSnapshot.forEach(doc => {
-                    const option = document.createElement('option');
-                    option.value = doc.id;
-                    option.textContent = doc.data().name;
-                    folderSelect.appendChild(option);
-                });
-            } catch (error) {
-                console.error('顯示資料夾清單時發生錯誤：', error);
-            }
-        }
-
         // 刪除資料夾
         document.getElementById('delete-folder-button').addEventListener('click', async () => {
             const folderSelect = document.getElementById('folder-select');
