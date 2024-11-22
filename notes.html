@@ -388,6 +388,17 @@
             });
         });
 
+        // 監聽下拉選單變化
+        folderSelect.addEventListener('change', () => {
+            if (folderSelect.value) {
+                // 當選擇了資料夾時顯示刪除按鈕
+                deleteFolderButton.style.display = 'inline-block';
+            } else {
+                // 未選擇資料夾時隱藏刪除按鈕
+                deleteFolderButton.style.display = 'none';
+            }
+        });
+
         // 切換 UI 狀態
         function toggleUI() {
             if (currentUser) {
