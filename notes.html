@@ -865,10 +865,10 @@
 
             folderSelect.innerHTML = '<option value="">選擇資料夾</option>';  // 清空選單
 
-            if (folderSnapshot.empty) {
-                // 沒有資料夾時，顯示提示
-                alert('目前沒有資料夾，請先新增資料夾');
-            }
+            // if (folderSnapshot.empty) {
+            //     // 沒有資料夾時，顯示提示
+            //     alert('目前沒有資料夾，請先新增資料夾');
+            // }
 
             folderSnapshot.forEach(doc => {
                 const folder = doc.data();
