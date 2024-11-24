@@ -81,18 +81,22 @@
         }
 
         .actions button {
-            width: 50px; /* 按鈕固定寬度 */
-            height: 50px; /* 按鈕固定高度 */
-            display: inline-flex; /* 確保圖標居中 */
-            justify-content: center;
-            align-items: center;
-            font-size: 20px; /* 圖標大小 */
-            margin: 0 8px; /* 左右間距 8px */
-
+            background-color: #cccccc;
+            color: #333333;
+            padding: 12px 18px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-left: 8px;
+            transition: background 0.3s ease, box-shadow 0.3s ease;
+            font-weight: 600;
+            font-size: 16px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
 
-        .actions button i {
-            font-size: 20px; /* 確保圖標大小一致 */
+        .actions button:hover {
+            background-color: #999999;
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
         }
 
         #login-button {
