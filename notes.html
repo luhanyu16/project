@@ -823,8 +823,18 @@
             }
 
             const userRef = db.collection('Users').doc(currentUser.uid);
-            const noteRef = userRef.collection('Notes').doc(noteId);
-            const folderRef = userRef.collection('Folders').doc(targetFolderId).collection('Notes');
+            let noteRef;  // 原筆記位置
+            let folderRef;  // 目標資料夾
+
+            if (currentFolderId) {
+                // 如果在資料夾內，從該資料夾移動
+                noteRef = userRef.collection('Folders').doc(currentFolderId).collection('Notes').doc(noteId);
+                folderRef = userRef.collection('Folders').doc(targetFolderId).collection('Notes');
+            } else {
+                // 如果在資料夾外，從根集合移動
+                noteRef = userRef.collection('Notes').doc(noteId);
+                folderRef = userRef.collection('Folders').doc(targetFolderId).collection('Notes');
+            }
 
             try {
                 const noteSnapshot = await noteRef.get();
@@ -834,8 +844,8 @@
                 }
 
                 const noteData = noteSnapshot.data();
-                await folderRef.doc(noteId).set(noteData);
-                await noteRef.delete();
+                await folderRef.doc(noteId).set(noteData);  // 將筆記新增到目標資料夾
+                await noteRef.delete();  // 從原資料夾刪除
 
                 alert('筆記已成功移動到資料夾');
                 displayNotes(); // 重新顯示筆記
