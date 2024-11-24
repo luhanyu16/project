@@ -85,7 +85,7 @@
             margin-top: 10px;
         }
 
-        .actions button, [id^="brush-"], [id^="eraser-"] {
+        .actions button {
             display: inline-flex; /* 保證圖示垂直水平居中 */
             justify-content: center;
             align-items: center;
@@ -106,7 +106,25 @@
             font-size: 20px; /* 圖示大小 */
             color: #333;     /* 圖示顏色 */
         }
-        [id^="brush-"] i, [id^="eraser-"] i {
+
+        [id^="brush-"], [id^="eraser-"], [id^="clear-canvas-"] {
+            display: inline-flex; /* 保證圖示垂直水平居中 */
+            justify-content: center;
+            align-items: center;
+            background-color: transparent;
+            appearance: none;
+            box-shadow: none;
+            border: none;
+            width: 40px;
+            height: 40px;
+            padding: 20px;
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            cursor: pointer;
+        }
+
+        [id^="brush-"] i, [id^="eraser-"] i, [id^="clear-canvas-"] i {
             font-size: 15px; /* 圖示大小 */
             color: #333;     /* 圖示顏色 */
         }
