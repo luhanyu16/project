@@ -507,26 +507,67 @@
 
         function searchNotes() {
             const searchTerm = document.getElementById('search-input').value.trim().toLowerCase();
-            if (searchTerm === '') {
-                displayNotes();
+
+            if (!searchTerm) {
+                displayNotes(); // 如果搜尋欄是空的，顯示所有筆記
                 return;
             }
 
             db.collection('Users').doc(currentUser.uid).collection('Notes').get()
                 .then(querySnapshot => {
-                    notesContainer.innerHTML = '';
+                    notesContainer.innerHTML = ''; // 清空結果
+
                     querySnapshot.forEach(doc => {
                         const note = doc.data();
-                        const titleMatches = note.title && note.title.toLowerCase().includes(searchTerm);
-                        const categoryMatches = note.category && note.category.toLowerCase().includes(searchTerm);
+                        const titleMatches = note.title?.toLowerCase().includes(searchTerm);
+                        const categoryMatches = note.category?.toLowerCase().includes(searchTerm);
+
                         if (titleMatches || categoryMatches) {
-                            createNoteElement(doc.id, note);
+                            createNoteElement(doc.id, note); // 如果符合條件，顯示筆記
                         }
                     });
                 })
                 .catch(error => {
                     console.error('搜尋筆記時出錯:', error);
                 });
+        }
+
+        async function searchNotes() {
+            const searchTerm = document.getElementById('search-input').value.trim().toLowerCase();
+
+            if (!searchTerm) {
+                displayNotes();
+                return;
+            }
+
+            notesContainer.innerHTML = ''; // 清空筆記容器
+
+            try {
+                const userRef = db.collection('Users').doc(currentUser.uid);
+
+                // 搜尋資料夾外的筆記
+                const notesSnapshot = await userRef.collection('Notes').get();
+                notesSnapshot.forEach(doc => {
+                    const note = doc.data();
+                    if (note.title?.toLowerCase().includes(searchTerm) || note.category?.toLowerCase().includes(searchTerm)) {
+                        createNoteElement(doc.id, note);
+                    }
+                });
+
+                // 搜尋所有資料夾中的筆記
+                const foldersSnapshot = await userRef.collection('Folders').get();
+                for (const folder of foldersSnapshot.docs) {
+                    const folderNotesSnapshot = await userRef.collection('Folders').doc(folder.id).collection('Notes').get();
+                    folderNotesSnapshot.forEach(doc => {
+                        const note = doc.data();
+                        if (note.title?.toLowerCase().includes(searchTerm) || note.category?.toLowerCase().includes(searchTerm)) {
+                            createNoteElement(doc.id, note);
+                        }
+                    });
+                }
+            } catch (error) {
+                console.error('搜尋筆記時出錯:', error);
+            }
         }
 
         // 建立筆記元素
