@@ -533,6 +533,7 @@
                     <button onclick="editNote('${id}')">編輯</button>
                     <button onclick="deleteNote('${id}')">刪除</button>
                     <button id="save-note-${id}">儲存內容</button>
+                    <button onclick="moveNoteToFolder('${id}')">移動到資料夾</button>
                 </div>
             `;
             notesContainer.appendChild(noteElement);
@@ -759,15 +760,16 @@
         // 刪除筆記
         function deleteNote(noteId) {
             const userRef = db.collection('Users').doc(currentUser.uid);
-            const noteRef = userRef.collection('Folders').doc(currentFolderId).collection('Notes').doc(noteId);
 
-            // 刪除筆記
+            // 如果有選擇資料夾，則刪除該資料夾內的筆記
+            const noteRef = currentFolderId 
+                ? userRef.collection('Folders').doc(currentFolderId).collection('Notes').doc(noteId)
+                : userRef.collection('Notes').doc(noteId); // 否則刪除資料夾外的筆記
+
             noteRef.delete()
                 .then(() => {
-                    console.log('筆記已成功刪除');
                     alert('筆記已成功刪除');
-                    // 刪除後重新載入筆記列表
-                    displayNotes();
+                    displayNotes(); // 重新顯示筆記
                 })
                 .catch(error => {
                     console.error('刪除筆記失敗:', error);
@@ -790,6 +792,36 @@
                 loadFolders();
             }
         });
+
+        async function moveNoteToFolder(noteId) {
+            if (!currentFolderId) {
+                alert('請先選擇要移動到的資料夾');
+                return;
+            }
+
+            const userRef = db.collection('Users').doc(currentUser.uid);
+            const noteRef = userRef.collection('Notes').doc(noteId);
+            const folderRef = userRef.collection('Folders').doc(currentFolderId).collection('Notes');
+
+            try {
+                const noteSnapshot = await noteRef.get();
+                if (!noteSnapshot.exists) {
+                    alert('找不到該筆記');
+                    return;
+                }
+
+                // 將筆記移動到資料夾
+                const noteData = noteSnapshot.data();
+                await folderRef.doc(noteId).set(noteData);
+                await noteRef.delete();
+
+                alert('筆記已成功移動到資料夾');
+                displayNotes(); // 更新顯示
+            } catch (error) {
+                console.error('移動筆記失敗:', error);
+                alert('移動筆記失敗，請稍後再試');
+            }
+        }
 
         // 載入資料夾
         async function loadFolders() {
@@ -849,14 +881,14 @@
         async function displayNotes() {
             if (!currentUser) return;
 
-            notesContainer.innerHTML = ''; // 清空筆記容器
+            notesContainer.innerHTML = '';
 
             let notesQuery;
             if (currentFolderId) {
                 // 顯示選定資料夾的筆記
                 notesQuery = db.collection('Users').doc(currentUser.uid).collection('Folders').doc(currentFolderId).collection('Notes').orderBy('timestamp', 'desc');
             } else {
-                // 顯示所有筆記
+                // 顯示所有資料夾外的筆記
                 notesQuery = db.collection('Users').doc(currentUser.uid).collection('Notes').orderBy('timestamp', 'desc');
             }
 
