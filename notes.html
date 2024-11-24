@@ -533,10 +533,16 @@
                     <button onclick="editNote('${id}')">編輯</button>
                     <button onclick="deleteNote('${id}')">刪除</button>
                     <button id="save-note-${id}">儲存內容</button>
-                    <button onclick="moveNoteToFolder('${id}')">移動到資料夾</button>
+                    <select id="move-folder-select-${id}">
+                        <option value="">選擇資料夾</option>
+                    </select>
+                    <button onclick="confirmMoveNoteToFolder('${id}')">移動到資料夾</button>
                 </div>
             `;
             notesContainer.appendChild(noteElement);
+
+            // 填充資料夾選單
+            populateFolderOptions(`move-folder-select-${id}`);
 
             // 繪圖和編輯功能
             const canvas = document.getElementById(`canvas-${id}`);
@@ -777,6 +783,19 @@
                 });
         }
 
+        async function populateFolderOptions(selectId) {
+            const folderSelect = document.getElementById(selectId);
+            const folderSnapshot = await db.collection('Users').doc(currentUser.uid).collection('Folders').get();
+
+            folderSnapshot.forEach(doc => {
+                const folder = doc.data();
+                const option = document.createElement('option');
+                option.value = doc.id;
+                option.textContent = folder.name;
+                folderSelect.appendChild(option);
+            });
+        }
+
         // 新增資料夾
         let currentFolderId = null; // 儲存目前選擇的資料夾
 
@@ -793,15 +812,19 @@
             }
         });
 
-        async function moveNoteToFolder(noteId) {
-            if (!currentFolderId) {
-                alert('請先選擇要移動到的資料夾');
+        async function confirmMoveNoteToFolder(noteId) {
+            const selectId = `move-folder-select-${noteId}`;
+            const folderSelect = document.getElementById(selectId);
+            const targetFolderId = folderSelect.value;
+
+            if (!targetFolderId) {
+                alert('請選擇一個目標資料夾');
                 return;
             }
 
             const userRef = db.collection('Users').doc(currentUser.uid);
             const noteRef = userRef.collection('Notes').doc(noteId);
-            const folderRef = userRef.collection('Folders').doc(currentFolderId).collection('Notes');
+            const folderRef = userRef.collection('Folders').doc(targetFolderId).collection('Notes');
 
             try {
                 const noteSnapshot = await noteRef.get();
@@ -810,13 +833,12 @@
                     return;
                 }
 
-                // 將筆記移動到資料夾
                 const noteData = noteSnapshot.data();
                 await folderRef.doc(noteId).set(noteData);
                 await noteRef.delete();
 
                 alert('筆記已成功移動到資料夾');
-                displayNotes(); // 更新顯示
+                displayNotes(); // 重新顯示筆記
             } catch (error) {
                 console.error('移動筆記失敗:', error);
                 alert('移動筆記失敗，請稍後再試');
@@ -1014,8 +1036,8 @@
             if (user) {
                 currentUser = user;
                 toggleUI();
-                // displayNotes(); // 只呼叫一次顯示筆記
                 loadFolders();
+                displayNotes();
             } else {
                 currentUser = null;
                 toggleUI();
