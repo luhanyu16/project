@@ -107,34 +107,6 @@
             color: #333;     /* 圖示顏色 */
         }
 
-        [id^="brush-"], [id^="eraser-"], [id^="clear-canvas-"], [id^="apply-text-color-"] {
-            display: inline-flex; /* 保證圖示垂直水平居中 */
-            justify-content: center;
-            align-items: center;
-            background-color: transparent;
-            appearance: none;
-            box-shadow: none;
-            border: none;
-            width: 40px;
-            height: 40px;
-            padding: 20px;
-            background-size: contain;
-            background-repeat: no-repeat;
-            background-position: center;
-            cursor: pointer;
-        }
-
-        [id^="brush-"] i, [id^="eraser-"] i, [id^="clear-canvas-"] i, [id^="apply-text-color-"] i {
-            font-size: 18px; /* 圖示大小 */
-            color: #333;     /* 圖示顏色 */
-        }
-
-        .fas.fa-upload {
-            margin-right: 10px; /* 調整右邊間距 */
-            font-size: 18px;
-            color: #333;
-        }
-
         #login-button {
             background-image: url('google.png');
             background-size: contain;
@@ -344,7 +316,6 @@
         .text-tools select {
             padding: 8px;
             font-size: 14px;
-            width: fit-content;
             border-radius: 6px;
             border: 1px solid #ced4da;
             background-color: #ffffff;
@@ -507,67 +478,26 @@
 
         function searchNotes() {
             const searchTerm = document.getElementById('search-input').value.trim().toLowerCase();
-
-            if (!searchTerm) {
-                displayNotes(); // 如果搜尋欄是空的，顯示所有筆記
+            if (searchTerm === '') {
+                displayNotes();
                 return;
             }
 
             db.collection('Users').doc(currentUser.uid).collection('Notes').get()
                 .then(querySnapshot => {
-                    notesContainer.innerHTML = ''; // 清空結果
-
+                    notesContainer.innerHTML = '';
                     querySnapshot.forEach(doc => {
                         const note = doc.data();
-                        const titleMatches = note.title?.toLowerCase().includes(searchTerm);
-                        const categoryMatches = note.category?.toLowerCase().includes(searchTerm);
-
+                        const titleMatches = note.title && note.title.toLowerCase().includes(searchTerm);
+                        const categoryMatches = note.category && note.category.toLowerCase().includes(searchTerm);
                         if (titleMatches || categoryMatches) {
-                            createNoteElement(doc.id, note); // 如果符合條件，顯示筆記
+                            createNoteElement(doc.id, note);
                         }
                     });
                 })
                 .catch(error => {
                     console.error('搜尋筆記時出錯:', error);
                 });
-        }
-
-        async function searchNotes() {
-            const searchTerm = document.getElementById('search-input').value.trim().toLowerCase();
-
-            if (!searchTerm) {
-                displayNotes();
-                return;
-            }
-
-            notesContainer.innerHTML = ''; // 清空筆記容器
-
-            try {
-                const userRef = db.collection('Users').doc(currentUser.uid);
-
-                // 搜尋資料夾外的筆記
-                const notesSnapshot = await userRef.collection('Notes').get();
-                notesSnapshot.forEach(doc => {
-                    const note = doc.data();
-                    if (note.title?.toLowerCase().includes(searchTerm) || note.category?.toLowerCase().includes(searchTerm)) {
-                        createNoteElement(doc.id, note);
-                    }
-                });
-
-                // 搜尋所有資料夾中的筆記
-                const foldersSnapshot = await userRef.collection('Folders').get();
-                for (const folder of foldersSnapshot.docs) {
-                    const folderNotesSnapshot = await userRef.collection('Folders').doc(folder.id).collection('Notes').get();
-                    folderNotesSnapshot.forEach(doc => {
-                        const note = doc.data();
-                        if (note.title?.toLowerCase().includes(searchTerm) || note.category?.toLowerCase().includes(searchTerm)) {
-                            createNoteElement(doc.id, note);
-                        }
-                    });
-                }
-            } catch (error) {
-                console.error('搜尋筆記時出錯:', error);
-            }
         }
 
         // 建立筆記元素
@@ -581,9 +511,9 @@
                 <div class="text-tools">
                     <label for="text-color-picker-${id}">文字顏色:</label>
                     <input type="color" id="text-color-picker-${id}" value="${note.textColor}">
-                    <button id="apply-text-color-${id}" title="變更顏色"><i class="fas fa-palette"></i></button>
+                    <button id="apply-text-color-${id}">變更顏色</button>
                 </div>
-                <i class="fas fa-upload"></i><input type="file" id="upload-image-${id}" accept="image/*">
+                <input type="file" id="upload-image-${id}" accept="image/*">
                 <img id="uploaded-image-${id}" style="display:none; max-width: 100%; height: auto;">
                 <canvas id="canvas-${id}" width="600" height="400"></canvas>
                 <div class="canvas-tools">
@@ -597,9 +527,9 @@
                         <option value="15">15px</option>
                         <option value="20">20px</option>
                     </select>
-                    <button id="brush-${id}" title="畫筆"><i class="fas fa-paint-brush"></i></button>
-                    <button id="eraser-${id} title="橡皮擦"><i class="fas fa-eraser"></i></button>
-                    <button id="clear-canvas-${id} title="清除畫布"><i class="fas fa-trash"></i></button>
+                    <button id="brush-${id}">畫筆</button>
+                    <button id="eraser-${id}">橡皮擦</button>
+                    <button id="clear-canvas-${id}">清除畫布</button>
                 </div>
                 <div class="actions">
                     <button onclick="editNote('${id}')"><i class="fas fa-edit"></i></button>
