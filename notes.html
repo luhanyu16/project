@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>網頁筆記</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
     <style>
         body {
@@ -528,13 +529,13 @@
                     <button id="clear-canvas-${id}">清除畫布</button>
                 </div>
                 <div class="actions">
-                    <button onclick="editNote('${id}')">編輯</button>
-                    <button onclick="deleteNote('${id}')">刪除</button>
-                    <button id="save-note-${id}">儲存內容</button>
+                    <button onclick="editNote('${id}')"><i class="fas fa-edit"></i></button>
+                    <button onclick="deleteNote('${id}')"><i class="fas fa-trash-alt"></i></button>
+                    <button id="save-note-${id}"><i class="fas fa-save"></i></button>
                     <select id="move-folder-select-${id}">
                         <option value="">選擇資料夾</option>
                     </select>
-                    <button onclick="confirmMoveNoteToFolder('${id}')">移動到資料夾</button>
+                    <button onclick="confirmMoveNoteToFolder('${id}')"><i class="fas fa-folder"></i></button>
                 </div>
             `;
             notesContainer.appendChild(noteElement);
