@@ -177,7 +177,7 @@
         }
         
         /* 下拉選單樣式 */
-        #folder-select {
+        .older-select {
             width: 150px; /* 設定寬度 */
             height: 40px; /* 設定高度 */
             padding: 5px 10px; /* 調整內部留白 */
@@ -197,12 +197,12 @@
         }
 
         /* 聚焦時的樣式 */
-        #folder-select:focus {
+        .folder-select:focus {
             border-color: #007bff; /* 聚焦時的邊框顏色 */
         }
 
         /* 下拉選單的選項樣式 */
-        #folder-select option {
+        .folder-select option {
             font-size: 16px; /* 選項字體大小 */
             color: #333; /* 選項文字顏色 */
             background-color: #ffffff; /* 選項背景色 */
@@ -315,7 +315,7 @@
         <h1>網頁筆記</h1>
         <div class="header">
             <select id="folder-select">
-                <option value="">所有筆記</option>
+                <option value="">選擇資料夾</option>
             </select>
             <button id="login-button"></button>
             <button id="new-folder"></button>
@@ -389,39 +389,6 @@
                 toggleUI();
             });
         });
-
-        // 監聽下拉選單變化
-        // folderSelect.addEventListener('click', () => {
-        //     if (folderSelect.value) {
-        //         // 當選擇了資料夾時顯示刪除按鈕
-        //         deleteFolderButton.style.display = 'inline-block';
-        //     } else {
-        //         // 未選擇資料夾時隱藏刪除按鈕
-        //         deleteFolderButton.style.display = 'none';
-        //     }
-        // });
-
-        // 切換 UI 狀態
-        // function toggleUI() {
-        //     if (currentUser) {
-        //         loginButton.style.display = 'none';
-        //         logoutButton.style.display = 'inline-block';
-        //         newNoteButton.style.display = 'inline-block';
-        //         newFolderButton.style.display = 'inline-block';
-        //         deleteFolderButton.style.display = 'inline-block';
-        //         folderSelect.style.display = 'inline-block';
-        //         searchContainer.style.display = 'flex';
-        //     } else {
-        //         loginButton.style.display = 'inline-block';
-        //         logoutButton.style.display = 'none';
-        //         newNoteButton.style.display = 'none';
-        //         newFolderButton.style.display = 'none';
-        //         deleteFolderButton.style.display = 'none';
-        //         folderSelect.style.display = 'none';
-        //         searchContainer.style.display = 'none';
-        //         notesContainer.innerHTML = '';
-        //     }
-        // }
 
         // 新增資料夾選單變更事件監聽
         folderSelect.addEventListener('change', () => {
@@ -533,7 +500,7 @@
                     <button onclick="editNote('${id}')">編輯</button>
                     <button onclick="deleteNote('${id}')">刪除</button>
                     <button id="save-note-${id}">儲存內容</button>
-                    <select id="move-folder-select-${id}">
+                    <select id="move-folder-select-${id}" class="folder-select">
                         <option value="">選擇資料夾</option>
                     </select>
                     <button onclick="confirmMoveNoteToFolder('${id}')">移動到資料夾</button>
