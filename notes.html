@@ -532,7 +532,7 @@
                     <button id="clear-canvas-${id}">清除畫布</button>
                 </div>
                 <div class="actions">
-                    <button onclick="editNote('${id}')"><i class="fas fa-edit"></i></button>
+                    <button onclick="editNote('${id}', '${currentFolderId}')"><i class="fas fa-edit"></i></button>
                     <button onclick="deleteNote('${id}')"><i class="fas fa-trash-alt"></i></button>
                     <button id="save-note-${id}"><i class="fas fa-save"></i></button>
                     <select id="move-folder-select-${id}">
@@ -745,23 +745,29 @@
 
         // 編輯筆記
         async function editNote(noteId, folderId) {
-            const newContent = prompt('輸入新的筆記內容:');
-            
-            if (newContent && currentUser) {
+            const newCategory = prompt('輸入新的分類:');
+            const newTitle = prompt('輸入新的標題:');
+
+            // 確保新內容不為空
+            if (newCategory && newTitle && currentUser) {
                 try {
+                    // 更新 Firebase 的筆記資料
                     await db.collection('Users').doc(currentUser.uid)
                         .collection('Folders').doc(folderId)
                         .collection('Notes').doc(noteId).update({
-                            content: newContent,
-                            timestamp: new Date()  // 更新時間戳
+                            category: newCategory,
+                            title: newTitle,
+                            timestamp: new Date() // 更新時間戳
                         });
 
                     alert('筆記已更新');
-                    loadNotes(folderId);  // 更新筆記列表
+                    loadNotes(folderId); // 重新加載筆記列表
                 } catch (error) {
                     console.error('更新筆記時出錯:', error);
                     alert('更新筆記失敗');
                 }
+            } else {
+                alert('請輸入完整的分類與標題');
             }
         }
 
