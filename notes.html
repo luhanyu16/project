@@ -539,7 +539,7 @@
                 <label for="upload-image-${id}" class="upload-btn">
                     <i class="fas fa-upload"></i> 上傳圖片
                 </label>
-                <input type="file" id="upload-image-${id}" accept="image/*">
+                <input type="file" id="upload-image-${id}" accept="image/*" onchange="previewImage(event, 'uploaded-image-${id}')">
                 <img id="uploaded-image-${id}" style="display:none; max-width: 100%; height: auto;">
                 <canvas id="canvas-${id}" width="600" height="400"></canvas>
                 <div class="canvas-tools">
@@ -750,6 +750,19 @@
             ctx.stroke();
             ctx.beginPath();
             ctx.moveTo(event.offsetX, event.offsetY);
+        }
+
+        function previewImage(event, imageId) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const img = document.getElementById(imageId);
+                    img.src = e.target.result; // 使用讀取的 Data URL 作為圖片來源
+                    img.style.display = 'block'; // 確保圖片顯示
+                };
+                reader.readAsDataURL(file); // 將圖片讀取為 Data URL
+            }
         }
 
         // 儲存圖片資料到資料庫
