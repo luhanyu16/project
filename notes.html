@@ -130,7 +130,7 @@
         [id^="upload-image-"] {
             display: inline-flex;
             align-items: center;
-            gap: 12px; /* 圖示與按鈕之間的間距 */
+            gap: 8px; /* 圖示與按鈕之間的間距 */
         }
 
         .upload-icon {
@@ -581,7 +581,6 @@
 
             // 填充資料夾選單
             populateFolderOptions(`move-folder-select-${id}`);
-            return noteElement;
 
             // 繪圖和編輯功能
             const canvas = document.getElementById(`canvas-${id}`);
@@ -1018,8 +1017,6 @@
                     textColor: '#000000',
                     brushSize: 5,
                 });
-
-                notesContainer.prepend(noteElement);
             }
         });
 
