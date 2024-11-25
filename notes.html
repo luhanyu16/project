@@ -17,6 +17,10 @@
             color: #333;
         }
 
+        img {
+            display: block; /* 確保圖片顯示 */
+        }
+
         .container {
             max-width: 1000px;
             margin: 40px auto;
@@ -677,7 +681,7 @@
             // 載入保存的圖片
             if (note.imageSrc) {
                 const uploadedImage = document.getElementById(`uploaded-image-${id}`);
-                uploadedImage.src = note.imageSrc;  // 將圖片的 dataURL 設置為 <img> 的 src
+                uploadedImage.src = `${note.imageSrc}?t=${new Date().getTime()}`;  // 將圖片的 dataURL 設置為 <img> 的 src
                 uploadedImage.style.display = 'block';  // 確保圖片顯示
             }
 
@@ -806,7 +810,7 @@
                     // uploadedImage.src = dataURL;
                     uploadedImage.src = `${dataURL}?t=${new Date().getTime()}`;
                     uploadedImage.style.display = 'block';
-                    alert('圖片更新成功！');
+                    // alert('圖片更新成功！');
                 }
             } catch (error) {
                 console.error('儲存圖片內容時出錯:', error);
