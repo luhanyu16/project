@@ -108,6 +108,25 @@
             color: #333;     /* 圖示顏色 */
         }
 
+        .icon-button {
+            display: inline-flex; /* 讓圖示水平垂直居中 */
+            justify-content: center;
+            align-items: center;
+            background-color: transparent; /* 移除背景 */
+            appearance: none;
+            box-shadow: none;
+            border: none;
+            width: 50px; /* 按鈕寬度略小 */
+            height: 30px; /* 按鈕高度略小 */
+            cursor: pointer;
+            padding: 10px;
+        }
+
+        .icon-button i {
+            font-size: 16px; /* 圖示大小略小 */
+            color: #333; /* 圖示顏色 */
+        }
+
         #login-button {
             background-image: url('google.png');
             background-size: contain;
@@ -533,9 +552,9 @@
                         <option value="15">15px</option>
                         <option value="20">20px</option>
                     </select>
-                    <button id="brush-${id}">畫筆</button>
-                    <button id="eraser-${id}">橡皮擦</button>
-                    <button id="clear-canvas-${id}">清除畫布</button>
+                    <button id="brush-${id}" class="icon-button"><i class="fas fa-paint-brush"></i></button>
+                    <button id="eraser-${id}" class="icon-button"><i class="fas fa-eraser"></i></button>
+                    <button id="clear-canvas-${id}" class="icon-button"><i class="fas fa-trash-alt"></i></button>
                 </div>
                 <div class="actions">
                     <button onclick="editNote('${id}')"><i class="fas fa-edit"></i></button>
