@@ -489,6 +489,11 @@
             }
         }
 
+        function formatTimestamp(timestamp) {
+            const date = timestamp.toDate();
+            return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+        }
+
         // 顯示筆記
         async function displayNotes() {
             if (!currentUser) return;
@@ -544,6 +549,7 @@
             noteElement.classList.add('note');
             noteElement.innerHTML = `
                <div class="note-category"><strong>分類:</strong> ${note.category}</div>
+               <div class="note-timestamp"><strong>筆記創建時間：</strong> ${note.timestamp ? formatTimestamp(note.timestamp) : '未知'}</div>
                 <h2>${note.title}</h2>
                 <div id="text-content-${id}" contenteditable="true" class="editable-text" style="color: ${note.textColor};">${note.content}</div>
                 <div class="text-tools">
@@ -1007,7 +1013,7 @@
                     canvasData: '', // 預設畫布資料為空
                     textColor: '#000000',
                     brushSize: 5,
-                    timestamp: new Date()
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp() // 確保存入時間戳
                 });
 
                 // 初始化筆記元素到畫面
