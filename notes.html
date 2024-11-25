@@ -601,7 +601,7 @@
 
                     await notesRef.update({
                         content: textContent,
-                        textColor: textColor,
+                        textColor: textColorPicker.innerHTML,
                         canvasData: canvasData,
                         timestamp: firebase.firestore.FieldValue.serverTimestamp()
                     });
