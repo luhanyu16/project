@@ -581,6 +581,7 @@
 
             // 填充資料夾選單
             populateFolderOptions(`move-folder-select-${id}`);
+            return noteElement;
 
             // 繪圖和編輯功能
             const canvas = document.getElementById(`canvas-${id}`);
@@ -1017,6 +1018,8 @@
                     textColor: '#000000',
                     brushSize: 5,
                 });
+
+                notesContainer.prepend(noteElement);
             }
         });
 
