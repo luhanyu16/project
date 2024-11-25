@@ -46,6 +46,9 @@
             color: #3375cb;
             border: none;
             border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
             padding: 12px 20px;
             font-size: 16px;
             font-weight: 600;
@@ -68,6 +71,15 @@
             transform: translateY(1px);
         }
 
+        .google-icon {
+            width: 20px;
+            height: 20px;
+            background-image: url('google.png'); /* 替換成 Google 圖標路徑 */
+            background-size: contain;
+            background-position: center;
+            background-repeat: no-repeat;
+        }
+
         /* 錯誤訊息 */
         .error-message {
             color: #ff5555;
@@ -82,7 +94,8 @@
         <h1>歡迎來到網頁筆記</h1>
         <div id="google-login">
             <button id="google-login-button">
-                使用 Google 登入
+                <div class="google-icon"></div>
+                <span>使用 Google 登入</span>
             </button>
         </div>
         <div class="error-message" id="error-message"></div>
