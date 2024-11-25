@@ -138,6 +138,17 @@
             color: #333; /* 圖示顏色 */
         }
 
+        .note-timestamp {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 12px;
+            color: #0056b3; /* 使用較淺的顏色以不搶眼 */
+        }
+        .note {
+            position: relative; /* 設定相對定位，讓時間可以相對於這個區塊定位 */
+        }
+
         #login-button {
             background-image: url('google.png');
             background-size: contain;
@@ -548,8 +559,8 @@
             const noteElement = document.createElement('div');
             noteElement.classList.add('note');
             noteElement.innerHTML = `
-               <div class="note-category"><strong>分類:</strong> ${note.category}</div>
-               <div class="note-timestamp"><strong>筆記創建時間：</strong> ${note.timestamp ? formatTimestamp(note.timestamp) : '未知'}</div>
+                <div class="note-timestamp">${note.timestamp ? formatTimestamp(note.timestamp) : '未知'}</div>
+                <div class="note-category"><strong>分類:</strong> ${note.category}</div>
                 <h2>${note.title}</h2>
                 <div id="text-content-${id}" contenteditable="true" class="editable-text" style="color: ${note.textColor};">${note.content}</div>
                 <div class="text-tools">
