@@ -587,30 +587,23 @@
 
             document.getElementById(`save-note-${id}`).addEventListener('click', async () => {
                 try {
-                    // 獲取文字內容，儲存帶顏色的 innerHTML
                     const textContentElement = document.getElementById(`text-content-${id}`);
-                    const textContent = textContentElement ? textContentElement.innerHTML : ''; // 儲存 HTML 內容
-
-                    // 獲取文字顏色
                     const textColorPicker = document.getElementById(`text-color-picker-${id}`);
-                    const textColor = textColorPicker ? textColorPicker.value : '#000000';
+                    const canvas = document.getElementById(`canvas-${id}`);
 
-                    // 獲取圖片資料
-                    const imageSrc = document.getElementById(`uploaded-image-${id}`).src;
+                    const textContent = textContentElement.innerHTML;
+                    const textColor = textColorPicker.value;
+                    const canvasData = canvas.toDataURL();
 
-                    // 儲存畫布資料
-                    await saveCanvasDataToDatabase(id, canvas);
-
-                    // 更新資料到 Firebase
                     const notesRef = currentFolderId
                         ? db.collection('Users').doc(currentUser.uid).collection('Folders').doc(currentFolderId).collection('Notes').doc(id)
                         : db.collection('Users').doc(currentUser.uid).collection('Notes').doc(id);
 
                     await notesRef.update({
-                        content: textContent, // 儲存帶顏色的 HTML
-                        textColor: textColorPicker.innerHTML, // 使用文字顏色選取器的值
-                        canvasData: canvas.toDataURL(), // 儲存畫布的 dataURL
-                        timestamp: firebase.firestore.FieldValue.serverTimestamp() // 更新時間戳
+                        content: textContent,
+                        textColor: textColor,
+                        canvasData: canvasData,
+                        timestamp: firebase.firestore.FieldValue.serverTimestamp()
                     });
 
                     alert('筆記儲存成功！');
@@ -923,7 +916,8 @@
                     loadNotes(selectedFolderId); // 顯示該資料夾中的筆記
                 } else {
                     deleteFolderButton.style.display = 'none'; // 隱藏刪除按鈕
-                    notesContainer.innerHTML = ''; // 清空筆記內容
+                    // notesContainer.innerHTML = ''; // 清空筆記內容
+                    displayNotes();
                 }
             });
         }
@@ -953,15 +947,9 @@
             if (!currentUser) return;
 
             notesContainer.innerHTML = '';
-
-            let notesQuery;
-            if (currentFolderId) {
-                // 顯示選定資料夾的筆記
-                notesQuery = db.collection('Users').doc(currentUser.uid).collection('Folders').doc(currentFolderId).collection('Notes').orderBy('timestamp', 'desc');
-            } else {
-                // 顯示所有資料夾外的筆記
-                notesQuery = db.collection('Users').doc(currentUser.uid).collection('Notes').orderBy('timestamp', 'desc');
-            }
+            const notesQuery = currentFolderId
+                ? db.collection('Users').doc(currentUser.uid).collection('Folders').doc(currentFolderId).collection('Notes').orderBy('timestamp', 'desc')
+                : db.collection('Users').doc(currentUser.uid).collection('Notes').orderBy('timestamp', 'desc');
 
             const notesSnapshot = await notesQuery.get();
             notesSnapshot.forEach(doc => {
