@@ -602,11 +602,14 @@
                     await saveCanvasDataToDatabase(id, canvas);
 
                     // 更新資料到 Firebase
-                    await db.collection('Users').doc(currentUser.uid).collection('Folders').doc(currentFolderId).collection('Notes').doc(id).update({
+                    const notesRef = currentFolderId
+                        ? db.collection('Users').doc(currentUser.uid).collection('Folders').doc(currentFolderId).collection('Notes').doc(id)
+                        : db.collection('Users').doc(currentUser.uid).collection('Notes').doc(id);
+
+                    await notesRef.update({
                         content: textContent, // 儲存帶顏色的 HTML
-                        textColor: textColorPicker.innerHTML,
-                        imageSrc: imageSrc,
-                        brushSize: brushSize,
+                        textColor: textColor, // 使用文字顏色選取器的值
+                        canvasData: canvas.toDataURL(), // 儲存畫布的 dataURL
                         timestamp: firebase.firestore.FieldValue.serverTimestamp() // 更新時間戳
                     });
 
@@ -771,10 +774,14 @@
                     }
 
                     // 更新筆記
-                    await noteRef.update({
+                    const notesRef = currentFolderId
+                        ? db.collection('Users').doc(currentUser.uid).collection('Folders').doc(currentFolderId).collection('Notes').doc(noteId)
+                        : db.collection('Users').doc(currentUser.uid).collection('Notes').doc(noteId);
+
+                    await notesRef.update({
                         category: newCategory,
                         title: newTitle,
-                        timestamp: new Date() // 更新時間戳
+                        timestamp: new Date()
                     });
 
                     alert('筆記已更新');
@@ -875,6 +882,9 @@
                 const noteData = noteSnapshot.data();
                 await folderRef.doc(noteId).set(noteData);  // 將筆記新增到目標資料夾
                 await noteRef.delete();  // 從原資料夾刪除
+
+                loadNotes(targetFolderId); // 顯示目標資料夾中的筆記
+                currentFolderId = targetFolderId; // 更新當前資料夾
 
                 alert('筆記已成功移動到資料夾');
                 displayNotes(); // 重新顯示筆記
