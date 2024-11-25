@@ -27,36 +27,17 @@
             text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.2);
         }
 
-        /* 登入框容器 */
-        .login-container {
+        /* 雲背景 */
+        .cloud-container {
             background-image: url('cloud.png');
             background-size: cover;
             background-position: center;
-            border-radius: 15px;
-            padding: 60px 40px;
-            max-width: 400px;
-            width: 100%;
-            text-align: center;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .login-container::before {
-            content: "";
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(255, 255, 255, 0.85); /* 半透明遮罩 */
-            z-index: 1;
-            border-radius: 15px;
-        }
-
-        .login-container > * {
-            position: relative;
-            z-index: 2;
+            width: 400px;
+            height: 300px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
         }
 
         /* 按鈕樣式 */
@@ -65,19 +46,13 @@
             color: #3375cb;
             border: none;
             border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
             padding: 12px 20px;
             font-size: 16px;
             font-weight: 600;
             cursor: pointer;
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
             transition: all 0.3s ease;
-            width: 100%;
-            max-width: 250px;
-            margin: 10px auto 0;
+            margin-top: 15px;
         }
 
         button:hover {
@@ -93,52 +68,27 @@
             transform: translateY(1px);
         }
 
-        .google-icon {
-            width: 20px;
-            height: 20px;
-            background-image: url('google.png');
-            background-size: cover;
-            background-position: center;
-        }
-
         /* 錯誤訊息 */
         .error-message {
             color: #ff5555;
             font-size: 14px;
             margin-top: 15px;
         }
-
-        /* 響應式樣式 */
-        @media (max-width: 768px) {
-            .login-container {
-                width: 90%;
-                padding: 40px 20px;
-            }
-
-            h1 {
-                font-size: 28px;
-            }
-
-            button {
-                font-size: 14px;
-            }
-        }
     </style>
 </head>
 
 <body>
-    <div class="login-container">
+    <div class="cloud-container">
         <h1>歡迎來到網頁筆記</h1>
         <div id="google-login">
             <button id="google-login-button">
-                <div class="google-icon"></div>
-                <span>使用 Google 登入</span>
+                使用 Google 登入
             </button>
         </div>
         <div class="error-message" id="error-message"></div>
     </div>
 
-    <!-- 引入 Firebase SDK -->
+    <!-- Firebase JS -->
     <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-firestore.js"></script>
