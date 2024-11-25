@@ -781,14 +781,9 @@
 
         // 儲存圖片資料到資料庫
         async function saveImageToDatabase(id, dataURL) {
-            try {
-                await db.collection('Users').doc(currentUser.uid).collection('Notes').doc(id).update({
-                    imageSrc: dataURL // 儲存圖片的 dataURL
-                });
-                console.log("圖片已成功儲存至資料庫");
-            } catch (error) {
-                console.error("圖片儲存失敗:", error);
-            }
+            await db.collection('Users').doc(currentUser.uid).collection('Notes').doc(id).update({
+                imageSrc: dataURL // 儲存圖片的 dataURL
+            });
         }
 
         // 儲存畫布內容至資料庫
