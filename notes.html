@@ -608,7 +608,7 @@
 
                     await notesRef.update({
                         content: textContent, // 儲存帶顏色的 HTML
-                        textColor: textColor, // 使用文字顏色選取器的值
+                        textColor: textColorPicker.innerHTML, // 使用文字顏色選取器的值
                         canvasData: canvas.toDataURL(), // 儲存畫布的 dataURL
                         timestamp: firebase.firestore.FieldValue.serverTimestamp() // 更新時間戳
                     });
