@@ -20,83 +20,39 @@
         }
 
         h1 {
-            color: #ffffff;
+            color: #0056b3;
             font-weight: 600;
             margin-bottom: 20px;
-            font-size: 28px;
-            text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.2);
-        }
-
-        .login-container {
-            background: rgba(255, 255, 255, 0.9);
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-            border-radius: 15px;
-            padding: 40px 30px;
-            width: 320px;
-            text-align: center;
-            backdrop-filter: blur(10px);
         }
 
         button {
-            background: #ffffff;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            width: 80px;
-            height: 40px;
-            cursor: pointer;
-            position: relative;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-            transition: all 0.3s ease;
-        }
-
-        button:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
-        }
-
-        button:active {
-            transform: translateY(1px);
-            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
-        }
-
-        button::after {
-            content: 'Google';
-            position: absolute;
-            left: 45px;
-            top: 50%;
-            transform: translateY(-50%);
-            font-size: 14px;
-            color: #333;
-        }
-
-        button::before {
-            content: '';
             background-image: url('google.png');
-            background-size: cover;
+            background-size: contain;
+            background-repeat: no-repeat;
             background-position: center;
-            width: 30px;
-            height: 30px;
-            position: absolute;
-            top: 50%;
-            left: 10px;
-            transform: translateY(-50%);
+            background-color: transparent;
+            appearance: none;
+            box-shadow: none;
+            border: none;
+            width: 70px;
+            height: 40px;
+            padding: 20px;
         }
 
         .error-message {
-            color: #ff4444;
-            margin-top: 15px;
-            font-size: 14px;
+            color: #ff0000;
+            margin-top: 10px;
         }
 
-        @media (max-width: 768px) {
-            .login-container {
-                padding: 30px 20px;
-                width: 90%;
-            }
-
-            button::after {
-                display: none;
-            }
+        .login-container {
+            background-image: url('cloud.png');
+            background-size: cover;
+            background-position: center -100px;
+            border-radius: 10px;
+            padding: 150px;
+            max-width: 300px;
+            width: 100%;
+            text-align: center;
         }
     </style>
 </head>
@@ -116,6 +72,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-firestore.js"></script>
 
     <script type="module">
+        // Firebase 初始化
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-app.js";
         import { getAuth, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-auth.js";
         import { getFirestore, doc, getDoc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-firestore.js";
@@ -130,18 +87,22 @@
             measurementId: "G-GP2NN9Y1D5"
         };
 
+        // 初始化 Firebase
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
 
+        // Google 登入按鈕
         const googleLoginButton = document.getElementById('google-login-button');
         googleLoginButton.addEventListener('click', async () => {
             const provider = new GoogleAuthProvider();
             try {
+                // 使用 Google 登入
                 const result = await signInWithPopup(auth, provider);
                 const user = result.user;
                 console.log('登入成功:', user);
 
+                // 寫入 Firestore
                 const userRef = doc(db, 'users', user.uid);
                 const docSnap = await getDoc(userRef);
 
@@ -154,6 +115,7 @@
                     console.log("使用者資料已成功存入 Firestore");
                 }
 
+                // 跳轉到專屬的筆記頁面
                 window.location.href = `notes.html?uid=${user.uid}`;
             } catch (error) {
                 console.error('Google 登入錯誤:', error);
