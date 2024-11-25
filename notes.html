@@ -806,8 +806,8 @@
                     // uploadedImage.src = dataURL;
                     uploadedImage.src = `${dataURL}?t=${new Date().getTime()}`;
                     uploadedImage.style.display = 'block';
+                    alert('圖片更新成功！');
                 }
-                alert('圖片更新成功！');
             } catch (error) {
                 console.error('儲存圖片內容時出錯:', error);
             }
