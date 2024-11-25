@@ -29,15 +29,12 @@
 
         /* 雲背景 */
         .cloud-container {
-            background-image: url('cloud.png');
-            background-size: cover;
-            background-position: center;
-            width: 400px;
-            height: 500px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
+    width: 80%; /* 使用百分比讓背景適應不同裝置 */
+    max-width: 500px; /* 限制最大寬度 */
+    height: auto; /* 讓高度自動調整 */
+    background-size: contain; /* 避免背景圖片被裁切 */
+}
+
         }
 
         /* 按鈕樣式 */
