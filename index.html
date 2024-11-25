@@ -29,12 +29,34 @@
 
         /* 登入框容器 */
         .login-container {
-            background: rgba(255, 255, 255, 0.8);
+            background-image: url('cloud.png');
+            background-size: cover;
+            background-position: center;
             border-radius: 15px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-            padding: 50px 40px;
-            width: 360px;
+            padding: 60px 40px;
+            max-width: 400px;
+            width: 100%;
             text-align: center;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .login-container::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.85); /* 半透明遮罩 */
+            z-index: 1;
+            border-radius: 15px;
+        }
+
+        .login-container > * {
+            position: relative;
+            z-index: 2;
         }
 
         /* 按鈕樣式 */
