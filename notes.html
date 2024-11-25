@@ -1,3 +1,4 @@
+<!-- 資料夾外搜尋沒問題編輯沒問題 資料夾內搜尋壞掉不能編輯 筆記不會重疊 -->
 <!DOCTYPE html>
 <html lang="en">
 
@@ -479,13 +480,18 @@
         function searchNotes() {
             const searchTerm = document.getElementById('search-input').value.trim().toLowerCase();
             if (searchTerm === '') {
-                displayNotes();
+                displayNotes(); // 根據是否在資料夾內顯示筆記
                 return;
             }
 
-            db.collection('Users').doc(currentUser.uid).collection('Notes').get()
+            // 判斷是資料夾內或資料夾外
+            const notesQuery = currentFolderId
+                ? db.collection('Users').doc(currentUser.uid).collection('Folders').doc(currentFolderId).collection('Notes')
+                : db.collection('Users').doc(currentUser.uid).collection('Notes');
+
+            notesQuery.get()
                 .then(querySnapshot => {
-                    notesContainer.innerHTML = '';
+                    notesContainer.innerHTML = ''; // 清空現有筆記
                     querySnapshot.forEach(doc => {
                         const note = doc.data();
                         const titleMatches = note.title && note.title.toLowerCase().includes(searchTerm);
@@ -673,11 +679,13 @@
             const textContent = noteElement.querySelector(`#text-content-${id}`);
             textContent.addEventListener('input', async () => {
                 try {
-                    await db.collection('Users').doc(currentUser.uid)
-                        .collection('Folders').doc(currentFolderId)
-                        .collection('Notes').doc(id).update({
-                            content: textContent.innerHTML, // 使用 innerHTML 來儲存文字內容
-                        });
+                    const notesRef = currentFolderId
+                        ? db.collection('Users').doc(currentUser.uid).collection('Folders').doc(currentFolderId).collection('Notes').doc(id)
+                        : db.collection('Users').doc(currentUser.uid).collection('Notes').doc(id);
+
+                    await notesRef.update({
+                        content: textContent.innerHTML, // 使用 innerHTML 來儲存文字內容
+                    });
                 } catch (error) {
                     console.error('儲存文字內容時出錯:', error);
                 }
