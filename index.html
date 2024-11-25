@@ -8,85 +8,97 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
     <style>
         /* 全局樣式 */
-        body {
-            font-family: 'Poppins', sans-serif;
-            background: linear-gradient(135deg, #a8c0ff, #3375cb);
-            margin: 0;
-            padding: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            color: #fff;
-        }
+      body {
+        font-family: 'Poppins', sans-serif;
+        background: linear-gradient(135deg, #a8c0ff, #3375cb);
+        margin: 0;
+        padding: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        color: #fff;
+    }
 
-        h1 {
-            font-size: 32px;
-            font-weight: 600;
-            margin-bottom: 20px;
-            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.2);
-        }
+    h1 {
+        font-size: 32px;
+        font-weight: 600;
+        margin-bottom: 20px;
+        color: #a8c0ff; /* 修改成與背景一致的藍色 */
+        text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3);
+    }
 
-        /* 雲背景 */
-        .cloud-container {
-              max-width: 90%; /* 限制容器寬度 */
-                overflow: hidden; /* 防止文字溢出 */
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                text-align: center; /* 確保所有內容置中 */
+    /* 雲背景 */
+    .cloud-container {
+        background-image: url('cloud.png');
+        background-size: cover;
+        background-position: center -100px;
+        border-radius: 10px;
+        padding: 150px;
+        max-width: 300px;
+        width: 100%;
+        text-align: center;
 
+        display: flex; /* 新增 */
+        flex-direction: column; /* 子元素縱向排列 */
+        justify-content: center; /* 水平居中 */
+        align-items: center; /* 垂直居中 */
+    }
 
-}
- 
-        }
+    /* 按鈕樣式 */
+    button {
+        background: #fff;
+        color: #3375cb;
+        border: none;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 12px 20px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        transition: all 0.3s ease;
+        margin-top: 15px;
+    }
 
-        /* 按鈕樣式 */
-        button {
-            background: #fff;
-            color: #3375cb;
-            border: none;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 12px 20px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-            transition: all 0.3s ease;
-            margin-top: 15px;
-        }
+    button:hover {
+        background: #3375cb;
+        color: #fff;
+        box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
+        transform: translateY(-2px);
+    }
 
-        button:hover {
-            background: #3375cb;
-            color: #fff;
-            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
-            transform: translateY(-2px);
-        }
+    button:active {
+        background: #2859a3;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        transform: translateY(1px);
+    }
 
-        button:active {
-            background: #2859a3;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-            transform: translateY(1px);
-        }
+    .google-icon {
+        width: 20px;
+        height: 20px;
+        background-image: url('google.png'); /* 替換成 Google 圖標路徑 */
+        background-size: contain;
+        background-position: center;
+        background-repeat: no-repeat;
+    }
 
-        .google-icon {
-            width: 20px;
-            height: 20px;
-            background-image: url('google.png'); /* 替換成 Google 圖標路徑 */
-            background-size: contain;
-            background-position: center;
-            background-repeat: no-repeat;
-        }
+    /* 錯誤訊息和建置中訊息 */
+    .error-message, .loading-message {
+        font-size: 14px;
+        margin-top: 15px;
+    }
 
-        /* 錯誤訊息 */
-        .error-message {
-            color: #ff5555;
-            font-size: 14px;
-            margin-top: 15px;
-        }
+    .error-message {
+        color: #ff5555;
+    }
+
+    .loading-message {
+        color: #f7d062; /* 顯示建置中訊息 */
+    }
+</style>
     </style>
 </head>
 
@@ -100,6 +112,7 @@
             </button>
         </div>
         <div class="error-message" id="error-message"></div>
+        <div class="loading-message" id="loading-message" style="display: none;">Google 登入建置中...</div>
     </div>
 
     <!-- Firebase JS -->
@@ -127,7 +140,12 @@
         const db = getFirestore(app);
 
         const googleLoginButton = document.getElementById('google-login-button');
+        const loadingMessage = document.getElementById('loading-message');
+        const errorMessage = document.getElementById('error-message');
+
         googleLoginButton.addEventListener('click', async () => {
+            loadingMessage.style.display = 'block';
+            errorMessage.textContent = ''; // 清除錯誤訊息
             const provider = new GoogleAuthProvider();
             try {
                 const result = await signInWithPopup(auth, provider);
@@ -149,8 +167,9 @@
                 window.location.href = `notes.html?uid=${user.uid}`;
             } catch (error) {
                 console.error('Google 登入錯誤:', error);
-                const errorMessage = document.getElementById('error-message');
                 errorMessage.textContent = `Google 登入失敗：${error.message}`;
+            } finally {
+                loadingMessage.style.display = 'none'; // 隱藏建置中訊息
             }
         });
     </script>
