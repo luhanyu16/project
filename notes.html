@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>網頁筆記</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
     <style>
         body {
@@ -85,22 +86,25 @@
         }
 
         .actions button {
-            background-color: #cccccc;
-            color: #333333;
-            padding: 12px 18px;
+            display: inline-flex; /* 保證圖示垂直水平居中 */
+            justify-content: center;
+            align-items: center;
+            background-color: transparent;
+            appearance: none;
+            box-shadow: none;
             border: none;
-            border-radius: 8px;
+            width: 70px;
+            height: 40px;
+            padding: 20px;
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
             cursor: pointer;
-            margin-left: 8px;
-            transition: background 0.3s ease, box-shadow 0.3s ease;
-            font-weight: 600;
-            font-size: 16px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
 
-        .actions button:hover {
-            background-color: #999999;
-            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+        .actions button i {
+            font-size: 20px; /* 圖示大小 */
+            color: #333;     /* 圖示顏色 */
         }
 
         #login-button {
@@ -528,13 +532,13 @@
                     <button id="clear-canvas-${id}">清除畫布</button>
                 </div>
                 <div class="actions">
-                    <button onclick="editNote('${id}')">編輯</button>
-                    <button onclick="deleteNote('${id}')">刪除</button>
-                    <button id="save-note-${id}">儲存內容</button>
+                    <button onclick="editNote('${id}')"><i class="fas fa-edit"></i></button>
+                    <button onclick="deleteNote('${id}')"><i class="fas fa-trash-alt"></i></button>
+                    <button id="save-note-${id}"><i class="fas fa-save"></i></button>
                     <select id="move-folder-select-${id}">
                         <option value="">選擇資料夾</option>
                     </select>
-                    <button onclick="confirmMoveNoteToFolder('${id}')">移動到資料夾</button>
+                    <button onclick="confirmMoveNoteToFolder('${id}')"><i class="fas fa-file-export"></i></button>
                 </div>
             `;
             notesContainer.appendChild(noteElement);
@@ -880,10 +884,10 @@
 
             folderSelect.innerHTML = '<option value="">選擇資料夾</option>';  // 清空選單
 
-            if (folderSnapshot.empty) {
-                // 沒有資料夾時，顯示提示
-                alert('目前沒有資料夾，請先新增資料夾');
-            }
+            // if (folderSnapshot.empty) {
+            //     // 沒有資料夾時，顯示提示
+            //     alert('目前沒有資料夾，請先新增資料夾');
+            // }
 
             folderSnapshot.forEach(doc => {
                 const folder = doc.data();
