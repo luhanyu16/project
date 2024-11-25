@@ -17,10 +17,6 @@
             color: #333;
         }
 
-        img {
-            display: block; /* 確保圖片顯示 */
-        }
-
         .container {
             max-width: 1000px;
             margin: 40px auto;
@@ -146,7 +142,7 @@
             position: absolute;
             top: 10px;
             right: 10px;
-            font-size: 16px;
+            font-size: 14px;
             color: #0056b3; /* 使用較淺的顏色以不搶眼 */
         }
         .note {
@@ -643,12 +639,10 @@
                     const textContentElement = document.getElementById(`text-content-${id}`);
                     const textColorPicker = document.getElementById(`text-color-picker-${id}`);
                     const canvas = document.getElementById(`canvas-${id}`);
-                    const uploadedImage = document.getElementById(`uploaded-image-${id}`);
 
                     const textContent = textContentElement.innerHTML;
                     const textColor = textColorPicker.value;
                     const canvasData = canvas.toDataURL();
-                    const imageSrc = uploadedImage.src;
 
                     const notesRef = currentFolderId
                         ? db.collection('Users').doc(currentUser.uid).collection('Folders').doc(currentFolderId).collection('Notes').doc(id)
@@ -658,7 +652,6 @@
                         content: textContent,
                         textColor: textColorPicker.innerHTML,
                         canvasData: canvasData,
-                        imageSrc: imageSrc,
                         timestamp: firebase.firestore.FieldValue.serverTimestamp()
                     });
 
@@ -681,7 +674,7 @@
             // 載入保存的圖片
             if (note.imageSrc) {
                 const uploadedImage = document.getElementById(`uploaded-image-${id}`);
-                uploadedImage.src = `${note.imageSrc}?t=${new Date().getTime()}`;  // 將圖片的 dataURL 設置為 <img> 的 src
+                uploadedImage.src = note.imageSrc;  // 將圖片的 dataURL 設置為 <img> 的 src
                 uploadedImage.style.display = 'block';  // 確保圖片顯示
             }
 
@@ -716,8 +709,7 @@
                     const reader = new FileReader();
                     reader.onload = function(e) {
                         const uploadedImage = document.getElementById(`uploaded-image-${id}`);
-                        // uploadedImage.src = e.target.result; // 設置圖片的 src 為 dataURL
-                        uploadedImage.src = `${e.target.result}?t=${new Date().getTime()}`;
+                        uploadedImage.src = e.target.result; // 設置圖片的 src 為 dataURL
                         uploadedImage.style.display = 'block'; // 顯示圖片
 
                         // 儲存圖片資料到資料庫
@@ -788,33 +780,10 @@
         }
 
         // 儲存圖片資料到資料庫
-        // async function saveImageToDatabase(id, dataURL) {
-        //     await db.collection('Users').doc(currentUser.uid).collection('Notes').doc(id).update({
-        //         imageSrc: dataURL // 儲存圖片的 dataURL
-        //     });
-        // }
-
         async function saveImageToDatabase(id, dataURL) {
-            try {
-                const notesRef = currentFolderId
-                    ? db.collection('Users').doc(currentUser.uid).collection('Folders').doc(currentFolderId).collection('Notes').doc(id)
-                    : db.collection('Users').doc(currentUser.uid).collection('Notes').doc(id);
-                
-                await notesRef.update({
-                    imageSrc: dataURL // 儲存圖片的 dataURL
-                });
-
-                // 更新前端 DOM 元素
-                const uploadedImage = document.getElementById(`uploaded-image-${id}`);
-                if (uploadedImage) {
-                    // uploadedImage.src = dataURL;
-                    uploadedImage.src = `${dataURL}?t=${new Date().getTime()}`;
-                    uploadedImage.style.display = 'block';
-                    // alert('圖片更新成功！');
-                }
-            } catch (error) {
-                console.error('儲存圖片內容時出錯:', error);
-            }
+            await db.collection('Users').doc(currentUser.uid).collection('Notes').doc(id).update({
+                imageSrc: dataURL // 儲存圖片的 dataURL
+            });
         }
 
         // 儲存畫布內容至資料庫
