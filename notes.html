@@ -493,10 +493,12 @@
         async function displayNotes() {
             if (!currentUser) return;
 
-            // 清空筆記容器，避免重複顯示
             notesContainer.innerHTML = '';
+            const notesQuery = currentFolderId
+                ? db.collection('Users').doc(currentUser.uid).collection('Folders').doc(currentFolderId).collection('Notes').orderBy('timestamp', 'desc')
+                : db.collection('Users').doc(currentUser.uid).collection('Notes').orderBy('timestamp', 'desc');
 
-            const notesSnapshot = await db.collection('Users').doc(currentUser.uid).collection('Notes').orderBy('timestamp', 'desc').get();
+            const notesSnapshot = await notesQuery.get();
             notesSnapshot.forEach(doc => {
                 const note = doc.data();
                 createNoteElement(doc.id, note);
@@ -1017,6 +1019,8 @@
                     textColor: '#000000',
                     brushSize: 5,
                 });
+
+                displayNotes();
             }
         });
 
