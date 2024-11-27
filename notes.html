@@ -776,7 +776,6 @@ document.getElementById(`voice-input-${id}`).addEventListener('click', () => {
         }
         isRecording = false;
         button.innerHTML = '<i class="fas fa-microphone"></i>'; // 恢復按鈕圖示
-        alert('語音輸入已停止');
     };
 
     // 處理錯誤
@@ -798,7 +797,6 @@ document.getElementById(`voice-input-${id}`).addEventListener('click', () => {
         recognition.start(); // 啟動語音辨識
         isRecording = true;
         button.innerHTML = '<i class="fas fa-stop"></i>'; // 切換按鈕圖示
-        alert('語音輸入已啟動，請開始說話...');
     }
 });
 
