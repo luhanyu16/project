@@ -721,30 +721,39 @@
             });
 
             document.getElementById(`voice-input-${id}`).addEventListener('click', () => {
-            const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-            recognition.lang = 'zh-TW'; // 設定語言，例如繁體中文
+                const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+                recognition.lang = 'zh-TW'; // 設定語言
 
-            recognition.onstart = () => {
-                alert('語音輸入開始，請開始說話...');
-            };
+                recognition.onstart = () => {
+                    alert('語音輸入開始，請開始說話...');
+                };
 
-            recognition.onspeechend = () => {
-                recognition.stop();
-                alert('語音輸入結束');
-            };
+                recognition.onspeechend = () => {
+                    recognition.stop();
+                    alert('語音輸入結束');
+                };
 
-            recognition.onresult = (event) => {
-                const transcript = event.results[0][0].transcript;
-                const textContentElement = document.getElementById(`text-content-${id}`);
-                textContentElement.innerHTML += transcript; // 將語音結果加到輸入框中
-            };
+                recognition.onresult = (event) => {
+                    try {
+                        const transcript = event.results[0][0].transcript;
+                        const textContentElement = document.getElementById(`text-content-${id}`);
+                        if (!textContentElement) {
+                            console.error(`找不到文字框: text-content-${id}`);
+                            return;
+                        }
+                        textContentElement.innerHTML += transcript;
+                        textContentElement.dispatchEvent(new Event('input')); // 手動觸發輸入事件
+                    } catch (error) {
+                        console.error('處理語音結果時出錯:', error);
+                    }
+                };
 
-            recognition.onerror = (event) => {
-                alert(`語音輸入錯誤：${event.error}`);
-            };
+                recognition.onerror = (event) => {
+                    console.error(`語音輸入錯誤: ${event.error}`);
+                };
 
-            recognition.start();
-        });
+                recognition.start();
+            });
 
             // 儲存文字內容
             const textContent = noteElement.querySelector(`#text-content-${id}`);
