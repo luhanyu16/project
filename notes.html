@@ -415,7 +415,45 @@
     <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-firestore-compat.js"></script>
+    
     <script>
+        // Web Speech API for speech-to-text functionality
+        document.querySelectorAll('.voice-input-button').forEach(button => {
+            button.addEventListener('click', () => {
+                const noteId = button.dataset.noteId;
+                const textContentElement = document.getElementById(`text-content-${noteId}`);
+                if (!textContentElement) return;
+
+                const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+                recognition.lang = 'zh-TW'; // Set language to Traditional Chinese
+                recognition.interimResults = true;
+                recognition.continuous = false;
+
+                recognition.onresult = (event) => {
+                    let finalTranscript = '';
+                    for (let i = 0; i < event.results.length; i++) {
+                        if (event.results[i].isFinal) {
+                            finalTranscript += event.results[i][0].transcript;
+                        }
+                    }
+                    textContentElement.innerHTML += finalTranscript;
+                };
+
+                recognition.onerror = (event) => {
+                    console.error('Speech recognition error:', event.error);
+                    alert('語音辨識發生錯誤，請重試。');
+                };
+
+                recognition.onend = () => {
+                    alert('語音輸入已停止。');
+                };
+
+                recognition.start();
+                alert('語音輸入已啟動，請開始說話...');
+            });
+        });
+    </script>
+
         // Firebase 初始化
         const firebaseConfig = {
             apiKey: "AIzaSyBEmo_Za0U52zNFBz-IikurtL0UWcco0sc",
@@ -725,13 +763,11 @@
             //語音輸入
 document.getElementById(`voice-input-${id}`).addEventListener('click', () => {
     const button = document.getElementById(`voice-input-${id}`);
-    const textContentElement = document.getElementById(`text-content-${id}`);
-    if (!textContentElement) return;
 
+    // 定義語音辨識
     let recognition = null;
-    let isRecording = false; // 紀錄是否正在錄音
-    let accumulatedTranscript = ''; // 儲存多次輸入的最終結果
-    let finalTranscript = ''; // 儲存當次語音輸入的最終結果
+    let isRecording = false; // 紀錄語音輸入狀態
+    let finalTranscript = ''; // 儲存所有最終的語音結果
     let lastResultIndex = 0; // 記錄上一次處理的語音結果索引
 
     // 初始化語音辨識
@@ -742,6 +778,9 @@ document.getElementById(`voice-input-${id}`).addEventListener('click', () => {
 
     // 處理語音輸入的結果
     recognition.onresult = (event) => {
+        const textContentElement = document.getElementById(`text-content-${id}`);
+        if (!textContentElement) return;
+
         let interimTranscript = ''; // 儲存即時結果
 
         // 遍歷新的語音結果
@@ -756,19 +795,19 @@ document.getElementById(`voice-input-${id}`).addEventListener('click', () => {
         // 更新索引以避免重複處理
         lastResultIndex = event.results.length;
 
-        // 更新文字框內容為：累積最終結果 + 當次最終結果 + 即時結果
-        textContentElement.innerHTML = `${accumulatedTranscript}${finalTranscript}` +
+        // 更新文字框內容為：最終結果 + 即時結果
+        textContentElement.innerHTML = finalTranscript + 
             `<span style="color: gray;">${interimTranscript}</span>`;
     };
 
     // 停止語音辨識
     recognition.onend = () => {
-        // 將本次最終結果加入累積結果
-        accumulatedTranscript += finalTranscript;
-        finalTranscript = ''; // 清空當次最終結果
-        lastResultIndex = 0; // 重置索引
+        const textContentElement = document.getElementById(`text-content-${id}`);
+        if (textContentElement) {
+            // 移除灰色的即時結果，僅保留最終結果
+            textContentElement.innerHTML = finalTranscript;
+        }
         isRecording = false;
-        textContentElement.innerHTML = accumulatedTranscript; // 僅保留累積的結果
         button.innerHTML = '<i class="fas fa-microphone"></i>'; // 恢復按鈕圖示
         alert('語音輸入已停止');
     };
@@ -784,8 +823,9 @@ document.getElementById(`voice-input-${id}`).addEventListener('click', () => {
     // 按鈕邏輯：開始或停止語音輸入
     if (isRecording) {
         recognition.stop(); // 停止語音辨識
+        isRecording = false;
     } else {
-        finalTranscript = ''; // 清空當次最終結果
+        finalTranscript = ''; // 每次啟動時清空最終結果
         lastResultIndex = 0; // 重置結果索引
         recognition.start(); // 啟動語音辨識
         isRecording = true;
@@ -793,8 +833,6 @@ document.getElementById(`voice-input-${id}`).addEventListener('click', () => {
         alert('語音輸入已啟動，請開始說話...');
     }
 });
-
-
 
 
 
