@@ -749,7 +749,11 @@
                 };
 
                 recognition.onerror = (event) => {
-                    console.error(`語音輸入錯誤: ${event.error}`);
+                    if (event.error === 'network') {
+                        alert('網路錯誤，請檢查連線或稍後再試。');
+                    } else {
+                        console.error(`語音輸入錯誤: ${event.error}`);
+                    }
                 };
 
                 recognition.start();
