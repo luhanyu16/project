@@ -755,6 +755,17 @@
                         if (event.error === 'network') {
                             alert('網路錯誤，請檢查連線或稍後再試。');
                         }
+                            const textContentElement = document.getElementById(`text-content-${id}`);
+                            if (!textContentElement) return;
+
+                            // 收集即時結果並追加到原文字框內容
+                            let transcript = '';
+                            for (let i = 0; i < event.results.length; i++) {
+                                transcript += event.results[i][0].transcript;
+                            }
+
+                            // 保留原有內容並追加新的語音輸入
+                            textContentElement.innerHTML += transcript;
                     };
                 }
 
@@ -763,12 +774,10 @@
                     recognition.stop();
                     isRecording = false;
                     button.innerHTML = '<i class="fas fa-microphone"></i>'; // 恢復麥克風圖示
-                    alert('語音輸入已停止');
                 } else {
                     recognition.start();
                     isRecording = true;
                     button.innerHTML = '<i class="fas fa-stop"></i>'; // 切換為停止圖示
-                    alert('語音輸入已啟動，請開始說話...');
                 }
             });
 
