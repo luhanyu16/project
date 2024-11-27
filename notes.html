@@ -723,84 +723,88 @@
             });
 
             //語音輸入
-            let recognition = null;
-            let isRecording = false;
-            let finalTranscript = ''; // 保存所有已確認的語音內容
+// 全局變數
+let recognition = null;
+let isRecording = false; // 記錄語音輸入狀態
+let finalTranscript = ''; // 儲存已確認的語音結果
+let previousTranscript = ''; // 儲存最後一次處理的內容
 
-            document.getElementById(`voice-input-${id}`).addEventListener('click', () => {
-                const button = document.getElementById(`voice-input-${id}`);
+document.getElementById(`voice-input-${id}`).addEventListener('click', () => {
+    const button = document.getElementById(`voice-input-${id}`);
 
-                if (!recognition) {
-                    // 初始化語音辨識
-                    recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-                    recognition.lang = 'zh-TW'; // 設定語言
-                    recognition.interimResults = true; // 開啟即時結果
-                    recognition.continuous = true; // 持續監聽模式
+    if (!recognition) {
+        // 初始化語音辨識
+        recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+        recognition.lang = 'zh-TW'; // 設定語言
+        recognition.interimResults = true; // 開啟即時結果
+        recognition.continuous = true; // 持續模式
 
-                    // 設置 onresult 處理程序
-                    let finalTranscript = ''; // 儲存所有已確認的語音
-let previousTranscript = ''; // 儲存上一次的最終結果
+        // 處理語音結果
+        recognition.onresult = (event) => {
+            const textContentElement = document.getElementById(`text-content-${id}`);
+            if (!textContentElement) return;
 
-                recognition.onresult = (event) => {
-                    const textContentElement = document.getElementById(`text-content-${id}`);
-                    if (!textContentElement) return;
+            let interimTranscript = ''; // 儲存即時結果
+            let newFinalTranscript = ''; // 儲存新的最終結果
 
-                    let interimTranscript = ''; // 保存即時結果
-                    let newFinalTranscript = ''; // 保存本次新增的最終結果
-
-                    // 遍歷語音結果
-                    for (let i = 0; i < event.results.length; i++) {
-                        if (event.results[i].isFinal) {
-                            newFinalTranscript += event.results[i][0].transcript; // 收集新的最終結果
-                        } else {
-                            interimTranscript += event.results[i][0].transcript; // 即時結果
-                        }
-                    }
-
-                    // 確保只添加新結果
-                    if (newFinalTranscript !== previousTranscript) {
-                        finalTranscript += newFinalTranscript;
-                        previousTranscript = newFinalTranscript; // 更新已處理的內容
-                    }
-
-                    // 更新文字框：已確認內容 + 即時結果
-                    textContentElement.innerHTML = finalTranscript + 
-                        `<span style="color: gray;">${interimTranscript}</span>`;
-                };
-                    recognition.onend = () => {
-                    const textContentElement = document.getElementById(`text-content-${id}`);
-                    if (textContentElement) {
-                        textContentElement.innerHTML = finalTranscript; // 只顯示最終結果
-                    }
-                    isRecording = false;
-                    document.getElementById(`voice-input-${id}`).innerHTML = '<i class="fas fa-microphone"></i>'; // 恢復按鈕圖示
-                    alert('語音輸入已停止');
-};
-                    recognition.onerror = (event) => {
-                        console.error(`語音輸入錯誤: ${event.error}`);
-                        if (event.error === 'network') {
-                            alert('網路錯誤，請檢查連線或稍後再試。');
-                        }
-                    };
-                }
-
-                // 切換語音輸入狀態
-                if (isRecording) {
-                    recognition.stop();
-                    isRecording = false;
-                    button.innerHTML = '<i class="fas fa-microphone"></i>'; // 恢復麥克風圖示
-
-                    // 停止後移除灰色即時內容，只保留最終內容
-                    const textContentElement = document.getElementById(`text-content-${id}`);
-                    textContentElement.innerHTML = finalTranscript;
-                    alert('語音輸入已停止');
+            // 處理每個語音段落
+            for (let i = 0; i < event.results.length; i++) {
+                if (event.results[i].isFinal) {
+                    newFinalTranscript += event.results[i][0].transcript; // 獲取最終結果
                 } else {
-                    recognition.start();
-                    isRecording = true;
-                    button.innerHTML = '<i class="fas fa-stop"></i>'; // 切換為停止圖示
-                    alert('語音輸入已啟動，請開始說話...');
+                    interimTranscript += event.results[i][0].transcript; // 獲取即時結果
                 }
-            });
+            }
+
+            // 僅添加新的最終結果，避免重複
+            if (newFinalTranscript !== previousTranscript) {
+                finalTranscript += newFinalTranscript;
+                previousTranscript = newFinalTranscript; // 更新處理記錄
+            }
+
+            // 更新文字框內容
+            textContentElement.innerHTML = finalTranscript + 
+                `<span style="color: gray;">${interimTranscript}</span>`;
+        };
+
+        // 停止後的處理
+        recognition.onend = () => {
+            if (!isRecording) {
+                // 如果用戶手動停止，則不重新啟動
+                return;
+            }
+        };
+
+        // 處理錯誤
+        recognition.onerror = (event) => {
+            console.error(`語音輸入錯誤: ${event.error}`);
+            if (event.error === 'network') {
+                alert('網路錯誤，請檢查連線或稍後再試。');
+            }
+        };
+    }
+
+    // 按鈕邏輯：啟動或停止語音輸入
+    if (isRecording) {
+        recognition.stop(); // 停止語音辨識
+        isRecording = false;
+        button.innerHTML = '<i class="fas fa-microphone"></i>'; // 恢復麥克風圖示
+
+        // 停止後只顯示最終內容
+        const textContentElement = document.getElementById(`text-content-${id}`);
+        if (textContentElement) {
+            textContentElement.innerHTML = finalTranscript; // 清除即時結果
+        }
+
+        alert('語音輸入已停止');
+    } else {
+        recognition.start(); // 啟動語音辨識
+        isRecording = true;
+        button.innerHTML = '<i class="fas fa-stop"></i>'; // 切換為停止圖示
+        alert('語音輸入已啟動，請開始說話...');
+    }
+});
+
 
 
 
