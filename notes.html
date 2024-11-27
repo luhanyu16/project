@@ -724,62 +724,54 @@
 
             //語音輸入
               // 初始化狀態變數
-            let isRecording = false;
-            let recognition = null;
+                let recognition = null;
+                let isRecording = false;
 
-            // 按鈕事件監聽
-            document.getElementById(`voice-input-${id}`).addEventListener('click', () => {
-                const button = document.getElementById(`voice-input-${id}`);
+                document.getElementById(`voice-input-${id}`).addEventListener('click', () => {
+                    const button = document.getElementById(`voice-input-${id}`);
 
-                // 初始化語音辨識
-                if (!recognition) {
-                    recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-                    recognition.lang = 'zh-TW'; // 設定語言
-                    recognition.interimResults = true; // 即時結果
-                    recognition.continuous = true; // 持續監聽模式
+                    if (!recognition) {
+                        // 初始化語音辨識
+                        recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+                        recognition.lang = 'zh-TW'; // 設定語言
+                        recognition.interimResults = true; // 即時結果
+                        recognition.continuous = true; // 持續監聽模式
 
-                    recognition.onresult = (event) => {
-                        const textContentElement = document.getElementById(`text-content-${id}`);
-                        if (!textContentElement) return;
-
-                        // 更新輸入框內容
-                        let transcript = '';
-                        for (let i = 0; i < event.results.length; i++) {
-                            transcript += event.results[i][0].transcript;
-                        }
-                        textContentElement.innerHTML = transcript;
-                    };
-
-                    recognition.onerror = (event) => {
-                        console.error(`語音輸入錯誤: ${event.error}`);
-                        if (event.error === 'network') {
-                            alert('網路錯誤，請檢查連線或稍後再試。');
-                        }
+                        recognition.onresult = (event) => {
                             const textContentElement = document.getElementById(`text-content-${id}`);
                             if (!textContentElement) return;
 
-                            // 收集即時結果並追加到原文字框內容
+                            // 收集所有即時結果
                             let transcript = '';
                             for (let i = 0; i < event.results.length; i++) {
                                 transcript += event.results[i][0].transcript;
                             }
 
-                            // 保留原有內容並追加新的語音輸入
+                            // 將語音內容接續追加到文字框
                             textContentElement.innerHTML += transcript;
-                    };
-                }
+                        };
 
-                // 根據目前狀態切換
-                if (isRecording) {
-                    recognition.stop();
-                    isRecording = false;
-                    button.innerHTML = '<i class="fas fa-microphone"></i>'; // 恢復麥克風圖示
-                } else {
-                    recognition.start();
-                    isRecording = true;
-                    button.innerHTML = '<i class="fas fa-stop"></i>'; // 切換為停止圖示
-                }
-            });
+                        recognition.onerror = (event) => {
+                            console.error(`語音輸入錯誤: ${event.error}`);
+                            if (event.error === 'network') {
+                                alert('網路錯誤，請檢查連線或稍後再試。');
+                            }
+                        };
+                    }
+
+                    // 切換語音輸入狀態
+                    if (isRecording) {
+                        recognition.stop();
+                        isRecording = false;
+                        button.innerHTML = '<i class="fas fa-microphone"></i>'; // 恢復麥克風圖示
+                        alert('語音輸入已停止');
+                    } else {
+                        recognition.start();
+                        isRecording = true;
+                        button.innerHTML = '<i class="fas fa-stop"></i>'; // 切換為停止圖示
+                        alert('語音輸入已啟動，請開始說話...');
+                    }
+                });
 
             // 儲存文字內容
             const textContent = noteElement.querySelector(`#text-content-${id}`);
