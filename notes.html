@@ -725,7 +725,7 @@
             //語音輸入
             let recognition = null;
             let isRecording = false;
-            let finalTranscript = ''; // 用於保存最終的語音結果
+            let finalTranscript = ''; // 保存所有已確認的語音內容
 
             document.getElementById(`voice-input-${id}`).addEventListener('click', () => {
                 const button = document.getElementById(`voice-input-${id}`);
@@ -742,19 +742,21 @@
                         const textContentElement = document.getElementById(`text-content-${id}`);
                         if (!textContentElement) return;
 
-                        let interimTranscript = ''; // 即時結果暫存
+                        let interimTranscript = ''; // 保存即時結果
+                        let newFinalTranscript = ''; // 保存本次輸入的最終結果
 
                         for (let i = 0; i < event.results.length; i++) {
                             if (event.results[i].isFinal) {
-                                // 保存最終結果並追加到文字框
-                                finalTranscript += event.results[i][0].transcript;
+                                // 累加新語音輸入的最終結果
+                                newFinalTranscript += event.results[i][0].transcript;
                             } else {
-                                // 保存即時結果
+                                // 暫存即時語音內容
                                 interimTranscript += event.results[i][0].transcript;
                             }
                         }
 
-                        // 實時更新文字框，包含最終結果和即時結果
+                        // 更新文字框：追加新內容，不重複 finalTranscript
+                        finalTranscript += newFinalTranscript;
                         textContentElement.innerHTML = finalTranscript + `<span style="color: gray;">${interimTranscript}</span>`;
                     };
 
@@ -772,9 +774,9 @@
                     isRecording = false;
                     button.innerHTML = '<i class="fas fa-microphone"></i>'; // 恢復麥克風圖示
 
-                    // 最終確定更新文字框內容
+                    // 停止後移除灰色即時內容，只保留最終內容
                     const textContentElement = document.getElementById(`text-content-${id}`);
-                    textContentElement.innerHTML = finalTranscript; // 移除灰色即時內容
+                    textContentElement.innerHTML = finalTranscript;
                     alert('語音輸入已停止');
                 } else {
                     recognition.start();
