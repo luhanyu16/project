@@ -738,35 +738,44 @@
                     recognition.continuous = true; // 持續監聽模式
 
                     // 設置 onresult 處理程序
-                    recognition.onresult = (event) => {
-                        const textContentElement = document.getElementById(`text-content-${id}`);
-                        if (!textContentElement) return;
+                    let finalTranscript = ''; // 儲存所有已確認的語音
+let previousTranscript = ''; // 儲存上一次的最終結果
 
-                        let interimTranscript = ''; // 即時結果
-                        let newFinalTranscript = ''; // 當前新增的最終結果
+                recognition.onresult = (event) => {
+                    const textContentElement = document.getElementById(`text-content-${id}`);
+                    if (!textContentElement) return;
 
-                        for (let i = 0; i < event.results.length; i++) {
-                            if (event.results[i].isFinal) {
-                                newFinalTranscript += event.results[i][0].transcript;
-                            } else {
-                                interimTranscript += event.results[i][0].transcript;
-                            }
+                    let interimTranscript = ''; // 保存即時結果
+                    let newFinalTranscript = ''; // 保存本次新增的最終結果
+
+                    // 遍歷語音結果
+                    for (let i = 0; i < event.results.length; i++) {
+                        if (event.results[i].isFinal) {
+                            newFinalTranscript += event.results[i][0].transcript; // 收集新的最終結果
+                        } else {
+                            interimTranscript += event.results[i][0].transcript; // 即時結果
                         }
+                    }
 
-                        // 累加新的最終結果到 finalTranscript
+                    // 確保只添加新結果
+                    if (newFinalTranscript !== previousTranscript) {
                         finalTranscript += newFinalTranscript;
+                        previousTranscript = newFinalTranscript; // 更新已處理的內容
+                    }
 
-                        // 僅保留新的最終結果和即時結果，不重複累積已顯示的內容
-                        textContentElement.innerHTML = finalTranscript + 
-                            `<span style="color: gray;">${interimTranscript}</span>`;
-                    };
+                    // 更新文字框：已確認內容 + 即時結果
+                    textContentElement.innerHTML = finalTranscript + 
+                        `<span style="color: gray;">${interimTranscript}</span>`;
+                };
                     recognition.onend = () => {
                     const textContentElement = document.getElementById(`text-content-${id}`);
                     if (textContentElement) {
-                        textContentElement.innerHTML = finalTranscript; // 僅保留最終結果
+                        textContentElement.innerHTML = finalTranscript; // 只顯示最終結果
                     }
-                };
-
+                    isRecording = false;
+                    document.getElementById(`voice-input-${id}`).innerHTML = '<i class="fas fa-microphone"></i>'; // 恢復按鈕圖示
+                    alert('語音輸入已停止');
+};
                     recognition.onerror = (event) => {
                         console.error(`語音輸入錯誤: ${event.error}`);
                         if (event.error === 'network') {
