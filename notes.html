@@ -724,51 +724,47 @@
 
             //語音輸入
             document.getElementById(`voice-input-${id}`).addEventListener('click', () => {
-            const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-            recognition.lang = 'zh-TW'; // 設置語言
+                const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+                recognition.lang = 'zh-TW'; // 設置語言
 
-            recognition.interimResults = true; // 啟用即時結果
-            recognition.continuous = true; // 持續監聽模式
+                recognition.interimResults = true; // 啟用即時結果
+                recognition.continuous = true; // 持續監聽模式
 
-            recognition.onstart = () => {
-                alert('語音輸入開始，請開始說話...');
-            };
+                recognition.onstart = () => {
+                    alert('語音輸入開始，請開始說話...');
+                };
 
-            recognition.onresult = (event) => {
-                const textContentElement = document.getElementById(`text-content-${id}`);
-                if (!textContentElement) {
-                    console.error(`找不到文字框: text-content-${id}`);
-                    return;
-                }
+                recognition.onresult = (event) => {
+                    const textContentElement = document.getElementById(`text-content-${id}`);
+                    if (!textContentElement) {
+                        console.error(`找不到文字框: text-content-${id}`);
+                        return;
+                    }
 
-                // 取得目前文字框的內容
-                let currentText = textContentElement.innerHTML || '';
-                
-                // 收集所有的結果（包含臨時和最終結果）
-                let transcript = '';
-                for (let i = 0; i < event.results.length; i++) {
-                    transcript += event.results[i][0].transcript;
-                }
+                    // 收集所有的結果（包含臨時和最終結果）
+                    let transcript = '';
+                    for (let i = 0; i < event.results.length; i++) {
+                        transcript += event.results[i][0].transcript;
+                    }
 
-                // 將新結果附加到原有內容之後
-                textContentElement.innerHTML = currentText + transcript;
-            };
+                    // 實時更新文字框內容
+                    textContentElement.innerHTML = transcript;
+                };
 
-            recognition.onerror = (event) => {
-                console.error(`語音輸入錯誤: ${event.error}`);
-                if (event.error === 'network') {
-                    alert('網路錯誤，請檢查連線或稍後再試。');
-                }
-            };
+                recognition.onerror = (event) => {
+                    console.error(`語音輸入錯誤: ${event.error}`);
+                    if (event.error === 'network') {
+                        alert('網路錯誤，請檢查連線或稍後再試。');
+                    }
+                };
 
-            recognition.onspeechend = () => {
-                recognition.stop(); // 自動停止
-                alert('語音輸入結束');
-            };
+                recognition.onspeechend = () => {
+                    recognition.stop(); // 自動停止
+                    alert('語音輸入結束');
+                };
 
-            recognition.start();
-        });
-
+                recognition.start();
+            });
 
 
 
