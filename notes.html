@@ -729,8 +729,8 @@ document.getElementById(`voice-input-${id}`).addEventListener('click', () => {
     // 定義語音辨識
     let recognition = null;
     let isRecording = false; // 紀錄語音輸入狀態
+    let finalTranscript = ''; // 儲存所有最終的語音結果
     let lastResultIndex = 0; // 記錄上一次處理的語音結果索引
-    let accumulatedTranscript = ''; // 儲存所有語音輸入的最終結果
 
     // 初始化語音辨識
     if (!recognition) {
@@ -749,7 +749,7 @@ document.getElementById(`voice-input-${id}`).addEventListener('click', () => {
             // 遍歷新的語音結果
             for (let i = lastResultIndex; i < event.results.length; i++) {
                 if (event.results[i].isFinal) {
-                    accumulatedTranscript += event.results[i][0].transcript; // 累積最終結果
+                    finalTranscript += event.results[i][0].transcript; // 更新最終結果
                 } else {
                     interimTranscript += event.results[i][0].transcript; // 收集即時結果
                 }
@@ -758,8 +758,9 @@ document.getElementById(`voice-input-${id}`).addEventListener('click', () => {
             // 更新索引以避免重複處理
             lastResultIndex = event.results.length;
 
-            // 即時更新文字框內容：累積內容 + 即時結果
-            textContentElement.innerHTML = accumulatedTranscript +
+            // 更新文字框內容為：最終結果 + 即時結果
+            textContentElement.innerHTML =
+                finalTranscript +
                 `<span style="color: gray;">${interimTranscript}</span>`;
         };
 
@@ -768,7 +769,7 @@ document.getElementById(`voice-input-${id}`).addEventListener('click', () => {
             const textContentElement = document.getElementById(`text-content-${id}`);
             if (textContentElement) {
                 // 移除灰色的即時結果，僅保留最終結果
-                textContentElement.innerHTML = accumulatedTranscript;
+                textContentElement.innerHTML = finalTranscript;
             }
             isRecording = false;
             button.innerHTML = '<i class="fas fa-microphone"></i>'; // 恢復按鈕圖示
@@ -789,7 +790,6 @@ document.getElementById(`voice-input-${id}`).addEventListener('click', () => {
         recognition.stop(); // 停止語音辨識
         isRecording = false;
     } else {
-        // 每次啟動時，不清空已累積的內容，但重置即時結果索引
         lastResultIndex = 0; // 重置結果索引
         recognition.start(); // 啟動語音辨識
         isRecording = true;
@@ -797,9 +797,6 @@ document.getElementById(`voice-input-${id}`).addEventListener('click', () => {
         alert('語音輸入已啟動，請開始說話...');
     }
 });
-
-
-
 
             // 儲存文字內容
             const textContent = noteElement.querySelector(`#text-content-${id}`);
