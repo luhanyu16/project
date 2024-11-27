@@ -222,6 +222,17 @@
         }
         
         /* 下拉選單樣式 */
+
+.language-select {
+    font-size: 14px;
+    padding: 5px 10px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    outline: none;
+    cursor: pointer;
+    margin-right: 10px;
+}
+
         #folder-select {
             width: 150px; /* 設定寬度 */
             height: 40px; /* 設定高度 */
@@ -722,7 +733,75 @@
                 }
             });
 
-            //語音輸入
+            
+document.getElementById(`voice-input-${id}`).addEventListener('click', () => {
+    const button = document.getElementById(`voice-input-${id}`);
+    const languageSelect = document.getElementById(`language-select-${id}`);
+    const selectedLanguage = languageSelect.value;
+
+    let recognition = null;
+    let isRecording = false; 
+    let finalTranscript = ''; 
+    let lastResultIndex = 0; 
+
+    recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+    recognition.lang = selectedLanguage; 
+    recognition.interimResults = true;
+    recognition.continuous = true;
+
+    recognition.onresult = (event) => {
+        const textContentElement = document.getElementById(`text-content-${id}`);
+        if (!textContentElement) return;
+
+        let interimTranscript = ''; 
+
+        for (let i = lastResultIndex; i < event.results.length; i++) {
+            if (event.results[i].isFinal) {
+                finalTranscript += event.results[i][0].transcript; 
+            } else {
+                interimTranscript += event.results[i][0].transcript; 
+            }
+        }
+
+        lastResultIndex = event.results.length;
+
+        textContentElement.innerHTML = finalTranscript + 
+            `<span style="color: gray;">${interimTranscript}</span>`;
+    };
+
+    recognition.onend = () => {
+        const textContentElement = document.getElementById(`text-content-${id}`);
+        if (textContentElement) {
+            textContentElement.innerHTML = finalTranscript; 
+        }
+        isRecording = false;
+        button.innerHTML = '<i class="fas fa-microphone"></i>'; 
+        alert('語音輸入已停止');
+    };
+
+    recognition.onerror = (event) => {
+        console.error(`語音輸入錯誤: ${event.error}`);
+        if (event.error === 'not-allowed') {
+            alert('請允許麥克風使用權限');
+        } else if (event.error === 'network') {
+            alert('網路錯誤，請稍後再試');
+        }
+    };
+
+    if (isRecording) {
+        recognition.stop();
+        isRecording = false;
+        button.innerHTML = '<i class="fas fa-microphone"></i>'; 
+    } else {
+        finalTranscript = ''; 
+        lastResultIndex = 0; 
+        recognition.start(); 
+        isRecording = true;
+        button.innerHTML = '<i class="fas fa-stop"></i>'; 
+        alert('語音輸入已啟動，請開始說話...');
+    }
+});
+
 document.getElementById(`voice-input-${id}`).addEventListener('click', () => {
     const button = document.getElementById(`voice-input-${id}`);
 
