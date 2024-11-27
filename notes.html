@@ -765,13 +765,14 @@ document.getElementById(`voice-input-${id}`).addEventListener('click', () => {
 
         lastResultIndex = event.results.length;
 
-        textContentElement.innerHTML = finalTranscript + interimTranscript; // 確保結果顯示於文字框
+        // 將最終結果和即時結果分別顯示
+        textContentElement.innerHTML = `${finalTranscript}<span style="color: gray;">${interimTranscript}</span>`;
     };
 
     recognition.onend = () => {
         const textContentElement = document.getElementById(`text-content-${id}`);
         if (textContentElement) {
-            textContentElement.innerHTML = finalTranscript; 
+            textContentElement.innerHTML = finalTranscript; // 清除即時結果，保留最終結果
         }
         isRecording = false;
         button.innerHTML = '<i class="fas fa-microphone"></i>'; 
