@@ -723,51 +723,78 @@
             });
 
             //語音輸入
-            document.getElementById(`voice-input-${id}`).addEventListener('click', () => {
-                const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-                recognition.lang = 'zh-TW'; // 設置語言
+document.getElementById(`voice-input-${id}`).addEventListener('click', () => {
+    const button = document.getElementById(`voice-input-${id}`);
 
-                recognition.interimResults = true; // 啟用即時結果
-                recognition.continuous = true; // 持續監聽模式
+    // 定義語音辨識
+    let recognition = null;
+    let isRecording = false; // 紀錄語音輸入狀態
+    let finalTranscript = ''; // 儲存所有最終的語音結果
+    let lastResultIndex = 0; // 記錄上一次處理的語音結果索引
 
-                recognition.onstart = () => {
-                    alert('語音輸入開始，請開始說話...');
-                };
+    // 初始化語音辨識
+    recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+    recognition.lang = 'zh-TW'; // 設定語言
+    recognition.interimResults = true; // 開啟即時結果
+    recognition.continuous = true; // 持續監聽
 
-                recognition.onresult = (event) => {
-                    const textContentElement = document.getElementById(`text-content-${id}`);
-                    if (!textContentElement) {
-                        console.error(`找不到文字框: text-content-${id}`);
-                        return;
-                    }
+    // 處理語音輸入的結果
+    recognition.onresult = (event) => {
+        const textContentElement = document.getElementById(`text-content-${id}`);
+        if (!textContentElement) return;
 
-                    // 收集所有的結果（包含臨時和最終結果）
-                    let transcript = '';
-                    for (let i = 0; i < event.results.length; i++) {
-                        transcript += event.results[i][0].transcript;
-                    }
+        let interimTranscript = ''; // 儲存即時結果
 
-                    // 實時更新文字框內容
-                    textContentElement.innerHTML = transcript;
-                };
+        // 遍歷新的語音結果
+        for (let i = lastResultIndex; i < event.results.length; i++) {
+            if (event.results[i].isFinal) {
+                finalTranscript += event.results[i][0].transcript; // 更新最終結果
+            } else {
+                interimTranscript += event.results[i][0].transcript; // 收集即時結果
+            }
+        }
 
-                recognition.onerror = (event) => {
-                    console.error(`語音輸入錯誤: ${event.error}`);
-                    if (event.error === 'network') {
-                        alert('網路錯誤，請檢查連線或稍後再試。');
-                    }
-                };
+        // 更新索引以避免重複處理
+        lastResultIndex = event.results.length;
 
-                recognition.onspeechend = () => {
-                    recognition.stop(); // 自動停止
-                    alert('語音輸入結束');
-                };
+        // 更新文字框內容為：最終結果 + 即時結果
+        textContentElement.innerHTML = finalTranscript + 
+            `<span style="color: gray;">${interimTranscript}</span>`;
+    };
 
-                recognition.start();
-            });
+    // 停止語音辨識
+    recognition.onend = () => {
+        const textContentElement = document.getElementById(`text-content-${id}`);
+        if (textContentElement) {
+            // 移除灰色的即時結果，僅保留最終結果
+            textContentElement.innerHTML = finalTranscript;
+        }
+        isRecording = false;
+        button.innerHTML = '<i class="fas fa-microphone"></i>'; // 恢復按鈕圖示
+        alert('語音輸入已停止');
+    };
 
+    // 處理錯誤
+    recognition.onerror = (event) => {
+        console.error(`語音輸入錯誤: ${event.error}`);
+        if (event.error === 'network') {
+            alert('網路錯誤，請檢查連線或稍後再試。');
+        }
+    };
 
-
+    // 按鈕邏輯：開始或停止語音輸入
+    if (isRecording) {
+        recognition.stop(); // 停止語音辨識
+        isRecording = false;
+    } else {
+        finalTranscript = ''; // 每次啟動時清空最終結果
+        lastResultIndex = 0; // 重置結果索引
+        recognition.start(); // 啟動語音辨識
+        isRecording = true;
+        button.innerHTML = '<i class="fas fa-stop"></i>'; // 切換按鈕圖示
+        alert('語音輸入已啟動，請開始說話...');
+    }
+});
 
 
 
