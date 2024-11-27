@@ -725,6 +725,7 @@
             //語音輸入
             let recognition = null;
             let isRecording = false;
+            let finalTranscript = ''; // 用於保存最終的語音結果
 
             document.getElementById(`voice-input-${id}`).addEventListener('click', () => {
                 const button = document.getElementById(`voice-input-${id}`);
@@ -733,7 +734,7 @@
                     // 初始化語音辨識
                     recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
                     recognition.lang = 'zh-TW'; // 設定語言
-                    recognition.interimResults = false; // 只接收最終結果
+                    recognition.interimResults = true; // 開啟即時結果
                     recognition.continuous = true; // 持續監聽模式
 
                     // 設置 onresult 處理程序
@@ -741,12 +742,20 @@
                         const textContentElement = document.getElementById(`text-content-${id}`);
                         if (!textContentElement) return;
 
-                        // 處理語音結果，只追加最終結果
+                        let interimTranscript = ''; // 即時結果暫存
+
                         for (let i = 0; i < event.results.length; i++) {
                             if (event.results[i].isFinal) {
-                                textContentElement.innerHTML += event.results[i][0].transcript;
+                                // 保存最終結果並追加到文字框
+                                finalTranscript += event.results[i][0].transcript;
+                            } else {
+                                // 保存即時結果
+                                interimTranscript += event.results[i][0].transcript;
                             }
                         }
+
+                        // 實時更新文字框，包含最終結果和即時結果
+                        textContentElement.innerHTML = finalTranscript + `<span style="color: gray;">${interimTranscript}</span>`;
                     };
 
                     recognition.onerror = (event) => {
@@ -762,6 +771,10 @@
                     recognition.stop();
                     isRecording = false;
                     button.innerHTML = '<i class="fas fa-microphone"></i>'; // 恢復麥克風圖示
+
+                    // 最終確定更新文字框內容
+                    const textContentElement = document.getElementById(`text-content-${id}`);
+                    textContentElement.innerHTML = finalTranscript; // 移除灰色即時內容
                     alert('語音輸入已停止');
                 } else {
                     recognition.start();
@@ -770,6 +783,7 @@
                     alert('語音輸入已啟動，請開始說話...');
                 }
             });
+
 
 
             // 儲存文字內容
