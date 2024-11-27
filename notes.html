@@ -726,11 +726,11 @@
 document.getElementById(`voice-input-${id}`).addEventListener('click', () => {
     const button = document.getElementById(`voice-input-${id}`);
 
-    // 每次按下按鈕，重置變數
+    // 定義語音辨識
     let recognition = null;
     let isRecording = false; // 紀錄語音輸入狀態
-    let finalTranscript = ''; // 本次輸入的最終結果
-    let previousTranscript = ''; // 本次輸入的最後一個處理結果
+    let finalTranscript = ''; // 儲存本次輸入的最終結果
+    let previousTranscript = ''; // 儲存本次輸入的最後一個處理結果
 
     // 初始化語音辨識
     recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
@@ -746,7 +746,7 @@ document.getElementById(`voice-input-${id}`).addEventListener('click', () => {
         let interimTranscript = ''; // 即時結果
         let newFinalTranscript = ''; // 本次新增的最終結果
 
-        // 遍歷語音輸入結果
+        // 處理每個語音段落
         for (let i = 0; i < event.results.length; i++) {
             if (event.results[i].isFinal) {
                 newFinalTranscript += event.results[i][0].transcript;
@@ -761,8 +761,9 @@ document.getElementById(`voice-input-${id}`).addEventListener('click', () => {
             previousTranscript = newFinalTranscript; // 更新記錄
         }
 
-        // 更新文字框內容
-        textContentElement.innerHTML = finalTranscript + 
+        // 將文字框現有內容和新結果結合
+        const existingContent = textContentElement.innerHTML;
+        textContentElement.innerHTML = existingContent + finalTranscript + 
             `<span style="color: gray;">${interimTranscript}</span>`;
     };
 
@@ -770,7 +771,8 @@ document.getElementById(`voice-input-${id}`).addEventListener('click', () => {
     recognition.onend = () => {
         const textContentElement = document.getElementById(`text-content-${id}`);
         if (textContentElement) {
-            textContentElement.innerHTML = finalTranscript; // 僅顯示最終結果
+            const existingContent = textContentElement.innerHTML.replace(/<span.*?>.*?<\/span>/g, ''); // 移除即時結果
+            textContentElement.innerHTML = existingContent + finalTranscript; // 保留最終結果
         }
         isRecording = false;
         button.innerHTML = '<i class="fas fa-microphone"></i>'; // 恢復按鈕圖示
@@ -790,7 +792,7 @@ document.getElementById(`voice-input-${id}`).addEventListener('click', () => {
         recognition.stop(); // 停止語音辨識
         isRecording = false;
     } else {
-        // 重置輸入結果，準備新的一次輸入
+        // 每次開始時，不重置 finalTranscript，但保持清空即時結果
         finalTranscript = '';
         previousTranscript = '';
         recognition.start(); // 啟動語音辨識
@@ -799,10 +801,6 @@ document.getElementById(`voice-input-${id}`).addEventListener('click', () => {
         alert('語音輸入已啟動，請開始說話...');
     }
 });
-
-
-
-
 
             // 儲存文字內容
             const textContent = noteElement.querySelector(`#text-content-${id}`);
