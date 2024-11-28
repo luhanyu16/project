@@ -734,11 +734,27 @@ document.addEventListener('mouseup', (event) => {
     }
 });
 
-// 語音識別功能
 function startSpeechRecognition() {
     const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
     recognition.lang = 'zh-TW'; // 設置語言
     recognition.interimResults = false; // 僅處理最終結果
+
+    const voiceStatus = document.createElement('div'); // 狀態提示元素
+    voiceStatus.style.color = 'grey';
+    voiceStatus.style.fontStyle = 'italic';
+    voiceStatus.style.display = 'none'; // 預設隱藏
+    voiceStatus.innerText = '正在輸入中...';
+    notesContainer.appendChild(voiceStatus); // 加入到頁面
+
+    recognition.onstart = () => {
+        voiceStatus.style.display = 'block'; // 顯示提示
+    };
+
+    recognition.onend = () => {
+        voiceStatus.style.display = 'none'; // 隱藏提示
+        console.log('語音識別結束，重新啟動中...');
+        recognition.start(); // 自動重啟語音識別
+    };
 
     recognition.onresult = (event) => {
         let finalTranscript = ''; // 用於存放本次輸入的文字
@@ -750,8 +766,9 @@ function startSpeechRecognition() {
         }
 
         if (finalTranscript && finalTranscript !== lastTranscript) {
-            if (caretRange) {
-                // 確保光標範圍有效並插入內容
+            const textContentElement = document.getElementById(`text-content-${id}`);
+            if (caretRange && caretRange.commonAncestorContainer.parentNode === textContentElement) {
+                // 如果有光標範圍，插入於光標位置
                 try {
                     const textNode = document.createTextNode(finalTranscript);
                     caretRange.insertNode(textNode);
@@ -765,11 +782,9 @@ function startSpeechRecognition() {
                     console.error('插入文字時出錯：', error);
                 }
             } else {
-                // 如果沒有光標範圍，默認將文字插入到筆記開頭
-                const textContentElement = document.getElementById(`text-content-${id}`);
+                // 若無光標，插入到筆記尾端
                 if (textContentElement) {
-                    const existingText = textContentElement.innerHTML;
-                    textContentElement.innerHTML = finalTranscript + existingText; // 插入到開頭
+                    textContentElement.innerHTML += finalTranscript; // 插入文字於尾端
                 } else {
                     console.error('找不到文字框，無法插入內容。');
                 }
@@ -779,16 +794,9 @@ function startSpeechRecognition() {
         }
     };
 
-    recognition.onend = () => {
-        console.log('語音識別結束，重新啟動中...');
-        recognition.start(); // 自動重啟語音識別
-    };
-
     recognition.start(); // 啟動語音識別
 }
 
-// 啟動語音識別
-startSpeechRecognition();
 
 
 
