@@ -722,14 +722,13 @@
                 }
             });
 
-            //語音輸入
-            // 優化語音輸入功能，支援文字累積
+            // 語音輸入功能，支援文字累積
 document.getElementById(`voice-input-${id}`).addEventListener('click', () => {
     const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
     recognition.lang = 'zh-TW'; // 設定語言
 
     recognition.interimResults = true; // 啟用即時結果
-    recognition.continuous = false; // 非連續模式
+    recognition.continuous = true; // 持續模式
     let isListening = false;
 
     // 狀態通知元素
@@ -754,14 +753,16 @@ document.getElementById(`voice-input-${id}`).addEventListener('click', () => {
             return;
         }
 
-        // 獲取本次輸入的文字
-        let transcript = '';
+        // 獲取現有內容，並累加新的文字
+        let existingText = textContentElement.innerHTML;
+        let newText = '';
+
         for (let i = 0; i < event.results.length; i++) {
-            transcript += event.results[i][0].transcript;
+            newText += event.results[i][0].transcript;
         }
 
-        // 將本次輸入的文字累加到已有內容中
-        textContentElement.innerHTML += transcript;
+        // 將新內容附加到現有內容後
+        textContentElement.innerHTML = existingText + newText;
     };
 
     // 錯誤處理
@@ -788,6 +789,7 @@ document.getElementById(`voice-input-${id}`).addEventListener('click', () => {
         recognition.start();
     }
 });
+
 
 
 
