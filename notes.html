@@ -723,48 +723,69 @@
             });
 
             //語音輸入
-            document.getElementById(`voice-input-${id}`).addEventListener('click', () => {
-                const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-                recognition.lang = 'zh-TW'; // 設置語言
+           // 優化語音輸入功能
+document.getElementById(`voice-input-${id}`).addEventListener('click', () => {
+    const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+    recognition.lang = 'zh-TW'; // 設定語言
 
-                recognition.interimResults = true; // 啟用即時結果
-                recognition.continuous = true; // 持續監聽模式
+    recognition.interimResults = true; // 啟用即時結果
+    recognition.continuous = false; // 設置非連續模式
+    let isListening = false;
 
-                recognition.onstart = () => {
-                    alert('語音輸入開始，請開始說話...');
-                };
+    // 顯示狀態通知
+    const statusMessage = document.createElement('div');
+    statusMessage.textContent = '語音輸入已啟動，請開始說話...';
+    statusMessage.style.color = '#0056b3';
+    statusMessage.style.marginTop = '10px';
+    statusMessage.id = `voice-status-${id}`;
+    document.getElementById(`text-content-${id}`).parentNode.appendChild(statusMessage);
 
-                recognition.onresult = (event) => {
-                    const textContentElement = document.getElementById(`text-content-${id}`);
-                    if (!textContentElement) {
-                        console.error(`找不到文字框: text-content-${id}`);
-                        return;
-                    }
+    // 開始語音輸入
+    recognition.onstart = () => {
+        isListening = true;
+        statusMessage.textContent = '語音輸入中...';
+    };
 
-                    // 收集所有的結果（包含臨時和最終結果）
-                    let transcript = '';
-                    for (let i = 0; i < event.results.length; i++) {
-                        transcript += event.results[i][0].transcript;
-                    }
+    // 即時處理結果
+    recognition.onresult = (event) => {
+        const textContentElement = document.getElementById(`text-content-${id}`);
+        if (!textContentElement) {
+            console.error(`找不到文字框: text-content-${id}`);
+            return;
+        }
 
-                    // 實時更新文字框內容
-                    textContentElement.innerHTML = transcript;
-                };
+        let transcript = '';
+        for (let i = 0; i < event.results.length; i++) {
+            transcript += event.results[i][0].transcript;
+        }
+        textContentElement.innerHTML = transcript;
+    };
 
-                recognition.onerror = (event) => {
-                    console.error(`語音輸入錯誤: ${event.error}`);
-                    if (event.error === 'network') {
-                        alert('網路錯誤，請檢查連線或稍後再試。');
-                    }
-                };
+    // 處理錯誤
+    recognition.onerror = (event) => {
+        console.error(`語音輸入錯誤: ${event.error}`);
+        statusMessage.textContent = `錯誤: ${event.error}`;
+        if (event.error === 'network') {
+            alert('網路錯誤，請檢查連線或稍後再試。');
+        }
+    };
 
-                recognition.onspeechend = () => {
-                    recognition.stop(); // 自動停止
-                    alert('語音輸入結束');
-                };
+    // 停止輸入
+    recognition.onend = () => {
+        isListening = false;
+        statusMessage.textContent = '語音輸入已結束';
+        setTimeout(() => {
+            const statusElement = document.getElementById(`voice-status-${id}`);
+            if (statusElement) statusElement.remove(); // 移除狀態通知
+        }, 3000);
+    };
 
-                recognition.start();
-            });
+    // 啟動語音輸入
+    if (!isListening) {
+        recognition.start();
+    }
+});
+
 
 
 
