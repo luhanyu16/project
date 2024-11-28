@@ -722,76 +722,66 @@
                 }
             });
 
-            // 語音輸入功能，支援手動開關，提示顯示在麥克風旁邊
-document.getElementById(`voice-input-${id}`).addEventListener('click', () => {
+          let lastTranscript = ''; // 記錄最後的輸入結果
+let caretRange = null; // 用於記錄光標位置
+
+// 監測滑鼠點擊以記錄光標位置
+document.addEventListener('mouseup', (event) => {
+    const selection = window.getSelection();
+    if (selection.rangeCount > 0) {
+        caretRange = selection.getRangeAt(0); // 記錄光標位置
+    }
+});
+
+// 語音識別
+function startSpeechRecognition() {
     const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
     recognition.lang = 'zh-TW'; // 設定語言
-    recognition.interimResults = true; // 啟用即時結果
-    recognition.continuous = true; // 持續模式
+    recognition.interimResults = false; // 僅處理最終結果
 
-    let isListening = false; // 狀態標誌
-
-    // 動態創建狀態提示元素
-    let statusMessage = document.getElementById(`voice-status-${id}`);
-    if (!statusMessage) {
-        statusMessage = document.createElement('div');
-        statusMessage.id = `voice-status-${id}`;
-        statusMessage.style.position = 'absolute';
-        statusMessage.style.backgroundColor = '#ffffff';
-        statusMessage.style.color = '#0056b3';
-        statusMessage.style.border = '1px solid #ccc';
-        statusMessage.style.borderRadius = '5px';
-        statusMessage.style.padding = '5px 10px';
-        statusMessage.style.boxShadow = '0px 4px 8px rgba(0, 0, 0, 0.1)';
-        statusMessage.style.display = 'none'; // 預設隱藏
-        document.body.appendChild(statusMessage);
-    }
-
-    // 更新狀態提示位置
-    const updateStatusPosition = () => {
-        const micButton = document.getElementById(`voice-input-${id}`);
-        const micRect = micButton.getBoundingClientRect();
-        statusMessage.style.top = `${micRect.top - 40}px`; // 提示顯示在按鈕上方
-        statusMessage.style.left = `${micRect.left}px`;
-    };
-
-    // 顯示狀態提示
-    const showStatusMessage = (message) => {
-        statusMessage.textContent = message;
-        updateStatusPosition();
-        statusMessage.style.display = 'block'; // 顯示
-    };
-
-    // 隱藏狀態提示
-    const hideStatusMessage = () => {
-        statusMessage.style.display = 'none';
-    };
-
-    // 處理語音輸入結果
     recognition.onresult = (event) => {
-    const textContentElement = document.getElementById(`text-content-${id}`);
-    if (!textContentElement) {
-        console.error(`找不到文字框: text-content-${id}`);
-        return;
-    }
+        let finalTranscript = ''; // 用於存放本次輸入的文字
 
-    let finalTranscript = ''; // 用於存放最終結果
-
-    for (let i = 0; i < event.results.length; i++) {
-        if (event.results[i].isFinal) {
-            finalTranscript += event.results[i][0].transcript; // 累加最終結果
+        for (let i = 0; i < event.results.length; i++) {
+            if (event.results[i].isFinal) {
+                finalTranscript += event.results[i][0].transcript; // 累加最終結果
+            }
         }
-    }
 
-    if (finalTranscript) {
-        const existingText = textContentElement.innerHTML;
-        
-        // 檢查是否已插入相同的內容
-        if (!existingText.startsWith(finalTranscript)) {
-            textContentElement.innerHTML = finalTranscript + existingText; // 插入到第一行
+        // 插入文字到光標處
+        if (finalTranscript && finalTranscript !== lastTranscript) {
+            if (caretRange) {
+                // 創建文本節點並插入到光標位置
+                const textNode = document.createTextNode(finalTranscript);
+                caretRange.insertNode(textNode);
+
+                // 移動光標到新文字後面
+                caretRange.setStartAfter(textNode);
+                caretRange.collapse(true);
+                window.getSelection().removeAllRanges();
+                window.getSelection().addRange(caretRange);
+            } else {
+                // 如果光標位置無效，默認插入到筆記開頭
+                const textContentElement = document.getElementById(`text-content-${id}`);
+                const existingText = textContentElement.innerHTML;
+                textContentElement.innerHTML = finalTranscript + existingText; // 插入到開頭
+            }
+
+            lastTranscript = finalTranscript; // 更新最後處理的內容
         }
-    }
-};
+    };
+
+    recognition.onend = () => {
+        console.log('語音識別結束，重新啟動中...');
+        recognition.start(); // 自動重啟語音識別
+    };
+
+    recognition.start(); // 啟動語音識別
+}
+
+// 啟動語音識別
+startSpeechRecognition();
+
 
 
 
