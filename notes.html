@@ -727,10 +727,14 @@
                 const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
                 recognition.lang = 'zh-TW'; // 設置語音識別語言
 
+                // 切換錄音狀態
                 if (!isRecording) {
                     // 開始錄音
                     recognition.start();
                     isRecording = true;
+                    const voiceButton = document.getElementById(`voice-input-${id}`);
+                    voiceButton.innerHTML = '<i class="fas fa-stop"></i>'; // 改變按鈕圖示
+                    voiceButton.style.color = 'red'; // 提示錄音進行中
                     alert('錄音已開始，請開始說話...');
 
                     recognition.onresult = (event) => {
@@ -741,19 +745,18 @@
 
                     recognition.onerror = (event) => {
                         alert('語音輸入錯誤: ' + event.error);
-                        isRecording = false; // 發生錯誤時重置狀態
-                    };
-
-                    recognition.onspeechend = () => {
-                        recognition.stop(); // 停止錄音
-                        alert('錄音已結束');
-                        isRecording = false; // 重置狀態
+                        isRecording = false;
+                        voiceButton.innerHTML = '<i class="fas fa-microphone"></i>'; // 恢復按鈕圖示
+                        voiceButton.style.color = 'black'; // 恢復按鈕顏色
                     };
                 } else {
                     // 結束錄音
                     recognition.stop();
+                    isRecording = false;
+                    const voiceButton = document.getElementById(`voice-input-${id}`);
+                    voiceButton.innerHTML = '<i class="fas fa-microphone"></i>'; // 恢復按鈕圖示
+                    voiceButton.style.color = 'black'; // 恢復按鈕顏色
                     alert('錄音已結束');
-                    isRecording = false; // 重置狀態
                 }
             });
 
