@@ -722,28 +722,22 @@
                 }
             });
 
-            // 語音輸入功能，支援文字累積，並避免重複輸入
+            // 語音輸入功能，支援手動開/關切換
 document.getElementById(`voice-input-${id}`).addEventListener('click', () => {
     const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
     recognition.lang = 'zh-TW'; // 設定語言
-
     recognition.interimResults = true; // 啟用即時結果
     recognition.continuous = true; // 持續模式
-    let isListening = false;
+
+    let isListening = false; // 狀態標誌
 
     // 狀態通知元素
     const statusMessage = document.createElement('div');
-    statusMessage.textContent = '語音輸入已啟動，請開始說話...';
+    statusMessage.textContent = '點擊按鈕以啟動語音輸入...';
     statusMessage.style.color = '#0056b3';
     statusMessage.style.marginTop = '10px';
     statusMessage.id = `voice-status-${id}`;
     document.getElementById(`text-content-${id}`).parentNode.appendChild(statusMessage);
-
-    // 開始語音輸入
-    recognition.onstart = () => {
-        isListening = true;
-        statusMessage.textContent = '語音輸入中...';
-    };
 
     // 處理語音輸入結果
     recognition.onresult = (event) => {
@@ -756,16 +750,16 @@ document.getElementById(`voice-input-${id}`).addEventListener('click', () => {
         let finalTranscript = ''; // 用於存放最終結果
 
         for (let i = 0; i < event.results.length; i++) {
-            // 判斷是否為最終結果
+            // 只處理最終結果
             if (event.results[i].isFinal) {
                 finalTranscript += event.results[i][0].transcript;
             }
         }
 
-        // 只處理最終結果，避免重複
+        // 累積新增最終結果
         if (finalTranscript) {
-            const existingText = textContentElement.innerHTML; // 獲取現有內容
-            textContentElement.innerHTML = existingText + finalTranscript; // 累加新文字
+            const existingText = textContentElement.innerHTML;
+            textContentElement.innerHTML = existingText + finalTranscript;
         }
     };
 
@@ -778,20 +772,22 @@ document.getElementById(`voice-input-${id}`).addEventListener('click', () => {
         }
     };
 
-    // 停止語音輸入
-    recognition.onend = () => {
-        isListening = false;
-        statusMessage.textContent = '語音輸入已結束';
-        setTimeout(() => {
-            const statusElement = document.getElementById(`voice-status-${id}`);
-            if (statusElement) statusElement.remove(); // 移除狀態通知
-        }, 3000);
+    // 開始/停止語音輸入切換
+    const toggleListening = () => {
+        if (isListening) {
+            recognition.stop(); // 停止語音輸入
+            isListening = false;
+            statusMessage.textContent = '語音輸入已停止';
+        } else {
+            recognition.start(); // 啟動語音輸入
+            isListening = true;
+            statusMessage.textContent = '語音輸入已啟動，請開始說話...';
+        }
     };
 
-    // 啟動語音輸入
-    if (!isListening) {
-        recognition.start();
-    }
+    // 綁定按鈕點擊事件來切換狀態
+    const voiceButton = document.getElementById(`voice-input-${id}`);
+    voiceButton.addEventListener('click', toggleListening);
 });
 
 
