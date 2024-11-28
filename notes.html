@@ -795,36 +795,6 @@ document.getElementById(`voice-input-${id}`).addEventListener('click', () => {
 
 
 
-    // 錯誤處理
-    recognition.onerror = (event) => {
-        console.error(`語音輸入錯誤: ${event.error}`);
-        showStatusMessage(`錯誤: ${event.error}`);
-        setTimeout(hideStatusMessage, 3000); // 3 秒後隱藏提示
-    };
-
-    // 停止語音輸入
-    recognition.onend = () => {
-        isListening = false;
-        showStatusMessage('語音輸入已停止');
-        setTimeout(hideStatusMessage, 2000); // 2 秒後隱藏提示
-    };
-
-    // 點擊按鈕切換語音輸入狀態
-    const toggleListening = () => {
-        if (isListening) {
-            recognition.stop(); // 停止語音輸入
-        } else {
-            recognition.start(); // 開始語音輸入
-            showStatusMessage('語音輸入中...');
-        }
-        isListening = !isListening; // 切換狀態
-    };
-
-    // 初始化狀態並綁定切換
-    toggleListening();
-});
-
-
 
 
 
