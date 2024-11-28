@@ -768,8 +768,7 @@ document.getElementById(`voice-input-${id}`).addEventListener('click', () => {
     };
 
     // 處理語音輸入結果
-   let lastTranscript = ''; // 用來記錄上一次的結果
-let tempTranscript = ''; // 用來累積當次語音結果
+   let lastTranscript = ''; // 儲存上一次的結果
 
 recognition.onresult = (event) => {
     const textContentElement = document.getElementById(`text-content-${id}`);
@@ -778,33 +777,21 @@ recognition.onresult = (event) => {
         return;
     }
 
-    // 清空臨時結果
-    tempTranscript = ''; 
+    let finalTranscript = ''; // 用於存放目前的最終結果
 
     for (let i = 0; i < event.results.length; i++) {
         if (event.results[i].isFinal) {
-            tempTranscript += event.results[i][0].transcript; // 累積當前最終結果
+            finalTranscript += event.results[i][0].transcript; // 累加最終結果
         }
     }
 
-    // 如果當前結果與上次結果不同，則插入內容
-    if (tempTranscript && tempTranscript !== lastTranscript) {
+    // 只有當新結果與上次結果不同時才插入
+    if (finalTranscript && finalTranscript !== lastTranscript) {
         const existingText = textContentElement.innerHTML;
-        textContentElement.innerHTML = tempTranscript + existingText; // 插入到第一行
-        lastTranscript = tempTranscript; // 更新最後處理的結果
+        textContentElement.innerHTML = finalTranscript + existingText; // 插入到第一行
+        lastTranscript = finalTranscript; // 更新最後結果為目前輸入
     }
 };
-
-// 確保每次啟動語音識別時重置狀態
-recognition.onstart = () => {
-    lastTranscript = ''; // 清空上次的記錄
-    tempTranscript = ''; // 清空臨時結果
-};
-
-recognition.onend = () => {
-    console.log('語音識別結束');
-};
-
 
 
 
