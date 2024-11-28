@@ -769,7 +769,7 @@ function startSpeechRecognition() {
                 const textContentElement = document.getElementById(`text-content-${id}`);
                 if (textContentElement) {
                     const existingText = textContentElement.innerHTML;
-                    textContentElement.innerHTML =  existingText+ finalTranscript; // 插入到開頭
+                    textContentElement.innerHTML = existingTextfinalTranscript + finalTranscript; // 插入到開頭
                 } else {
                     console.error('找不到文字框，無法插入內容。');
                 }
