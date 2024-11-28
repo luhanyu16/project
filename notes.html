@@ -722,7 +722,7 @@
                 }
             });
 
-            // 語音輸入功能，支援文字累積
+            // 語音輸入功能，支援文字累積，並避免重複輸入
 document.getElementById(`voice-input-${id}`).addEventListener('click', () => {
     const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
     recognition.lang = 'zh-TW'; // 設定語言
@@ -753,16 +753,20 @@ document.getElementById(`voice-input-${id}`).addEventListener('click', () => {
             return;
         }
 
-        // 獲取現有內容，並累加新的文字
-        let existingText = textContentElement.innerHTML;
-        let newText = '';
+        let finalTranscript = ''; // 用於存放最終結果
 
         for (let i = 0; i < event.results.length; i++) {
-            newText += event.results[i][0].transcript;
+            // 判斷是否為最終結果
+            if (event.results[i].isFinal) {
+                finalTranscript += event.results[i][0].transcript;
+            }
         }
 
-        // 將新內容附加到現有內容後
-        textContentElement.innerHTML = existingText + newText;
+        // 只處理最終結果，避免重複
+        if (finalTranscript) {
+            const existingText = textContentElement.innerHTML; // 獲取現有內容
+            textContentElement.innerHTML = existingText + finalTranscript; // 累加新文字
+        }
     };
 
     // 錯誤處理
