@@ -723,16 +723,16 @@
             });
 
             //語音輸入
-           // 優化語音輸入功能
+            // 優化語音輸入功能，支援文字累積
 document.getElementById(`voice-input-${id}`).addEventListener('click', () => {
     const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
     recognition.lang = 'zh-TW'; // 設定語言
 
     recognition.interimResults = true; // 啟用即時結果
-    recognition.continuous = false; // 設置非連續模式
+    recognition.continuous = false; // 非連續模式
     let isListening = false;
 
-    // 顯示狀態通知
+    // 狀態通知元素
     const statusMessage = document.createElement('div');
     statusMessage.textContent = '語音輸入已啟動，請開始說話...';
     statusMessage.style.color = '#0056b3';
@@ -746,7 +746,7 @@ document.getElementById(`voice-input-${id}`).addEventListener('click', () => {
         statusMessage.textContent = '語音輸入中...';
     };
 
-    // 即時處理結果
+    // 處理語音輸入結果
     recognition.onresult = (event) => {
         const textContentElement = document.getElementById(`text-content-${id}`);
         if (!textContentElement) {
@@ -754,14 +754,17 @@ document.getElementById(`voice-input-${id}`).addEventListener('click', () => {
             return;
         }
 
+        // 獲取本次輸入的文字
         let transcript = '';
         for (let i = 0; i < event.results.length; i++) {
             transcript += event.results[i][0].transcript;
         }
-        textContentElement.innerHTML = transcript;
+
+        // 將本次輸入的文字累加到已有內容中
+        textContentElement.innerHTML += transcript;
     };
 
-    // 處理錯誤
+    // 錯誤處理
     recognition.onerror = (event) => {
         console.error(`語音輸入錯誤: ${event.error}`);
         statusMessage.textContent = `錯誤: ${event.error}`;
@@ -770,7 +773,7 @@ document.getElementById(`voice-input-${id}`).addEventListener('click', () => {
         }
     };
 
-    // 停止輸入
+    // 停止語音輸入
     recognition.onend = () => {
         isListening = false;
         statusMessage.textContent = '語音輸入已結束';
@@ -785,7 +788,6 @@ document.getElementById(`voice-input-${id}`).addEventListener('click', () => {
         recognition.start();
     }
 });
-
 
 
 
