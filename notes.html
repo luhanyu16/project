@@ -747,8 +747,8 @@
                         transcript += event.results[i][0].transcript;
                     }
 
-                    // 實時更新文字框內容
-                    textContentElement.innerHTML += newTranscript;
+                    // 將語音輸入附加到原有文字框內容
+                    textContentElement.innerHTML += transcript;
                 };
 
                 recognition.onerror = (event) => {
@@ -765,12 +765,6 @@
 
                 recognition.start();
             });
-
-
-
-
-
-
 
             // 儲存文字內容
             const textContent = noteElement.querySelector(`#text-content-${id}`);
