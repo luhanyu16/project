@@ -768,52 +768,42 @@ document.getElementById(`voice-input-${id}`).addEventListener('click', () => {
     };
 
     // 處理語音輸入結果
-   let lastResultIndex = 0; // 用於記錄最後處理的結果序號
-let lastTranscript = ''; // 用於記錄最後插入的內容
+   let lastTranscript = ''; // 用來記錄上一次的結果
+let tempTranscript = ''; // 用來累積當次語音結果
 
-function startSpeechRecognition() {
-    const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-    recognition.lang = 'zh-TW'; // 設置語言
-    recognition.interimResults = false; // 僅處理最終結果
+recognition.onresult = (event) => {
+    const textContentElement = document.getElementById(`text-content-${id}`);
+    if (!textContentElement) {
+        console.error(`找不到文字框: text-content-${id}`);
+        return;
+    }
 
-    recognition.onresult = (event) => {
-        const textContentElement = document.getElementById(`text-content-${id}`);
-        if (!textContentElement) {
-            console.error(`找不到文字框: text-content-${id}`);
-            return;
+    // 清空臨時結果
+    tempTranscript = ''; 
+
+    for (let i = 0; i < event.results.length; i++) {
+        if (event.results[i].isFinal) {
+            tempTranscript += event.results[i][0].transcript; // 累積當前最終結果
         }
+    }
 
-        let finalTranscript = ''; // 用於存儲當次輸入
+    // 如果當前結果與上次結果不同，則插入內容
+    if (tempTranscript && tempTranscript !== lastTranscript) {
+        const existingText = textContentElement.innerHTML;
+        textContentElement.innerHTML = tempTranscript + existingText; // 插入到第一行
+        lastTranscript = tempTranscript; // 更新最後處理的結果
+    }
+};
 
-        // 確保僅處理最新的語音結果
-        for (let i = lastResultIndex; i < event.results.length; i++) {
-            if (event.results[i].isFinal) {
-                finalTranscript += event.results[i][0].transcript; // 累積新結果
-            }
-        }
+// 確保每次啟動語音識別時重置狀態
+recognition.onstart = () => {
+    lastTranscript = ''; // 清空上次的記錄
+    tempTranscript = ''; // 清空臨時結果
+};
 
-        // 僅在有新結果時進行更新
-        if (finalTranscript && finalTranscript !== lastTranscript) {
-            const existingText = textContentElement.innerHTML;
-            textContentElement.innerHTML = finalTranscript + existingText; // 插入新文字到第一行
-            lastTranscript = finalTranscript; // 更新最後結果
-        }
-
-        // 更新最後處理的結果序號
-        lastResultIndex = event.results.length;
-    };
-
-    recognition.onend = () => {
-        console.log('語音識別結束，重新啟動中...');
-        recognition.start(); // 自動重啟語音識別
-    };
-
-    recognition.start(); // 啟動語音識別
-}
-
-// 初始化語音識別
-startSpeechRecognition();
-
+recognition.onend = () => {
+    console.log('語音識別結束');
+};
 
 
 
