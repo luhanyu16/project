@@ -768,14 +768,16 @@ document.getElementById(`voice-input-${id}`).addEventListener('click', () => {
     };
 
     // 處理語音輸入結果
-    recognition.onresult = (event) => {
+   let lastTranscript = ''; // 儲存上一次的結果
+
+recognition.onresult = (event) => {
     const textContentElement = document.getElementById(`text-content-${id}`);
     if (!textContentElement) {
         console.error(`找不到文字框: text-content-${id}`);
         return;
     }
 
-    let finalTranscript = ''; // 用於存放最終結果
+    let finalTranscript = ''; // 用於存放目前的最終結果
 
     for (let i = 0; i < event.results.length; i++) {
         if (event.results[i].isFinal) {
@@ -783,15 +785,14 @@ document.getElementById(`voice-input-${id}`).addEventListener('click', () => {
         }
     }
 
-    if (finalTranscript) {
+    // 只有當新結果與上次結果不同時才插入
+    if (finalTranscript && finalTranscript !== lastTranscript) {
         const existingText = textContentElement.innerHTML;
-        
-        // 檢查是否已插入相同的內容
-        if (!existingText.startsWith(finalTranscript)) {
-            textContentElement.innerHTML = finalTranscript + existingText; // 插入到第一行
-        }
+        textContentElement.innerHTML = finalTranscript + existingText; // 插入到第一行
+        lastTranscript = finalTranscript; // 更新最後結果為目前輸入
     }
 };
+
 
 
 
