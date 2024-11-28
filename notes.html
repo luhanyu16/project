@@ -757,48 +757,6 @@
                 }
             });
 
-            const voiceButton = document.getElementById(`voice-input-${id}`);
-
-            voiceButton.addEventListener('click', () => {
-                const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-                recognition.lang = 'zh-TW';
-
-                if (!isRecording) {
-                    recognition.start();
-                    isRecording = true;
-                    voiceButton.innerHTML = '<i class="fas fa-stop"></i>'; // 切換圖示為停止錄音
-                    voiceButton.style.color = 'red'; // 按鈕變紅色
-                    alert('錄音已開始，請開始說話...');
-
-                    recognition.onresult = (event) => {
-                        const transcript = event.results[0][0].transcript;
-                        const textContent = document.getElementById(`text-content-${id}`);
-                        textContent.innerHTML += transcript;
-                    };
-
-                    recognition.onerror = (event) => {
-                        alert('語音輸入錯誤: ' + event.error);
-                        isRecording = false;
-                        voiceButton.innerHTML = '<i class="fas fa-microphone"></i>'; // 恢復圖示
-                        voiceButton.style.color = 'black'; // 恢復按鈕顏色
-                    };
-
-                    recognition.onspeechend = () => {
-                        recognition.stop();
-                        alert('錄音已結束');
-                        isRecording = false;
-                        voiceButton.innerHTML = '<i class="fas fa-microphone"></i>';
-                        voiceButton.style.color = 'black';
-                    };
-                } else {
-                    recognition.stop();
-                    alert('錄音已結束');
-                    isRecording = false;
-                    voiceButton.innerHTML = '<i class="fas fa-microphone"></i>';
-                    voiceButton.style.color = 'black';
-                }
-            });
-
             // 儲存文字內容
             const textContent = noteElement.querySelector(`#text-content-${id}`);
             textContent.addEventListener('input', async () => {
