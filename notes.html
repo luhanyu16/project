@@ -767,13 +767,17 @@ function startSpeechRecognition() {
             } else {
                 // 如果沒有光標範圍，默認將文字插入到筆記開頭
                 const textContentElement = document.getElementById(`text-content-${id}`);
-                     if (textContentElement) {
-                 const existingText = textContentElement.innerHTML;
-                   textContentElement.innerHTML = existingText + finalTranscript; // 插入到尾端
-}                 else {
-                     console.error('找不到文字框，無法插入內容。');
-}
+                if (textContentElement) {
+                    const existingText = textContentElement.innerHTML;
+                    textContentElement.innerHTML =  existingText+ finalTranscript; // 插入到開頭
+                } else {
+                    console.error('找不到文字框，無法插入內容。');
+                }
+            }
 
+            lastTranscript = finalTranscript; // 更新最後處理的內容
+        }
+    };
 
     recognition.onend = () => {
         console.log('語音識別結束，重新啟動中...');
