@@ -722,76 +722,49 @@
                 }
             });
 
-            // 語音輸入功能，支援手動開關，提示顯示在麥克風旁邊
-let lastTranscript = ''; // 記錄最後的輸入結果
-let caretRange = null; // 用於記錄光標位置
+            //語音輸入
+            document.getElementById(`voice-input-${id}`).addEventListener('click', () => {
+                const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+                recognition.lang = 'zh-TW'; // 設置語言
 
-// 監測滑鼠點擊以記錄光標位置
-document.addEventListener('mouseup', (event) => {
-    const selection = window.getSelection();
-    if (selection.rangeCount > 0) {
-        caretRange = selection.getRangeAt(0); // 記錄光標位置
-    }
-});
+                recognition.interimResults = true; // 啟用即時結果
+                recognition.continuous = true; // 持續監聽模式
 
-// 語音識別功能
-function startSpeechRecognition() {
-    const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-    recognition.lang = 'zh-TW'; // 設置語言
-    recognition.interimResults = false; // 僅處理最終結果
+                recognition.onstart = () => {
+                    alert('語音輸入開始，請開始說話...');
+                };
 
-    recognition.onresult = (event) => {
-        let finalTranscript = ''; // 用於存放本次輸入的文字
+                recognition.onresult = (event) => {
+                    const textContentElement = document.getElementById(`text-content-${id}`);
+                    if (!textContentElement) {
+                        console.error(`找不到文字框: text-content-${id}`);
+                        return;
+                    }
 
-        for (let i = 0; i < event.results.length; i++) {
-            if (event.results[i].isFinal) {
-                finalTranscript += event.results[i][0].transcript; // 累加最終結果
-            }
-        }
+                    // 收集所有的結果（包含臨時和最終結果）
+                    let transcript = '';
+                    for (let i = 0; i < event.results.length; i++) {
+                        transcript += event.results[i][0].transcript;
+                    }
 
-        if (finalTranscript && finalTranscript !== lastTranscript) {
-            if (caretRange) {
-                // 確保光標範圍有效並插入內容
-                try {
-                    const textNode = document.createTextNode(finalTranscript);
-                    caretRange.insertNode(textNode);
+                    // 實時更新文字框內容
+                    textContentElement.innerHTML = transcript;
+                };
 
-                    // 移動光標到新文字後
-                    caretRange.setStartAfter(textNode);
-                    caretRange.collapse(true);
-                    window.getSelection().removeAllRanges();
-                    window.getSelection().addRange(caretRange);
-                } catch (error) {
-                    console.error('插入文字時出錯：', error);
-                }
-            } else {
-                // 如果沒有光標範圍，默認將文字插入到筆記開頭
-                const textContentElement = document.getElementById(`text-content-${id}`);
-                if (textContentElement) {
-                    const existingText = textContentElement.innerHTML;
-                    textContentElement.innerHTML = existingTextfinalTranscript + finalTranscript; // 插入到開頭
-                } else {
-                    console.error('找不到文字框，無法插入內容。');
-                }
-            }
+                recognition.onerror = (event) => {
+                    console.error(`語音輸入錯誤: ${event.error}`);
+                    if (event.error === 'network') {
+                        alert('網路錯誤，請檢查連線或稍後再試。');
+                    }
+                };
 
-            lastTranscript = finalTranscript; // 更新最後處理的內容
-        }
-    };
+                recognition.onspeechend = () => {
+                    recognition.stop(); // 自動停止
+                    alert('語音輸入結束');
+                };
 
-    recognition.onend = () => {
-        console.log('語音識別結束，重新啟動中...');
-        recognition.start(); // 自動重啟語音識別
-    };
-
-    recognition.start(); // 啟動語音識別
-}
-
-// 啟動語音識別
-startSpeechRecognition();
-
-
-
+                recognition.start();
+            });
 
 
 
