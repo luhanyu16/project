@@ -747,8 +747,8 @@
                         transcript += event.results[i][0].transcript;
                     }
 
-                    // 將語音輸入附加到原有文字框內容
-                    textContentElement.innerHTML += transcript;
+                    // 實時更新文字框內容
+                    textContentElement.innerHTML = transcript;
                 };
 
                 recognition.onerror = (event) => {
