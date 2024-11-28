@@ -721,30 +721,82 @@
             });
 
             // 語音輸入
+            let isRecording = false;
+
             document.getElementById(`voice-input-${id}`).addEventListener('click', () => {
                 const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-                recognition.lang = 'zh-TW'; // 語音識別語言，設置為繁體中文
+                recognition.lang = 'zh-TW'; // 設置語音識別語言
 
-                recognition.onstart = () => {
-                    alert('語音輸入已開始，請開始說話...');
-                };
+                if (!isRecording) {
+                    // 開始錄音
+                    recognition.start();
+                    isRecording = true;
+                    alert('錄音已開始，請開始說話...');
 
-                recognition.onspeechend = () => {
+                    recognition.onresult = (event) => {
+                        const transcript = event.results[0][0].transcript;
+                        const textContent = document.getElementById(`text-content-${id}`);
+                        textContent.innerHTML += transcript; // 將語音文字新增到筆記
+                    };
+
+                    recognition.onerror = (event) => {
+                        alert('語音輸入錯誤: ' + event.error);
+                        isRecording = false; // 發生錯誤時重置狀態
+                    };
+
+                    recognition.onspeechend = () => {
+                        recognition.stop(); // 停止錄音
+                        alert('錄音已結束');
+                        isRecording = false; // 重置狀態
+                    };
+                } else {
+                    // 結束錄音
                     recognition.stop();
-                    alert('語音輸入已結束');
-                };
+                    alert('錄音已結束');
+                    isRecording = false; // 重置狀態
+                }
+            });
 
-                recognition.onresult = (event) => {
-                    const transcript = event.results[0][0].transcript;
-                    const textContent = document.getElementById(`text-content-${id}`);
-                    textContent.innerHTML += transcript; // 將輸入的語音文字新增到筆記中
-                };
+            const voiceButton = document.getElementById(`voice-input-${id}`);
 
-                recognition.onerror = (event) => {
-                    alert('語音輸入錯誤: ' + event.error);
-                };
+            voiceButton.addEventListener('click', () => {
+                const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+                recognition.lang = 'zh-TW';
 
-                recognition.start();
+                if (!isRecording) {
+                    recognition.start();
+                    isRecording = true;
+                    voiceButton.innerHTML = '<i class="fas fa-stop"></i>'; // 切換圖示為停止錄音
+                    voiceButton.style.color = 'red'; // 按鈕變紅色
+                    alert('錄音已開始，請開始說話...');
+
+                    recognition.onresult = (event) => {
+                        const transcript = event.results[0][0].transcript;
+                        const textContent = document.getElementById(`text-content-${id}`);
+                        textContent.innerHTML += transcript;
+                    };
+
+                    recognition.onerror = (event) => {
+                        alert('語音輸入錯誤: ' + event.error);
+                        isRecording = false;
+                        voiceButton.innerHTML = '<i class="fas fa-microphone"></i>'; // 恢復圖示
+                        voiceButton.style.color = 'black'; // 恢復按鈕顏色
+                    };
+
+                    recognition.onspeechend = () => {
+                        recognition.stop();
+                        alert('錄音已結束');
+                        isRecording = false;
+                        voiceButton.innerHTML = '<i class="fas fa-microphone"></i>';
+                        voiceButton.style.color = 'black';
+                    };
+                } else {
+                    recognition.stop();
+                    alert('錄音已結束');
+                    isRecording = false;
+                    voiceButton.innerHTML = '<i class="fas fa-microphone"></i>';
+                    voiceButton.style.color = 'black';
+                }
             });
 
             // 儲存文字內容
