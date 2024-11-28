@@ -785,9 +785,14 @@ document.getElementById(`voice-input-${id}`).addEventListener('click', () => {
 
     if (finalTranscript) {
         const existingText = textContentElement.innerHTML;
-        textContentElement.innerHTML = finalTranscript + existingText; // 將新文字插入到第一行
+        
+        // 檢查是否已插入相同的內容
+        if (!existingText.startsWith(finalTranscript)) {
+            textContentElement.innerHTML = finalTranscript + existingText; // 插入到第一行
+        }
     }
 };
+
 
 
     // 錯誤處理
