@@ -726,11 +726,20 @@
             document.getElementById(`voice-input-${id}`).addEventListener('click', () => {
                 const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
                 recognition.lang = 'zh-TW'; // 設置語言
-
                 recognition.interimResults = true; // 啟用即時結果
                 recognition.continuous = true; // 持續監聽模式
 
+                let isRecording = false; // 新增標記避免重複啟動
+
+                if (isRecording) {
+                    alert("語音輸入已結束");
+                    recognition.stop();
+                    isRecording = false;
+                    return;
+                }
+
                 recognition.onstart = () => {
+                    isRecording = true;
                     alert('語音輸入開始，請開始說話...');
                 };
 
@@ -741,14 +750,12 @@
                         return;
                     }
 
-                    // 收集所有的結果（包含臨時和最終結果）
+                    // 將新的語音文字追加到現有文字內容
                     let transcript = '';
                     for (let i = 0; i < event.results.length; i++) {
                         transcript += event.results[i][0].transcript;
                     }
-
-                    // 實時更新文字框內容
-                    textContentElement.innerHTML = transcript;
+                    textContentElement.innerHTML += transcript; // 用 += 追加內容
                 };
 
                 recognition.onerror = (event) => {
@@ -759,8 +766,9 @@
                 };
 
                 recognition.onspeechend = () => {
-                    recognition.stop(); // 自動停止
                     alert('語音輸入結束');
+                    recognition.stop(); // 確保語音識別停止
+                    isRecording = false; // 重置標記
                 };
 
                 recognition.start();
