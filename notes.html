@@ -554,13 +554,11 @@
                 <h2>${note.title}</h2>
                 <div id="text-content-${id}" contenteditable="true" class="editable-text" style="color: ${note.textColor};">${note.content}</div>
                 <div class="text-tools">
-    <label for="text-color-picker-${id}">文字顏色:</label>
-    <input type="color" id="text-color-picker-${id}" value="${note.textColor}">
-    <button id="apply-text-color-${id}" class="icon-button"><i class="fas fa-palette"></i></button>
-    <button id="voice-input-${id}" class="icon-button"><i class="fas fa-microphone"></i></button>
-    <span id="voice-status-${id}" class="voice-status" style="display: none; margin-left: 10px; color: #0056b3;">語音輸入中</span>
-</div>
-
+                    <label for="text-color-picker-${id}">文字顏色:</label>
+                    <input type="color" id="text-color-picker-${id}" value="${note.textColor}">
+                    <button id="apply-text-color-${id}" class="icon-button"><i class="fas fa-palette"></i></button>
+                    <button id="voice-input-${id}" class="icon-button"><i class="fas fa-microphone"></i></button>
+                </div>
                 <i class="fas fa-image upload-icon"></i><input type="file" id="upload-image-${id}" accept="image/*">
                 <img id="uploaded-image-${id}" style="display:none; max-width: 100%; height: auto;">
                 <canvas id="canvas-${id}" width="600" height="400"></canvas>
@@ -715,62 +713,48 @@
 
             // 語音輸入
             let isRecording = false;
-let recognition;
+            let recognition;
 
-document.getElementById(`voice-input-${id}`).addEventListener('click', () => {
-    const statusElement = document.getElementById(`voice-status-${id}`);
+            document.getElementById(`voice-input-${id}`).addEventListener('click', () => {
+                if (!isRecording) {
+                    recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+                    recognition.lang = 'zh-TW'; // 設定語音識別語言
 
-    if (!isRecording) {
-        // 開始語音輸入
-        recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-        recognition.lang = 'zh-TW';
+                    recognition.start();
+                    isRecording = true;
+                    alert('錄音已開始，請開始說話...');
 
-        recognition.start();
-        isRecording = true;
+                    recognition.onresult = (event) => {
+                        const transcript = event.results[0][0].transcript;
 
-        // 顯示「語音輸入中」
-        statusElement.textContent = '語音輸入中';
-        statusElement.style.display = 'inline';
+                        // 插入文字到光標位置
+                        const textContent = document.getElementById(`text-content-${id}`);
+                        const selection = window.getSelection();
+                        if (selection.rangeCount > 0) {
+                            const range = selection.getRangeAt(0);
+                            range.deleteContents();
+                            range.insertNode(document.createTextNode(transcript));
+                        } else {
+                            textContent.innerHTML += transcript; // 預設新增到最後
+                        }
+                    };
 
-        recognition.onresult = (event) => {
-            const transcript = event.results[0][0].transcript;
+                    recognition.onerror = (event) => {
+                        alert('語音輸入錯誤: ' + event.error);
+                        isRecording = false;
+                    };
 
-            // 插入語音內容到文字區域
-            const textContent = document.getElementById(`text-content-${id}`);
-            const selection = window.getSelection();
-            if (selection.rangeCount > 0) {
-                const range = selection.getRangeAt(0);
-                range.deleteContents();
-                range.insertNode(document.createTextNode(transcript));
-            } else {
-                textContent.innerHTML += transcript;
-            }
-        };
-
-        recognition.onerror = (event) => {
-            alert('語音輸入錯誤: ' + event.error);
-            statusElement.style.display = 'none'; // 隱藏狀態
-            isRecording = false;
-        };
-
-        recognition.onspeechend = () => {
-            recognition.stop();
-            statusElement.textContent = '已結束'; // 更新狀態為「已結束」
-            setTimeout(() => {
-                statusElement.style.display = 'none'; // 延遲隱藏狀態
-            }, 2000);
-            isRecording = false;
-        };
-    } else {
-        // 結束語音輸入
-        recognition.stop();
-        statusElement.textContent = '已結束'; // 更新狀態為「已結束」
-        setTimeout(() => {
-            statusElement.style.display = 'none'; // 延遲隱藏狀態
-        }, 2000);
-        isRecording = false;
-    }
-});
+                    recognition.onspeechend = () => {
+                        recognition.stop();
+                        alert('錄音已結束');
+                        isRecording = false;
+                    };
+                } else {
+                    recognition.stop();
+                    alert('語音輸入已關閉');
+                    isRecording = false;
+                }
+            });
 
             // 儲存文字內容
             const textContent = noteElement.querySelector(`#text-content-${id}`);
