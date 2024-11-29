@@ -928,6 +928,59 @@
             }
         });
 
+        // async function confirmMoveNoteToFolder(noteId) {
+        //     const selectId = `move-folder-select-${noteId}`;
+        //     const folderSelect = document.getElementById(selectId);
+        //     const targetFolderId = folderSelect.value;
+
+        //     if (!targetFolderId) {
+        //         alert('請選擇一個目標資料夾');
+        //         return;
+        //     }
+
+        //     const userRef = db.collection('Users').doc(currentUser.uid);
+        //     let noteRef;  // 原筆記位置
+        //     let folderRef;  // 目標資料夾
+
+        //     if (currentFolderId) {
+        //         // 如果在資料夾內，從該資料夾移動
+        //         noteRef = userRef.collection('Folders').doc(currentFolderId).collection('Notes').doc(noteId);
+        //         folderRef = userRef.collection('Folders').doc(targetFolderId).collection('Notes');
+        //     } else {
+        //         // 如果在資料夾外，從根集合移動
+        //         noteRef = userRef.collection('Notes').doc(noteId);
+        //         folderRef = userRef.collection('Folders').doc(targetFolderId).collection('Notes');
+        //     }
+
+        //     try {
+        //         const noteSnapshot = await noteRef.get();
+        //         if (!noteSnapshot.exists) {
+        //             alert('找不到該筆記');
+        //             return;
+        //         }
+
+        //         const noteData = noteSnapshot.data();
+        //         await folderRef.doc(noteId).set(noteData);  // 將筆記新增到目標資料夾
+        //         await noteRef.delete();  // 從原資料夾刪除
+        //         // 如果筆記是從資料夾外移動，更新資料夾外的筆記列表
+        //         if (!currentFolderId) {
+        //             const noteElement = document.getElementById(`note-${noteId}`);
+        //             if (noteElement) {
+        //                 noteElement.remove(); // 移除對應的筆記元素
+        //             }
+        //         }
+        //         // 重新載入目標資料夾的筆記
+        //         loadNotes(targetFolderId); 
+        //         currentFolderId = targetFolderId; // 更新當前資料夾
+
+        //         alert('筆記已成功移動到資料夾');
+        //         displayNotes(); // 重新顯示筆記
+        //     } catch (error) {
+        //         console.error('移動筆記失敗:', error);
+        //         alert('移動筆記失敗，請稍後再試');
+        //     }
+        // }
+
         async function confirmMoveNoteToFolder(noteId) {
             const selectId = `move-folder-select-${noteId}`;
             const folderSelect = document.getElementById(selectId);
@@ -960,21 +1013,27 @@
                 }
 
                 const noteData = noteSnapshot.data();
-                await folderRef.doc(noteId).set(noteData);  // 將筆記新增到目標資料夾
-                await noteRef.delete();  // 從原資料夾刪除
-                // 如果筆記是從資料夾外移動，更新資料夾外的筆記列表
-                if (!currentFolderId) {
+                await folderRef.doc(noteId).set(noteData); // 將筆記新增到目標資料夾
+                await noteRef.delete(); // 從原位置刪除
+
+                // 更新 UI
+                if (currentFolderId) {
+                    // 如果目前是資料夾視圖，重新載入資料夾內容
+                    loadNotes(currentFolderId);
+                } else {
+                    // 如果目前是資料夾外筆記視圖，移除該筆記並刷新
                     const noteElement = document.getElementById(`note-${noteId}`);
                     if (noteElement) {
                         noteElement.remove(); // 移除對應的筆記元素
                     }
+                    displayNotes(); // 刷新資料夾外的筆記列表
                 }
-                // 重新載入目標資料夾的筆記
-                loadNotes(targetFolderId); 
-                currentFolderId = targetFolderId; // 更新當前資料夾
+
+                // 切換到目標資料夾並顯示該資料夾的筆記
+                currentFolderId = targetFolderId;
+                await loadNotes(targetFolderId);
 
                 alert('筆記已成功移動到資料夾');
-                displayNotes(); // 重新顯示筆記
             } catch (error) {
                 console.error('移動筆記失敗:', error);
                 alert('移動筆記失敗，請稍後再試');
