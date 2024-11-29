@@ -717,15 +717,26 @@ let isRecording = false;
 let recognition;
 
 document.getElementById(`voice-input-${id}`).addEventListener('click', function () {
-    const voiceButton = this; // 取得按鈕元素
+    const voiceButton = this; // 按鈕元素
+    let statusElement = document.getElementById(`voice-status-${id}`); // 狀態元素
+
+    // 如果狀態元素不存在，動態添加
+    if (!statusElement) {
+        statusElement = document.createElement('span');
+        statusElement.id = `voice-status-${id}`;
+        statusElement.style.marginLeft = '10px';
+        statusElement.style.fontSize = '14px';
+        statusElement.style.color = '#555';
+        voiceButton.parentElement.appendChild(statusElement);
+    }
+
     if (!isRecording) {
         recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
         recognition.lang = 'zh-TW'; // 設定語言
         recognition.start();
         isRecording = true;
 
-        voiceButton.innerHTML = '<i class="fas fa-microphone-slash"></i>'; // 更改圖示
-        voiceButton.style.color = 'red'; // 設定為錄音中的顏色
+        statusElement.textContent = '輸入中...'; // 顯示輸入中
 
         recognition.onresult = (event) => {
             const transcript = event.results[0][0].transcript;
@@ -745,21 +756,18 @@ document.getElementById(`voice-input-${id}`).addEventListener('click', function 
         recognition.onerror = (event) => {
             alert('語音輸入錯誤: ' + event.error);
             isRecording = false;
-            voiceButton.innerHTML = '<i class="fas fa-microphone"></i>'; // 還原圖示
-            voiceButton.style.color = ''; // 還原顏色
+            statusElement.textContent = ''; // 清空狀態
         };
 
         recognition.onspeechend = () => {
             recognition.stop();
             isRecording = false;
-            voiceButton.innerHTML = '<i class="fas fa-microphone"></i>'; // 還原圖示
-            voiceButton.style.color = ''; // 還原顏色
+            statusElement.textContent = '結束'; // 顯示結束
         };
     } else {
         recognition.stop();
         isRecording = false;
-        voiceButton.innerHTML = '<i class="fas fa-microphone"></i>'; // 還原圖示
-        voiceButton.style.color = ''; // 還原顏色
+        statusElement.textContent = '結束'; // 顯示結束
     }
 });
 
