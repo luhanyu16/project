@@ -544,6 +544,7 @@
 
         // 建立筆記元素
         function createNoteElement(id, note) {
+            if (document.getElementById(`note-${id}`)) return;
             const noteElement = document.createElement('div');
             noteElement.classList.add('note');
             noteElement.innerHTML = `
@@ -1003,7 +1004,7 @@
         }
 
         // 切換資料夾時顯示對應筆記
-        folderSelect.addEventListener('change', () => {
+        folderSelect.addEventListener('change', async () => {
             const selectedFolderId = folderSelect.value;
 
             if (currentFolderId === selectedFolderId) return; // 避免重複處理相同資料夾
@@ -1012,9 +1013,9 @@
             notesContainer.innerHTML = ''; // 清空目前的筆記顯示
 
             if (currentFolderId) {
-                loadNotes(currentFolderId); // 顯示該資料夾的筆記
+                await loadNotes(currentFolderId); // 顯示該資料夾的筆記
             } else {
-                displayNotes(); // 顯示所有筆記
+                await displayNotes(); // 顯示所有筆記
             }
             
             if (folderSelect.value) {
