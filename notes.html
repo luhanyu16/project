@@ -1018,11 +1018,10 @@
 
         // 顯示資料夾中的筆記
         async function loadNotes(folderId) {
+            notesContainer.innerHTML = ''; // 清空現有的筆記內容，避免重複
             const notesSnapshot = await db.collection('Users').doc(currentUser.uid)
                 .collection('Folders').doc(folderId)
                 .collection('Notes').get();
-
-            notesContainer.innerHTML = ''; // 清空現有筆記內容
 
             notesSnapshot.forEach(doc => {
                 const note = doc.data();
@@ -1034,7 +1033,11 @@
         folderSelect.addEventListener('change', () => {
             currentFolderId = folderSelect.value; // 設定目前選擇的資料夾
             notesContainer.innerHTML = ''; // 清空目前的筆記顯示，避免重複
-            loadNotes(currentFolderId); // 重新顯示筆記
+            if (currentFolderId) {
+                loadNotes(currentFolderId); // 重新顯示選中資料夾中的筆記
+            } else {
+                displayNotes(); // 如果沒有選擇資料夾，顯示資料夾外的筆記
+            }
         });
 
         // 顯示對應資料夾
