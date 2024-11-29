@@ -716,6 +716,8 @@
 let recognition;
 
 document.getElementById(`voice-input-${id}`).addEventListener('click', () => {
+    const statusElement = document.getElementById(`recording-status-${id}`); // 狀態顯示元素
+
     if (!isRecording) {
         // 初始化 SpeechRecognition
         recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
@@ -723,9 +725,10 @@ document.getElementById(`voice-input-${id}`).addEventListener('click', () => {
 
         recognition.start();
         isRecording = true;
-        alert('錄音已開始，請開始說話...');
 
-        // 當有語音結果時觸發
+        // 顯示錄音狀態
+        statusElement.style.display = 'inline-block';
+
         recognition.onresult = (event) => {
             const transcript = event.results[0][0].transcript;
 
@@ -737,28 +740,35 @@ document.getElementById(`voice-input-${id}`).addEventListener('click', () => {
                 range.deleteContents();
                 range.insertNode(document.createTextNode(transcript));
             } else {
-                textContent.innerHTML += transcript; // 如果沒有選擇範圍，新增到最後
+                textContent.innerHTML += transcript; // 預設新增到最後
             }
         };
 
-        // 錄音結束事件
         recognition.onspeechend = () => {
-            alert('錄音已結束');
             recognition.stop();
+            alert('錄音已結束');
             isRecording = false;
+
+            // 隱藏錄音狀態
+            statusElement.style.display = 'none';
         };
 
-        // 語音識別錯誤事件
         recognition.onerror = (event) => {
             alert('語音輸入錯誤: ' + event.error);
             recognition.stop();
             isRecording = false;
+
+            // 隱藏錄音狀態
+            statusElement.style.display = 'none';
         };
     } else {
         // 停止錄音
         recognition.stop();
         alert('語音輸入已關閉');
         isRecording = false;
+
+        // 隱藏錄音狀態
+        statusElement.style.display = 'none';
     }
 });
 
