@@ -1032,9 +1032,9 @@
                 // 切換到目標資料夾並顯示該資料夾的筆記
                 currentFolderId = targetFolderId;
                 await loadNotes(targetFolderId);
+                displayNotes();
 
                 alert('筆記已成功移動到資料夾');
-                displayNotes();
             } catch (error) {
                 console.error('移動筆記失敗:', error);
                 alert('移動筆記失敗，請稍後再試');
