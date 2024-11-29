@@ -466,17 +466,6 @@
             });
         });
 
-        // 新增資料夾選單變更事件監聽
-        folderSelect.addEventListener('change', () => {
-            if (folderSelect.value) {
-                // 如果有選擇資料夾，顯示刪除按鈕
-                deleteFolderButton.style.display = 'inline-block';
-            } else {
-                // 如果未選擇資料夾，隱藏刪除按鈕
-                deleteFolderButton.style.display = 'none';
-            }
-        });
-
         // 切換 UI 狀態
         function toggleUI() {
             if (currentUser) {
@@ -806,7 +795,6 @@
                     reader.readAsDataURL(file);
                 }
             });
-
             notesContainer.appendChild(noteElement);
         }
 
@@ -932,6 +920,7 @@
                 });
                 toggleUI();
                 loadFolders();
+                folderSelect.value = newFolder.id; // 將新資料夾設為當前選擇
                 folderSelect.value = ''; // 重置選擇狀態
                 notesContainer.innerHTML = ''; // 清空筆記顯示
             }
@@ -991,30 +980,12 @@
 
             folderSelect.innerHTML = '<option value="">選擇資料夾</option>';  // 清空選單
 
-            // if (folderSnapshot.empty) {
-            //     // 沒有資料夾時，顯示提示
-            //     alert('目前沒有資料夾，請先新增資料夾');
-            // }
-
             folderSnapshot.forEach(doc => {
                 const folder = doc.data();
                 const option = document.createElement('option');
                 option.value = doc.id;
                 option.textContent = folder.name;  // 顯示資料夾名稱
                 folderSelect.appendChild(option);
-            });
-
-            // 當選擇資料夾時，顯示刪除資料夾的按鈕
-            folderSelect.addEventListener('change', () => {
-                const selectedFolderId = folderSelect.value;
-                if (selectedFolderId) {
-                    deleteFolderButton.style.display = 'inline-block'; // 顯示刪除按鈕
-                    loadNotes(selectedFolderId); // 顯示該資料夾中的筆記
-                } else {
-                    deleteFolderButton.style.display = 'none'; // 隱藏刪除按鈕
-                    // notesContainer.innerHTML = ''; // 清空筆記內容
-                    displayNotes();
-                }
             });
         }
 
@@ -1033,12 +1004,34 @@
 
         // 切換資料夾時顯示對應筆記
         folderSelect.addEventListener('change', () => {
-            currentFolderId = folderSelect.value; // 設定目前選擇的資料夾
-            notesContainer.innerHTML = ''; // 清空目前的筆記顯示，避免重複
+            const selectedFolderId = folderSelect.value;
+
+            if (currentFolderId === selectedFolderId) return; // 避免重複處理相同資料夾
+
+            currentFolderId = selectedFolderId; // 更新目前的資料夾
+            notesContainer.innerHTML = ''; // 清空目前的筆記顯示
+
             if (currentFolderId) {
-                loadNotes(currentFolderId); // 重新顯示選中資料夾中的筆記
+                loadNotes(currentFolderId); // 顯示該資料夾的筆記
             } else {
-                displayNotes(); // 如果沒有選擇資料夾，顯示資料夾外的筆記
+                displayNotes(); // 顯示所有筆記
+            }
+            
+            if (folderSelect.value) {
+                // 如果有選擇資料夾，顯示刪除按鈕
+                deleteFolderButton.style.display = 'inline-block';
+            } else {
+                // 如果未選擇資料夾，隱藏刪除按鈕
+                deleteFolderButton.style.display = 'none';
+            }
+
+            if (selectedFolderId) {
+                deleteFolderButton.style.display = 'inline-block'; // 顯示刪除按鈕
+                loadNotes(selectedFolderId); // 顯示該資料夾中的筆記
+            } else {
+                deleteFolderButton.style.display = 'none'; // 隱藏刪除按鈕
+                // notesContainer.innerHTML = ''; // 清空筆記內容
+                displayNotes();
             }
         });
 
