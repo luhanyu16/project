@@ -716,6 +716,56 @@
             let recognition;
 
             document.getElementById(`voice-input-${id}`).addEventListener('click', () => {
+                const statusElement = document.getElementById(`voice-status-${id}`);
+                if (!isRecording) {
+                    recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+                    recognition.lang = 'zh-TW'; // 設定語言
+
+                    recognition.start();
+                    isRecording = true;
+
+                    // 顯示「輸入中」
+                    statusElement.textContent = '輸入中';
+                    statusElement.style.display = 'inline';
+
+                    recognition.onresult = (event) => {
+                        const transcript = event.results[0][0].transcript;
+                        const textContent = document.getElementById(`text-content-${id}`);
+                        const selection = window.getSelection();
+                        if (selection.rangeCount > 0) {
+                            const range = selection.getRangeAt(0);
+                            range.deleteContents();
+                            range.insertNode(document.createTextNode(transcript));
+                        } else {
+                            textContent.innerHTML += transcript;
+                        }
+                    };
+
+                    recognition.onerror = () => {
+                        statusElement.textContent = '發生錯誤';
+                        setTimeout(() => {
+                            statusElement.style.display = 'none';
+                        }, 2000);
+                        isRecording = false;
+                    };
+
+                    recognition.onspeechend = () => {
+                        recognition.stop();
+                        statusElement.textContent = '已結束';
+                        setTimeout(() => {
+                            statusElement.style.display = 'none';
+                        }, 2000);
+                        isRecording = false;
+                    };
+                } else {
+                    recognition.stop();
+                    statusElement.textContent = '已結束';
+                    setTimeout(() => {
+                        statusElement.style.display = 'none';
+                    }, 2000);
+                    isRecording = false;
+                }
+            });
                 if (!isRecording) {
                     recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
                     recognition.lang = 'zh-TW'; // 設定語音識別語言
