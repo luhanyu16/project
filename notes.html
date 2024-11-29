@@ -546,6 +546,7 @@
         function createNoteElement(id, note) {
             if (document.getElementById(`note-${id}`)) return;
             const noteElement = document.createElement('div');
+            noteElement.id = `note-${id}`; // 為每個筆記分配唯一的 ID
             noteElement.classList.add('note');
             noteElement.innerHTML = `
                 <div class="note-timestamp">${note.timestamp ? formatTimestamp(note.timestamp) : '未知'}</div>
@@ -961,8 +962,15 @@
                 const noteData = noteSnapshot.data();
                 await folderRef.doc(noteId).set(noteData);  // 將筆記新增到目標資料夾
                 await noteRef.delete();  // 從原資料夾刪除
-
-                loadNotes(targetFolderId); // 顯示目標資料夾中的筆記
+                // 如果筆記是從資料夾外移動，更新資料夾外的筆記列表
+                if (!currentFolderId) {
+                    const noteElement = document.getElementById(`note-${noteId}`);
+                    if (noteElement) {
+                        noteElement.remove(); // 移除對應的筆記元素
+                    }
+                }
+                // 重新載入目標資料夾的筆記
+                loadNotes(targetFolderId); 
                 currentFolderId = targetFolderId; // 更新當前資料夾
 
                 alert('筆記已成功移動到資料夾');
