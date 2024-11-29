@@ -1016,23 +1016,11 @@
                 await folderRef.doc(noteId).set(noteData); // 將筆記新增到目標資料夾
                 await noteRef.delete(); // 從原位置刪除
 
-                // 更新 UI
-                if (currentFolderId) {
-                    // 如果目前是資料夾視圖，重新載入資料夾內容
-                    loadNotes(currentFolderId);
-                } else {
-                    // 如果目前是資料夾外筆記視圖，移除該筆記並刷新
-                    const noteElement = document.getElementById(`note-${noteId}`);
-                    if (noteElement) {
-                        noteElement.remove(); // 移除對應的筆記元素
-                    }
-                    displayNotes(); // 刷新資料夾外的筆記列表
+                 // 更新 UI
+                const noteElement = document.getElementById(`note-${noteId}`);
+                if (noteElement) {
+                    noteElement.remove(); // 移除該筆記的 UI 元素
                 }
-
-                // 切換到目標資料夾並顯示該資料夾的筆記
-                currentFolderId = targetFolderId;
-                await loadNotes(targetFolderId);
-                displayNotes();
 
                 alert('筆記已成功移動到資料夾');
             } catch (error) {
