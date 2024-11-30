@@ -750,12 +750,13 @@
             // });
             let isRecording = false;
             let recognition;
+            let lastTranscript = ""; // 儲存上次的完整結果
 
             document.getElementById(`voice-input-${id}`).addEventListener('click', () => {
                 if (!isRecording) {
                     recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-                    recognition.lang = 'zh-TW'; // 設定語言
-                    recognition.interimResults = true; // 允許接收中間結果
+                    recognition.lang = 'zh-TW';
+                    recognition.interimResults = false; // 僅處理最終結果
                     recognition.continuous = true; // 允許連續錄音
                     recognition.start();
                     isRecording = true;
@@ -767,11 +768,18 @@
                 }
 
                 recognition.onresult = (event) => {
-                    const transcript = Array.from(event.results)
+                    let transcript = Array.from(event.results)
                         .map(result => result[0].transcript)
                         .join('');
+                    
+                    // 移除重複部分
+                    if (transcript.startsWith(lastTranscript)) {
+                        transcript = transcript.slice(lastTranscript.length);
+                    }
+
+                    lastTranscript += transcript; // 更新已處理的文字
                     const textContent = document.getElementById(`text-content-${id}`);
-                    textContent.innerHTML += transcript; // 增加語音輸入內容
+                    textContent.innerHTML += transcript; // 插入新內容
                 };
 
                 recognition.onerror = (event) => {
