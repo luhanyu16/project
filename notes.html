@@ -738,14 +738,9 @@ document.getElementById(`voice-input-${id}`).addEventListener('click', () => {
             isRecording = false;
         };
 
-        recognition.onspeechend = () => {
-            recognition.stop();
-            alert('錄音已結束');
-            isRecording = false;
-        };
     } else {
         recognition.stop();
-        alert('語音輸入已關閉');
+        alert('錄音已手動停止');
         isRecording = false;
     }
 });
