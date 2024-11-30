@@ -776,6 +776,7 @@
                     if (transcript.startsWith(lastTranscript)) {
                         transcript = transcript.slice(lastTranscript.length);
                     }
+
                     lastTranscript += transcript; // 更新已處理的文字
 
                     // 插入文字到光標位置
@@ -787,6 +788,7 @@
                         range.deleteContents(); // 刪除選定內容（若有）
                         const textNode = document.createTextNode(transcript);
                         range.insertNode(textNode);
+
                         // 移動光標到新插入文字的末尾
                         range.setStartAfter(textNode);
                         range.collapse(true);
@@ -795,10 +797,7 @@
                     } else {
                         textContent.innerHTML += transcript; // 若無選取則預設追加到最後
                     }
-                    // 在換行或完成文字插入後，清空已處理的內容
-                    lastTranscript = ""; 
                 };
-
                 recognition.onerror = (event) => {
                     alert(`語音輸入錯誤: ${event.error}`);
                     isRecording = false;
