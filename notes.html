@@ -750,7 +750,7 @@
             // });
             let isRecording = false;
             let recognition;
-            // let lastTranscript = ""; // 儲存上次的完整結果
+            let lastTranscript = ""; // 儲存上次的完整結果
 
             document.getElementById(`voice-input-${id}`).addEventListener('click', () => {
                 if (!isRecording) {
@@ -758,7 +758,7 @@
                     recognition.lang = 'zh-TW';
                     recognition.interimResults = false; // 只處理最終結果
                     recognition.continuous = true; // 允許連續錄音
-                    let lastTranscript = ""; 
+                    // let lastTranscript = ""; 
                     recognition.start();
                     isRecording = true;
                     alert('錄音已啟動，開始說話...');
