@@ -777,7 +777,7 @@
                         transcript = transcript.slice(lastTranscript.length);
                     }
 
-                    lastTranscript += transcript; // 更新已處理的文字
+                    lastTranscript = transcript; // 更新已處理的文字
 
                     // 插入文字到光標位置
                     const textContent = document.getElementById(`text-content-${id}`);
