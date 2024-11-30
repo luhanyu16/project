@@ -712,49 +712,44 @@
             });
 
             // 語音輸入
-            let isRecording = false;
-            let recognition;
+            // 偵測語音輸入按鈕
+let isRecording = false; // 紀錄是否正在錄音
+let recognition; // 語音識別對象
 
-            document.getElementById(`voice-input-${id}`).addEventListener('click', () => {
-                if (!isRecording) {
-                    recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-                    recognition.lang = 'zh-TW'; // 設定語音識別語言
+document.getElementById('voice-input-id').addEventListener('click', () => {
+    if (!isRecording) {
+        // 初始化語音識別
+        recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+        recognition.lang = 'zh-TW'; // 設定為中文
+        recognition.start();
+        isRecording = true;
+        alert('錄音已開始，請開始說話...');
 
-                    recognition.start();
-                    isRecording = true;
-                    alert('錄音已開始，請開始說話...');
+        // 處理語音識別結果
+        recognition.onresult = (event) => {
+            const transcript = event.results[0][0].transcript; // 取得識別文字
+            const textArea = document.getElementById('text-content-id'); // 目標筆記區域
+            textArea.innerHTML += transcript; // 將文字追加到筆記內容
+        };
 
-                    recognition.onresult = (event) => {
-                        const transcript = event.results[0][0].transcript;
+        recognition.onerror = (event) => {
+            alert('語音輸入出錯：' + event.error);
+            isRecording = false;
+        };
 
-                        // 插入文字到光標位置
-                        const textContent = document.getElementById(`text-content-${id}`);
-                        const selection = window.getSelection();
-                        if (selection.rangeCount > 0) {
-                            const range = selection.getRangeAt(0);
-                            range.deleteContents();
-                            range.insertNode(document.createTextNode(transcript));
-                        } else {
-                            textContent.innerHTML += transcript; // 預設新增到最後
-                        }
-                    };
+        recognition.onspeechend = () => {
+            recognition.stop();
+            alert('錄音已結束');
+            isRecording = false;
+        };
+    } else {
+        // 停止語音識別
+        recognition.stop();
+        alert('語音輸入已關閉');
+        isRecording = false;
+    }
+});
 
-                    recognition.onerror = (event) => {
-                        alert('語音輸入錯誤: ' + event.error);
-                        isRecording = false;
-                    };
-
-                    recognition.onspeechend = () => {
-                        recognition.stop();
-                        alert('錄音已結束');
-                        isRecording = false;
-                    };
-                } else {
-                    recognition.stop();
-                    alert('語音輸入已關閉');
-                    isRecording = false;
-                }
-            });
 
             // 儲存文字內容
             const textContent = noteElement.querySelector(`#text-content-${id}`);
