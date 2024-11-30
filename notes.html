@@ -773,7 +773,7 @@
                         .join('');
                     
                     // 移除重複部分
-                    if (transcript.startsWith(lastTranscript)) {
+                    if (lastTranscript && transcript.startsWith(lastTranscript)) {
                         transcript = transcript.slice(lastTranscript.length);
                     }
 
