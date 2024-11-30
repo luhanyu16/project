@@ -795,6 +795,8 @@
                     } else {
                         textContent.innerHTML += transcript; // 若無選取則預設追加到最後
                     }
+                    // 在換行或完成文字插入後，清空已處理的內容
+                    lastTranscript = ""; 
                 };
 
                 recognition.onerror = (event) => {
