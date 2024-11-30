@@ -466,6 +466,17 @@
             });
         });
 
+        // 新增資料夾選單變更事件監聽
+        folderSelect.addEventListener('change', () => {
+            if (folderSelect.value) {
+                // 如果有選擇資料夾，顯示刪除按鈕
+                deleteFolderButton.style.display = 'inline-block';
+            } else {
+                // 如果未選擇資料夾，隱藏刪除按鈕
+                deleteFolderButton.style.display = 'none';
+            }
+        });
+
         // 切換 UI 狀態
         function toggleUI() {
             if (currentUser) {
@@ -544,9 +555,7 @@
 
         // 建立筆記元素
         function createNoteElement(id, note) {
-            if (document.getElementById(`note-${id}`)) return;
             const noteElement = document.createElement('div');
-            noteElement.id = `note-${id}`; // 為每個筆記分配唯一的 ID
             noteElement.classList.add('note');
             noteElement.innerHTML = `
                 <div class="note-timestamp">${note.timestamp ? formatTimestamp(note.timestamp) : '未知'}</div>
@@ -557,7 +566,9 @@
                     <label for="text-color-picker-${id}">文字顏色:</label>
                     <input type="color" id="text-color-picker-${id}" value="${note.textColor}">
                     <button id="apply-text-color-${id}" class="icon-button"><i class="fas fa-palette"></i></button>
-                    <button id="voice-input-${id}" class="icon-button"><i class="fas fa-microphone"></i></button>
+                    <button id="voice-input-${id}" class="icon-button">
+                    <i class="fas fa-microphone"></i>
+                </button>
                 </div>
                 <i class="fas fa-image upload-icon"></i><input type="file" id="upload-image-${id}" accept="image/*">
                 <img id="uploaded-image-${id}" style="display:none; max-width: 100%; height: auto;">
@@ -711,50 +722,82 @@
                 }
             });
 
-            // 語音輸入
-            let isRecording = false;
-            let recognition;
+            // 語音輸入功能，支援手動開關，提示顯示在麥克風旁邊
+let lastTranscript = ''; // 記錄最後的輸入結果
+let caretRange = null; // 用於記錄光標位置
 
-            document.getElementById(`voice-input-${id}`).addEventListener('click', () => {
-                if (!isRecording) {
-                    recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-                    recognition.lang = 'zh-TW'; // 設定語音識別語言
+// 監測滑鼠點擊以記錄光標位置
+document.addEventListener('mouseup', (event) => {
+    const selection = window.getSelection();
+    if (selection.rangeCount > 0) {
+        caretRange = selection.getRangeAt(0); // 記錄光標位置
+    }
+});
 
-                    recognition.start();
-                    isRecording = true;
-                    alert('錄音已開始，請開始說話...');
+// 語音識別功能
+function startSpeechRecognition() {
+    const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+    recognition.lang = 'zh-TW'; // 設置語言
+    recognition.interimResults = false; // 僅處理最終結果
 
-                    recognition.onresult = (event) => {
-                        const transcript = event.results[0][0].transcript;
+    recognition.onresult = (event) => {
+        let finalTranscript = ''; // 用於存放本次輸入的文字
 
-                        // 插入文字到光標位置
-                        const textContent = document.getElementById(`text-content-${id}`);
-                        const selection = window.getSelection();
-                        if (selection.rangeCount > 0) {
-                            const range = selection.getRangeAt(0);
-                            range.deleteContents();
-                            range.insertNode(document.createTextNode(transcript));
-                        } else {
-                            textContent.innerHTML += transcript; // 預設新增到最後
-                        }
-                    };
+        for (let i = 0; i < event.results.length; i++) {
+            if (event.results[i].isFinal) {
+                finalTranscript += event.results[i][0].transcript; // 累加最終結果
+            }
+        }
 
-                    recognition.onerror = (event) => {
-                        alert('語音輸入錯誤: ' + event.error);
-                        isRecording = false;
-                    };
+        if (finalTranscript && finalTranscript !== lastTranscript) {
+            if (caretRange) {
+                // 確保光標範圍有效並插入內容
+                try {
+                    const textNode = document.createTextNode(finalTranscript);
+                    caretRange.insertNode(textNode);
 
-                    recognition.onspeechend = () => {
-                        recognition.stop();
-                        alert('錄音已結束');
-                        isRecording = false;
-                    };
-                } else {
-                    recognition.stop();
-                    alert('語音輸入已關閉');
-                    isRecording = false;
+                    // 移動光標到新文字後
+                    caretRange.setStartAfter(textNode);
+                    caretRange.collapse(true);
+                    window.getSelection().removeAllRanges();
+                    window.getSelection().addRange(caretRange);
+                } catch (error) {
+                    console.error('插入文字時出錯：', error);
                 }
-            });
+            } else {
+                // 如果沒有光標範圍，默認將文字插入到筆記開頭
+                const textContentElement = document.getElementById(`text-content-${id}`);
+                if (textContentElement) {
+                    const existingText = textContentElement.innerHTML;
+                    textContentElement.innerHTML = finalTranscript + existingText; // 插入到開頭
+                } else {
+                    console.error('找不到文字框，無法插入內容。');
+                }
+            }
+
+            lastTranscript = finalTranscript; // 更新最後處理的內容
+        }
+    };
+
+    recognition.onend = () => {
+        console.log('語音識別結束，重新啟動中...');
+        recognition.start(); // 自動重啟語音識別
+    };
+
+    recognition.start(); // 啟動語音識別
+}
+
+// 啟動語音識別
+startSpeechRecognition();
+
+
+
+
+
+
+
+
+
 
             // 儲存文字內容
             const textContent = noteElement.querySelector(`#text-content-${id}`);
@@ -797,6 +840,7 @@
                     reader.readAsDataURL(file);
                 }
             });
+
             notesContainer.appendChild(noteElement);
         }
 
@@ -922,64 +966,8 @@
                 });
                 toggleUI();
                 loadFolders();
-                folderSelect.value = newFolder.id; // 將新資料夾設為當前選擇
-                folderSelect.value = ''; // 重置選擇狀態
-                notesContainer.innerHTML = ''; // 清空筆記顯示
             }
         });
-
-        // async function confirmMoveNoteToFolder(noteId) {
-        //     const selectId = `move-folder-select-${noteId}`;
-        //     const folderSelect = document.getElementById(selectId);
-        //     const targetFolderId = folderSelect.value;
-
-        //     if (!targetFolderId) {
-        //         alert('請選擇一個目標資料夾');
-        //         return;
-        //     }
-
-        //     const userRef = db.collection('Users').doc(currentUser.uid);
-        //     let noteRef;  // 原筆記位置
-        //     let folderRef;  // 目標資料夾
-
-        //     if (currentFolderId) {
-        //         // 如果在資料夾內，從該資料夾移動
-        //         noteRef = userRef.collection('Folders').doc(currentFolderId).collection('Notes').doc(noteId);
-        //         folderRef = userRef.collection('Folders').doc(targetFolderId).collection('Notes');
-        //     } else {
-        //         // 如果在資料夾外，從根集合移動
-        //         noteRef = userRef.collection('Notes').doc(noteId);
-        //         folderRef = userRef.collection('Folders').doc(targetFolderId).collection('Notes');
-        //     }
-
-        //     try {
-        //         const noteSnapshot = await noteRef.get();
-        //         if (!noteSnapshot.exists) {
-        //             alert('找不到該筆記');
-        //             return;
-        //         }
-
-        //         const noteData = noteSnapshot.data();
-        //         await folderRef.doc(noteId).set(noteData);  // 將筆記新增到目標資料夾
-        //         await noteRef.delete();  // 從原資料夾刪除
-        //         // 如果筆記是從資料夾外移動，更新資料夾外的筆記列表
-        //         if (!currentFolderId) {
-        //             const noteElement = document.getElementById(`note-${noteId}`);
-        //             if (noteElement) {
-        //                 noteElement.remove(); // 移除對應的筆記元素
-        //             }
-        //         }
-        //         // 重新載入目標資料夾的筆記
-        //         loadNotes(targetFolderId); 
-        //         currentFolderId = targetFolderId; // 更新當前資料夾
-
-        //         alert('筆記已成功移動到資料夾');
-        //         displayNotes(); // 重新顯示筆記
-        //     } catch (error) {
-        //         console.error('移動筆記失敗:', error);
-        //         alert('移動筆記失敗，請稍後再試');
-        //     }
-        // }
 
         async function confirmMoveNoteToFolder(noteId) {
             const selectId = `move-folder-select-${noteId}`;
@@ -1013,16 +1001,14 @@
                 }
 
                 const noteData = noteSnapshot.data();
-                await folderRef.doc(noteId).set(noteData); // 將筆記新增到目標資料夾
-                await noteRef.delete(); // 從原位置刪除
+                await folderRef.doc(noteId).set(noteData);  // 將筆記新增到目標資料夾
+                await noteRef.delete();  // 從原資料夾刪除
 
-                 // 更新 UI
-                const noteElement = document.getElementById(`note-${noteId}`);
-                if (noteElement) {
-                    noteElement.remove(); // 移除該筆記的 UI 元素
-                }
+                loadNotes(targetFolderId); // 顯示目標資料夾中的筆記
+                currentFolderId = targetFolderId; // 更新當前資料夾
 
                 alert('筆記已成功移動到資料夾');
+                displayNotes(); // 重新顯示筆記
             } catch (error) {
                 console.error('移動筆記失敗:', error);
                 alert('移動筆記失敗，請稍後再試');
@@ -1037,6 +1023,11 @@
 
             folderSelect.innerHTML = '<option value="">選擇資料夾</option>';  // 清空選單
 
+            // if (folderSnapshot.empty) {
+            //     // 沒有資料夾時，顯示提示
+            //     alert('目前沒有資料夾，請先新增資料夾');
+            // }
+
             folderSnapshot.forEach(doc => {
                 const folder = doc.data();
                 const option = document.createElement('option');
@@ -1044,14 +1035,28 @@
                 option.textContent = folder.name;  // 顯示資料夾名稱
                 folderSelect.appendChild(option);
             });
+
+            // 當選擇資料夾時，顯示刪除資料夾的按鈕
+            folderSelect.addEventListener('change', () => {
+                const selectedFolderId = folderSelect.value;
+                if (selectedFolderId) {
+                    deleteFolderButton.style.display = 'inline-block'; // 顯示刪除按鈕
+                    loadNotes(selectedFolderId); // 顯示該資料夾中的筆記
+                } else {
+                    deleteFolderButton.style.display = 'none'; // 隱藏刪除按鈕
+                    // notesContainer.innerHTML = ''; // 清空筆記內容
+                    displayNotes();
+                }
+            });
         }
 
         // 顯示資料夾中的筆記
         async function loadNotes(folderId) {
-            notesContainer.innerHTML = ''; // 清空現有的筆記內容，避免重複
             const notesSnapshot = await db.collection('Users').doc(currentUser.uid)
                 .collection('Folders').doc(folderId)
                 .collection('Notes').get();
+
+            notesContainer.innerHTML = ''; // 清空現有筆記內容
 
             notesSnapshot.forEach(doc => {
                 const note = doc.data();
@@ -1060,36 +1065,9 @@
         }
 
         // 切換資料夾時顯示對應筆記
-        folderSelect.addEventListener('change', async () => {
-            const selectedFolderId = folderSelect.value;
-
-            if (currentFolderId === selectedFolderId) return; // 避免重複處理相同資料夾
-
-            currentFolderId = selectedFolderId; // 更新目前的資料夾
-            notesContainer.innerHTML = ''; // 清空目前的筆記顯示
-
-            if (currentFolderId) {
-                await loadNotes(currentFolderId); // 顯示該資料夾的筆記
-            } else {
-                await displayNotes(); // 顯示所有筆記
-            }
-            
-            if (folderSelect.value) {
-                // 如果有選擇資料夾，顯示刪除按鈕
-                deleteFolderButton.style.display = 'inline-block';
-            } else {
-                // 如果未選擇資料夾，隱藏刪除按鈕
-                deleteFolderButton.style.display = 'none';
-            }
-
-            if (selectedFolderId) {
-                deleteFolderButton.style.display = 'inline-block'; // 顯示刪除按鈕
-                loadNotes(selectedFolderId); // 顯示該資料夾中的筆記
-            } else {
-                deleteFolderButton.style.display = 'none'; // 隱藏刪除按鈕
-                // notesContainer.innerHTML = ''; // 清空筆記內容
-                displayNotes();
-            }
+        folderSelect.addEventListener('change', () => {
+            currentFolderId = folderSelect.value; // 設定目前選擇的資料夾
+            loadNotes(currentFolderId); // 重新顯示筆記
         });
 
         // 顯示對應資料夾
