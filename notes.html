@@ -721,12 +721,12 @@
                     recognition.continuous = true;
                     recognition.start();
                     isRecording = true;
-                    alert('錄音已啟動，開始說話...');
+                    alert('語音輸入已啟動，開始說話...');
                 } else {
                     recognition.stop();
                     isRecording = false;
                     saveCaretPosition(); // 在停止錄音後再次保存光標位置
-                    alert('錄音已停止');
+                    alert('語音輸入已停止');
                 }
 
                 // 保存光標位置
