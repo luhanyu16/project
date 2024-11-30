@@ -719,7 +719,6 @@
                     recognition.lang = 'zh-TW';
                     recognition.interimResults = false; // 只處理最終結果
                     recognition.continuous = true; // 允許連續錄音
-                    // let lastTranscript = ""; 
                     recognition.start();
                     isRecording = true;
                     alert('錄音已啟動，開始說話...');
@@ -729,6 +728,7 @@
                     alert('錄音已停止');
                 }
 
+                let lastTranscript = ""; 
                 recognition.onresult = (event) => {
                     let transcript = Array.from(event.results)
                         .map(result => result[0].transcript)
