@@ -773,11 +773,11 @@
                         .join('');
                     
                     // 移除重複部分
-                    if (lastTranscript && transcript.startsWith(lastTranscript)) {
+                    if (transcript.startsWith(lastTranscript)) {
                         transcript = transcript.slice(lastTranscript.length);
                     }
 
-                    lastTranscript = transcript; // 更新已處理的文字
+                    lastTranscript += transcript; // 更新已處理的文字
 
                     // 插入文字到光標位置
                     const textContent = document.getElementById(`text-content-${id}`);
@@ -785,25 +785,17 @@
 
                     if (selection.rangeCount > 0) {
                         const range = selection.getRangeAt(0);
-                        const container = range.commonAncestorContainer;
+                        range.deleteContents(); // 刪除選定內容（若有）
+                        const textNode = document.createTextNode(transcript);
+                        range.insertNode(textNode);
 
-                        if (textContent.contains(container)) {
-                            // 光標在文字區域內，插入文字
-                            range.deleteContents();
-                            const textNode = document.createTextNode(transcript);
-                            range.insertNode(textNode);
-
-                            range.setStartAfter(textNode);
-                            range.collapse(true);
-                            selection.removeAllRanges();
-                            selection.addRange(range);
-                        } else {
-                            // 光標不在文字區域，強制插入到文字區
-                            textContent.innerHTML += transcript;
-                        }
+                        // 移動光標到新插入文字的末尾
+                        range.setStartAfter(textNode);
+                        range.collapse(true);
+                        selection.removeAllRanges();
+                        selection.addRange(range);
                     } else {
-                        // 無光標範圍，直接追加文字
-                        textContent.innerHTML += transcript;
+                        textContent.innerHTML += transcript; // 若無選取則預設追加到最後
                     }
                 };
 
