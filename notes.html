@@ -766,57 +766,47 @@
             //     };
             // });
 
-            let isRecording = false; // 是否正在錄音
+            let isRecording = false;
             let recognition;
-            let lastTranscript = ""; // 儲存上次的完整結果
+            let lastTranscript = "";
 
             document.getElementById(`voice-input-${id}`).addEventListener('click', () => {
                 if (!isRecording) {
-                    // 在啟動錄音前重置 `lastTranscript`
-                    lastTranscript = ""; 
-
-                    // 初始化語音識別
+                    lastTranscript = "";
                     recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-                    recognition.lang = 'zh-TW'; // 設定語言
-                    recognition.interimResults = false; // 只處理最終結果
-                    recognition.continuous = true; // 允許連續輸入
+                    recognition.lang = 'zh-TW';
+                    recognition.interimResults = false;
+                    recognition.continuous = true;
 
                     recognition.start();
                     isRecording = true;
                     alert('語音輸入已啟動，開始說話...');
 
                     recognition.onresult = (event) => {
-                        // 將語音結果轉換為文字
                         let transcript = Array.from(event.results)
                             .map(result => result[0].transcript)
                             .join('');
 
-                        // 避免重複輸入
                         if (lastTranscript && transcript.startsWith(lastTranscript)) {
                             transcript = transcript.slice(lastTranscript.length);
                         }
 
-                        // 更新 `lastTranscript`
                         lastTranscript = transcript;
 
-                        // 插入文字到光標位置
                         const textContent = document.getElementById(`text-content-${id}`);
                         const selection = window.getSelection();
 
                         if (selection.rangeCount > 0) {
-                            const range = selection.getRangeAt(0); // 獲取選取範圍
-                            range.deleteContents(); // 刪除選定內容（如果有）
+                            const range = selection.getRangeAt(0);
+                            range.deleteContents();
+                            const textNode = document.createTextNode(transcript);
+                            range.insertNode(textNode);
 
-                            const textNode = document.createTextNode(transcript); // 創建新的文字節點
-                            range.insertNode(textNode); // 插入新文字
-
-                            // 將光標移到新文字節點的末尾
                             range.setStartAfter(textNode);
                             range.collapse(true);
                             selection.removeAllRanges();
                             selection.addRange(range);
                         } else {
-                            // 若無選取範圍，將文字追加到文字框的最後
                             textContent.innerHTML += transcript;
                         }
                     };
@@ -827,16 +817,14 @@
                     };
 
                     recognition.onend = () => {
-                        // 停止錄音後重置 `lastTranscript`
-                        lastTranscript = "";
-                        isRecording = false;
-                        alert('語音輸入已停止');
+                        if (isRecording) recognition.start();
                     };
                 } else {
-                    recognition.stop(); // 停止錄音
+                    recognition.stop();
                     isRecording = false;
                 }
             });
+
 
             // 儲存文字內容
             const textContent = noteElement.querySelector(`#text-content-${id}`);
