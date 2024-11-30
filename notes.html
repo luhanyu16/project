@@ -763,8 +763,8 @@
                     alert('錄音已啟動，開始說話...');
                 } else {
                     recognition.stop();
-                    alert('錄音已停止');
                     isRecording = false;
+                    alert('錄音已停止');
                 }
 
                 recognition.onresult = (event) => {
@@ -776,7 +776,6 @@
                     if (transcript.startsWith(lastTranscript)) {
                         transcript = transcript.slice(lastTranscript.length);
                     }
-
                     lastTranscript += transcript; // 更新已處理的文字
 
                     // 插入文字到光標位置
@@ -788,7 +787,6 @@
                         range.deleteContents(); // 刪除選定內容（若有）
                         const textNode = document.createTextNode(transcript);
                         range.insertNode(textNode);
-
                         // 移動光標到新插入文字的末尾
                         range.setStartAfter(textNode);
                         range.collapse(true);
