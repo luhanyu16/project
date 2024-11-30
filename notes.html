@@ -728,6 +728,20 @@
                     alert('錄音已停止');
                 }
 
+                let savedRange; // 儲存光標位置的變數
+
+                // 監聽文字區的點擊或選取事件，保存光標位置
+                const textContent = document.getElementById(`text-content-${id}`);
+                textContent.addEventListener('mouseup', () => saveCaretPosition());
+                textContent.addEventListener('keyup', () => saveCaretPosition());
+
+                function saveCaretPosition() {
+                    const selection = window.getSelection();
+                    if (selection.rangeCount > 0) {
+                        savedRange = selection.getRangeAt(0); // 保存當前的光標範圍
+                    }
+                }
+
                 let lastTranscript = ""; 
                 recognition.onresult = (event) => {
                     let transcript = Array.from(event.results)
@@ -741,31 +755,27 @@
 
                     lastTranscript += transcript; // 更新已處理的文字
 
-                    // 插入文字到光標位置（僅限文字區域）
-                    const textContent = document.getElementById(`text-content-${id}`);
-                    const selection = window.getSelection();
+                    // 如果有保存的光標位置，插入到該位置
+                    if (savedRange) {
+                        const range = savedRange.cloneRange(); // 複製保存的光標範圍
+                        range.deleteContents(); // 刪除光標範圍內的內容（如果有）
 
-                    if (selection.rangeCount > 0) {
-                        const range = selection.getRangeAt(0);
-                        const parentElement = range.startContainer.parentElement;
+                        const textNode = document.createTextNode(transcript); // 創建新文字節點
+                        range.insertNode(textNode); // 插入新文字到保存的光標位置
 
-                        // 確保光標在正確的文字區域
-                        if (textContent.contains(parentElement)) {
-                            range.deleteContents(); // 刪除選定內容（若有）
-                            const textNode = document.createTextNode(transcript);
-                            range.insertNode(textNode);
+                        // 更新光標位置到插入文字後
+                        range.setStartAfter(textNode);
+                        range.collapse(true);
 
-                            // 移動光標到新插入文字的末尾
-                            range.setStartAfter(textNode);
-                            range.collapse(true);
-                            selection.removeAllRanges();
-                            selection.addRange(range);
-                        } else {
-                            // 如果光標不在文字區域，強制追加到文字內容的末尾
-                            textContent.innerHTML += transcript;
-                        }
+                        // 將光標重新設定到文字區
+                        const selection = window.getSelection();
+                        selection.removeAllRanges();
+                        selection.addRange(range);
+
+                        // 更新保存的光標位置
+                        savedRange = range;
                     } else {
-                        // 若無選取範圍，直接追加到文字區域末尾
+                        // 如果未保存光標位置，則追加到文字區域末尾
                         textContent.innerHTML += transcript;
                     }
                 };
