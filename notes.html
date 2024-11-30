@@ -712,8 +712,9 @@
             });
 
             // 語音輸入
-           let isRecording = false;
+            let isRecording = false;
 let recognition;
+let hasInsertedToFirstLine = false; // 確保只有第一次輸入插入到第一行
 
 document.getElementById(`voice-input-${id}`).addEventListener('click', () => {
     if (!isRecording) {
@@ -727,20 +728,26 @@ document.getElementById(`voice-input-${id}`).addEventListener('click', () => {
         recognition.onresult = (event) => {
             const transcript = event.results[0][0].transcript;
 
-            // 插入文字到第一行
             const textContent = document.getElementById(`text-content-${id}`);
-            const currentText = textContent.innerHTML; // 獲取當前的內容
-            textContent.innerHTML = transcript + '\n' + currentText; // 將語音文字插入到第一行
+
+            if (!hasInsertedToFirstLine) {
+                // 第一次輸入：插入到第一行
+                const currentText = textContent.innerHTML;
+                textContent.innerHTML = transcript + (currentText ? '\n' + currentText : '');
+                hasInsertedToFirstLine = true; // 標記為已插入第一行
+            } else {
+                // 後續輸入：追加到末尾
+                textContent.innerHTML += (textContent.innerHTML ? '\n' : '') + transcript;
+            }
         };
 
         recognition.onerror = (event) => {
             alert('語音輸入錯誤: ' + event.error);
             isRecording = false;
         };
-
     } else {
         recognition.stop();
-        alert('錄音已手動停止');
+        alert('語音輸入已手動關閉');
         isRecording = false;
     }
 });
