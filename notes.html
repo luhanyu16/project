@@ -717,31 +717,22 @@
                 if (!isRecording) {
                     recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
                     recognition.lang = 'zh-TW';
-                    recognition.interimResults = false; // 只處理最終結果
-                    recognition.continuous = true; // 允許連續錄音
+                    recognition.interimResults = false;
+                    recognition.continuous = true;
                     recognition.start();
                     isRecording = true;
                     alert('錄音已啟動，開始說話...');
                 } else {
                     recognition.stop();
                     isRecording = false;
-                    saveCaretPosition();
+                    saveCaretPosition(); // 在停止錄音後再次保存光標位置
                     alert('錄音已停止');
                 }
 
-                let savedRange; // 儲存光標位置的變數
-
-                // 監聽文字區的點擊或選取事件，保存光標位置
+                // 保存光標位置
                 const textContent = document.getElementById(`text-content-${id}`);
-                textContent.addEventListener('mouseup', () => saveCaretPosition());
-                textContent.addEventListener('keyup', () => saveCaretPosition());
-
-                function saveCaretPosition() {
-                    const selection = window.getSelection();
-                    if (selection.rangeCount > 0) {
-                        savedRange = selection.getRangeAt(0); // 保存當前的光標範圍
-                    }
-                }
+                textContent.addEventListener('mouseup', saveCaretPosition);
+                textContent.addEventListener('keyup', saveCaretPosition);
 
                 let lastTranscript = ""; 
                 recognition.onresult = (event) => {
@@ -780,10 +771,18 @@
                         textContent.innerHTML += transcript;
                     }
                 };
+
                 recognition.onerror = (event) => {
                     alert(`語音輸入錯誤: ${event.error}`);
                     isRecording = false;
                 };
+
+                function saveCaretPosition() {
+                    const selection = window.getSelection();
+                    if (selection.rangeCount > 0) {
+                        savedRange = selection.getRangeAt(0); // 保存當前的光標範圍
+                    }
+                }
             });
 
             // 儲存文字內容
