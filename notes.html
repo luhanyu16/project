@@ -576,8 +576,6 @@
                     <button id="brush-${id}" class="icon-button"><i class="fas fa-paint-brush"></i></button>
                     <button id="eraser-${id}" class="icon-button"><i class="fas fa-eraser"></i></button>
                     <button id="clear-canvas-${id}" class="icon-button"><i class="fas fa-trash-alt"></i></button>
-					<button id="voice-input-id" class="icon-button"><i class="fas fa-microphone"></i></button>
-
                 </div>
                 <div class="actions">
                     <button onclick="editNote('${id}')"><i class="fas fa-edit"></i></button>
@@ -713,45 +711,72 @@
                 }
             });
 
-            // 語音輸入
-            // 偵測語音輸入按鈕
-let isRecording = false; // 紀錄是否正在錄音
-let recognition; // 語音識別對象
+            let isRecording = false; // 用來記錄當前是否正在錄音
+let recognition; // 用於存放語音識別的實例
 
-document.getElementById('voice-input-id').addEventListener('click', () => {
+// 綁定麥克風按鈕的事件
+document.getElementById(`voice-input-${id}`).addEventListener('click', () => {
     if (!isRecording) {
         // 初始化語音識別
         recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-        recognition.lang = 'zh-TW'; // 設定為中文
-        recognition.start();
+        recognition.lang = 'zh-TW'; // 設定語言為中文
+        recognition.interimResults = false; // 禁止返回中間結果
+        recognition.start(); // 開始語音識別
         isRecording = true;
+
+        // 修改按鈕的狀態，顯示錄音中
+        const micButton = document.getElementById(`voice-input-${id}`);
+        micButton.innerHTML = '<i class="fas fa-microphone-slash"></i>'; // 改為停止圖示
+        micButton.title = "點擊停止錄音"; // 修改按鈕提示文字
+
         alert('錄音已開始，請開始說話...');
 
-        // 處理語音識別結果
+        // 當語音結果返回時
         recognition.onresult = (event) => {
-            const transcript = event.results[0][0].transcript; // 取得識別文字
-            const textArea = document.getElementById('text-content-id'); // 目標筆記區域
-            textArea.innerHTML += transcript; // 將文字追加到筆記內容
+            const transcript = event.results[0][0].transcript; // 獲取語音識別文字
+            const textContent = document.getElementById(`text-content-${id}`); // 目標筆記區域
+            const selection = window.getSelection();
+
+            if (selection.rangeCount > 0) {
+                const range = selection.getRangeAt(0);
+                range.deleteContents(); // 清除光標選取的內容
+                range.insertNode(document.createTextNode(transcript)); // 插入語音文字
+            } else {
+                textContent.innerHTML += transcript; // 沒有選取時，將文字追加到最後
+            }
         };
 
+        // 當語音輸入過程中發生錯誤
         recognition.onerror = (event) => {
-            alert('語音輸入出錯：' + event.error);
-            isRecording = false;
+            alert('語音輸入錯誤：' + event.error);
+            stopRecording(); // 停止錄音並重置按鈕
         };
 
+        // 當使用者停止說話時
         recognition.onspeechend = () => {
-            recognition.stop();
-            alert('錄音已結束');
-            isRecording = false;
+            stopRecording(); // 自動停止錄音
         };
     } else {
-        // 停止語音識別
-        recognition.stop();
-        alert('語音輸入已關閉');
-        isRecording = false;
+        stopRecording(); // 手動停止錄音
     }
 });
 
+// 停止錄音並重置按鈕狀態的函數
+function stopRecording() {
+    if (recognition) {
+        recognition.stop(); // 停止語音識別
+    }
+    isRecording = false;
+
+    // 修改按鈕狀態，顯示停止錄音後的樣式
+    const micButton = document.getElementById(`voice-input-${id}`);
+    micButton.innerHTML = '<i class="fas fa-microphone"></i>'; // 改回麥克風圖示
+    micButton.title = "點擊開始錄音"; // 修改按鈕提示文字
+
+    alert('錄音已結束');
+}
+
+            
 
             // 儲存文字內容
             const textContent = noteElement.querySelector(`#text-content-${id}`);
